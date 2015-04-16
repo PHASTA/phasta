@@ -1,0 +1,121 @@
+# PHASTA Version 1.5 Input File
+#
+#  Basic format is
+#
+#    Key Phrase  :  Acceptable Value (integer, double, logical, or phrase
+#                                     list of integers, list of doubles )
+#
+
+# To find the Key Phrases, first look in input.config.  There you will
+# find the default values for everything that is allowed to have a
+# default. Some things are not allowed to default and must be entered
+# in this file.  In most cases, the acceptable inputs also appear in
+# the input.config file. To add acceptable inputs you should only have
+# to modify:
+
+#     input_asci.cc :which matches the string and translates it to the 
+#                    parameter change. If it is a new parameter, you must
+#                    modify:
+#
+#                      common.h (to carry new parameter through code)
+#                      common_c.h (to carry the parameter from C to Fortran)
+#     
+#
+# In case it is not clear by now, # allows you to comment either from the 
+# beginning of the line or to the right as shown below.
+#
+#SOLUTION CONTROL <--- These are for your organizational clarity (not required)
+#{                 <---
+     Equation of State: Incompressible     # sets ipress=-1 matflag(1,n)
+     Number of Timesteps:  20        #replaces nsteps(1) (ntseq wired =1)
+     Time Step Size: 0.1             # Delt(1)
+#     Turbulence Model:  RANS         #  No-Model iturb=0, RANS =-1  LES=1 
+#}
+
+Print Error Indicators: True
+#MATERIAL PROPERTIES
+#{
+     Viscosity: 0.01            # fills datmat (2 values REQUIRED if iLset=1)
+     Density: 1.0               # ditto
+#     Scalar Diffusivity: 0.1    # fills scdiff(1:nsclrS)
+#}
+
+
+#LINEAR SOLVER
+#{
+     Number of Solves per Left-hand-side Formation: 2  #nupdat/LHSupd(1)
+#}
+
+#DISCRETIZATION CONTROL
+#{
+     Basis Function Order: 1                 # ipord
+     Quadrature Rule on Interior: 2           #int(1)
+     Quadrature Rule on Boundary: 2           #intb(1)
+     Include Viscous Correction in Stabilization: True    # if p=1 idiff=1
+                                                           # if p=2 idiff=2  
+     Lumped Mass Fraction on Left-hand-side: 1.0           # flmpl
+     Lumped Mass Fraction on Right-hand-side: 1.0          # flmpr
+#}
+     Surface ID for Integrated Mass: 2
+     Number of Force Surfaces: 1
+     Surface ID's for Force Calculation: 1 
+
+TURBULENCE MODELING PARAMETERS  
+{  #                                  lines below are only read if ||| is true
+	Dynamic Model Type : Standard   # adds zero to iturb       LES
+        Filter Integration Rule: 1  #ifrule adds ifrule-1 to iturb LES
+#	Turbulence Wall Model Type: None  #itwmod=0                RANSorLES
+#	Turbulence Wall Model Type: Slip Velocity  #itwmod=1       RANSorLES
+	Turbulence Wall Model Type: Effective Viscosity  #itwmod=2 RANSorLES
+	Velocity Averaging Steps : 500. # wtavei= 1/this           RANSorLES
+	Dynamic Model Averaging Steps : 500. # dtavei= 1/this      LES
+#  negative values to the two previous entries make their value ISTEP in code
+#  Anil...leave as any negative value
+	Filter Width Ratio        : 3.  # fwr1                     LES
+ 	}
+#
+#
+#This last one is brand new.  It allows you to construct your step 
+#from elementary operations.  It works under the premise that a step is
+#constructed from from a series of solves and updates.  The table goes like
+#this:
+#     solve flow =  0;             update flow =  1
+# solve scalar 1 = 10;         update scalar 1 = 11    
+# solve scalar 2 = 20;         update scalar 2 = 21    
+# solve scalar 3 = 30;         update scalar 3 = 31
+#              :                             :
+# solve scalar n = n*10;       update scalar n = n*10+1
+# solve heat     = (n+1)*10;          update T = (n+1)*10+1
+#
+
+#  Below we have an example of solving the flow with two iterations
+# (solve, update, solve,update) what would have been achieve before by
+# setting niter=2
+
+#
+#STEP SEQUENCE 
+#{
+#      Step Construction  : 0 1 0 1    # this is the standard two iteration
+#     Step Construction  : 0 1 0 1 0 1 0 1 0 1  
+      Step Construction  : 0 1       # this is the standard one iteration 
+#      Step Construction  : 0 1 10 11
+#      Step Construction  : 0 1 10 11 0 1 10 11 0 1 10 11 20 21 20 21 20 21
+# This one is one Tony might like where the solver would solve the flow with 
+# the first scalar (3 times with an update immediately after each solve) 
+# followed by 3 successive solves of the second scalar (with an update after 
+# each solve)
+#
+
+
+# NOTE: An update consists of adding the delta from the appropriate
+# solve to the appropriate part of the Y vector, followed by
+# reapplication of the boundary conditions. You have to ask for an
+# update. It is not implicit that it will follow each solve.  This is to
+# enable you to solve successive pieces BEFORE updating the solution as
+# is sometimes convenient/necessary. Here is an example of that
+
+#      Step Construction  : 0 1 10 20 11 21 0 1 10 20 11 21
+# here we solve the flow, update the flow, solve scalar 1, solve scalar 2 (BEFORE UPDATING SCALAR 1) then update both scalars,  then repeat the process
+
+ 
+#}

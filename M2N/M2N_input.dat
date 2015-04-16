@@ -1,0 +1,13 @@
+120 # time step of the restart files for fields to reduce (solution, ybar, etc)
+100 # time step of the restart files for partID and vtxID (mapping between M and N)
+1 # Reduce the ybar field? (0/1)
+1 # Reduce the error field? (0/1)
+2 # Reduce the phase_average field? (0/n phase average fields)
+1 # Reduce the vorticity field? (0/1)
+1 # Reduce the dwal? (0/1)
+1 # Print debug statement (0/1)
+
+### What follows is a short manual and is not read by M2N ###
+This Script is used to reduce different fields from M parts to N parts, using the mapping fields (partID. vtxID) gerenated by phParAdapt.
+By default, this script reduces the solution field but it can also handle others fields such as mentioned above.
+

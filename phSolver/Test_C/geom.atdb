@@ -1,0 +1,276 @@
+AttDBVersion 3
+geom.atdb
+1 4 3 16 25
+4 0 5
+geom.dmg
+discrete
+
+0
+0
+1 6 24
+w
+scalar_1 flux
+
+0
+0 3 0
+2 -1
+
+1
+0
+1 6 23
+vector direction (Unknown)
+vector direction
+
+0
+1 3 0
+2 -1
+
+1
+0
+2 -1
+
+1
+1
+2 -1
+
+1
+0
+1 3 22
+vector magnitude (Unknown)
+vector magnitude
+
+0
+2 -1
+
+1
+0
+1 6 18
+
+temperature
+
+0
+0 3 0
+2 -1
+
+40
+0.0623068+0.00053516725780903*(1.0-x2^4)
+1 6 17
+
+mass flux
+
+0
+0 3 0
+2 -1
+
+1
+0
+1 6 16
+
+traction vector
+
+0
+1 3 0
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+1 6 15
+vector direction (Unknown)
+vector direction
+
+0
+1 3 0
+2 -1
+
+1
+1
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+1 3 14
+vector magnitude (Unknown)
+vector magnitude
+
+0
+2 -1
+
+12
+1.5*(1-x2^2)
+1 6 12
+vector direction (Unknown)
+vector direction
+
+0
+1 3 0
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+2 -1
+
+1
+1
+1 3 11
+vector magnitude (Unknown)
+vector magnitude
+
+0
+2 -1
+
+1
+0
+1 6 9
+
+pressure
+
+0
+0 3 0
+2 -1
+
+16
+18.0211967901162
+1 6 8
+
+initial temperature
+
+0
+0 3 0
+2 -1
+
+6
+0.0625
+1 6 7
+
+initial velocity
+
+0
+1 3 0
+2 -1
+
+14
+1.5*(1.0-x2^2)
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+1 6 6
+
+initial pressure
+
+0
+0 3 0
+2 -1
+
+16
+18.0211967901162
+1 6 19
+
+initial scalar_1
+
+0
+0 3 0
+2 -1
+
+50
+if(x1>0,if(x1<0.2, if(x2>0,if(x2<0.2,0,1),1),1),1)
+1 6 20
+
+scalar_1
+
+0
+0 3 0
+2 -1
+
+1
+1
+2 1 21
+zero
+comp3
+
+0
+2 22 23
+2 1 13
+inflow
+comp3
+
+0
+2 14 15
+2 1 10
+w
+comp1
+
+0
+2 11 12
+3 1 1
+Mesh Case
+meshing
+
+0
+0
+5
+0 0
+3 1 2
+Problem Specific Case
+problem specification
+
+0
+13 6 7 8 9 10 13 16 17 18 19 20 21 24
+5
+10 16
+11
+2 2 4  2 2 1 21
+10
+3 2 0  2 4  2 2 1 18
+8
+2 2 4  2 2 1 17
+7
+1 9 0 1 6
+6
+1 9 0 1 7
+5
+1 9 0 1 8
+4
+1 2 5 1 9
+3
+2 2 3  2 1 1 10
+2
+2 2 3  2 1 1 16
+1
+1 2 0 1 13
+3 1 3
+Numeric Case
+numerics
+
+0
+0
+-1
+0 0
+3 1 4
+Analysis Case
+analysis
+
+0
+3 1 2 3
+5
+0 0

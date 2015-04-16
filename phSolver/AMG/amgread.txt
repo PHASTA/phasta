@@ -1,0 +1,265 @@
+
+===================================================================
+
+This document is a README file for coding parallel AMG for Pressure
+Poisson Equation in PHASTA. If you want to start to modify or add
+functionality or simply want to understand the code, please use this
+document as a help.
+
+This document is intended to serve as extra comments for the source, not
+to be published. You made your changes, please also update this file.
+
+Please have basic knowledge of sparse matrices, and read paper/thesis as
+you continue. row-wise sparse storage is used everywhere in this
+document.
+
+Chun Sun, March, 2008
+
+==================================================================
+
+*** Files related to AMG in the ../common/ and ../incompressible/
+directories:
+
+** solfar.f
+    Two things involving AMG are done here between #ifdef AMG
+statements: 1) setup AMG by calling ramg_control. ( don't worry you'll
+do setup everytime, ramg_control handles that. ) 2) Build a loop for
+smartAMG, which is never used.
+
+** lestools.c
+    Provides C function: LesPrecPPE. LesLIB calls this function for
+preconditioning; and this function calls fortran function ramg_interface
+to do the actual preconditioning. This is the interface between our AMG
+and ACUSIM solver.
+
+** input_fforms.cc
+
+    Handling I/O from input.config and solver.inp, nothing special.
+
+**** in AMG directory ******
+
+* ramg_data.f
+
+  We have to start from this file. This is a module file containing
+global control variables, matrices, and vectors. To have a global module
+file and use it whenever necessary, saved us passing long parameters
+every function call (though it's still tedious in some places). 
+
+  First we have defined data type: pointer to arrays with different
+dimentions. This is used, as shown in this file later, in submatrices
+communication and build PPE multilevels. 
+  
+  Then we have our multilevel AMG stored in amg_A_* arrays as sparse
+matrices. amg_para* arrays are for communication. amg_ilwork, amg_nlwork
+are same as ilwork and nlwork, but in higher levels with smaller size.
+amg_ppeDiag is important diagonal scaling matrices for different levels.
+CF_map, CF_rev(erse)map are arrays recording coarsening information.
+
+* ramg_coarse.f
+
+The purpose of this file is: 1) CF-spliting, 2) setup interpolation
+operator. 
+
+CF-spliting is done in a seperate function ramg_CFsplit. Other than the
+thesis, one thing to note is that we use heap sort for lambda array. The
+good thing is we keep changing this array and everytime we want to get
+the highest value out from the array. So heap sort is a natural choice. 
+
+After CF-split, we do a communication: from ramg_update_cfmap to
+ramg_readin_cfmap. This is to ensure that shared boundary nodes get same
+coarsening on both processors. Note commout does not pass property for
+integers(it only work with real*8 numbers), so we have commout_i to do
+this for integer, check that commout_i.
+
+CF_map is an array to set the order for all the nodes according to
+"coarse first, fine second". This order will be used in Gauss-Seidel
+smoothing, when we smooth nodes according to this order. aka,
+"red-black" Gauss-Seidel, see paper/thesis for description.
+
+amg_paramap is an array to record "grouping" information for coarsening
+by group in parallel. For each node, there is a "group id" assigned to
+it. For all interior node, the "group id" is the rank of the local
+processor. For a boundary node, if it is a "master", the rank of it is
+the neighbour rank; if it is a "slave", the rank of it is the negative
+of the neighbour rank. (see ramg_initbcflag in ramg_paratools.f). This
+information is computed at very beginning for the finest level. Then
+after each coarsening, the information is carried on to higher level in
+ramg_coarse.f, and will be used for communication at higher levels.
+Also, CF-spliting is done within each group, if you pay attention to
+every "if (afmap....)" in ramg_CFsplit you will see that.
+
+Then we build temp variable amg_I for interpolation operator.
+Interpolation operator is a sparse matrix, but it's hard to build it at
+once. amg_I is used then. It's an array of allocatable pointers. So we
+can bulid row by row. Eventually construct it to form I_cf_* which is
+interpolation operator matrix. And transpose it to form I_fc_*. Pay
+attention to transpose algorithm, it's a bit complicated but as usual,
+standard for row-wise sparse storage. 
+
+* ramg_control.f
+
+In ramg_prep, please note that variable maxstopsign is the control
+variable for coarsening. Coarsening is stopped if this value is true.
+How do we decide it? When every processor has true value. Otherwise,
+coarsening is going on. For those already got coarsened and have true
+value, the result of coarsening will be trivial identity matrix as
+interpolator. A tiny bit of waste compare to communicate criterias (see
+thesis).
+
+Also in ramg_control, we do lu decomposition for the coarsest level, if
+direct solve for coarsest level is selected. Thus, each iteration will
+only need to do a back substitution, which saves time greatly,
+especially when you have a bit larger coarest level.
+
+For "smartamg" prototype, we check consecutive 7 norms from CG (stored
+in ramg_window/ramg_winct), if it does not go down, we start restart
+AMG-cg. Before restart we just cheat ACUSIM by giving it zero norms for
+the first sweep of solves (last iteration of CG and first iteration of
+GMRES). This whole segment might be abandoned provided ACUSIM give us
+better interface and norm control.
+
+* ramg_driver.f
+
+The main wrap, nothing fancy. ramg_interface is the only gate to the
+actual ACUSIM solve. In the actual ramg_driver, we have left
+possibilities (mode) to do a stand-alone Preconditioned CG by us, which
+is never used.
+
+Pay attention to diagonal scaling in V-cycle, at the finest level, the
+PPE has already been scaled to diagonal unity. We do scaling only at
+second level and above.
+
+(Now when I was writing these: There seems to be two places that we can
+improve efficiency: For second level and above, scaling can be
+incorporated with interpolation operator, i.e. interpolation is modified
+to directly give a scaled matrix. Another place is the allocation of
+coarse level vector. We don't need to do this every iteration. This can
+be done in extract and use the vector everytime.) 
+
+* ramg_extract.f
+
+sparse matrix-matrix production: You need to do these three steps
+seperatedly: calculate nonzeros; form colm; form rowp and A. Yes there
+are possibilities that you combine these three loops into one, but that
+will dramatically decrease efficiency. Actually, a rule of thumb: break
+the complicated loop into several less complicated loops will
+increaseing efficiency (better optimized for vector operations), even if
+the math hasn't changed. But here if you combine matrix-matrix product
+into one loop, the math will change to a more complicated one. Oh,
+another rule of thumb: use less "if" in a loop, that will increase
+efficiency.
+
+Now to parallel. lhsGP* is a sparse-communicated duplicate of lhsP
+matrix.
+
+* ramg_ggb.f
+
+Must read the section of GGB in Chun Sun's thesis. ARPACK/PARPACK is
+used through a user-specified AP-product. here in ggb_av.
+
+generate_gmap creates a mapping and reverse mapping (gmap,grevmap) for a
+vector mapping from GGB (without overlap boundary) to phasta format
+(with overlap boundary). ggb_G2A and ggb_A2G are actual function calls
+to do that.
+
+In ggb_setup, there is a Allreduce with MPI_MAX, this is to search for a
+maximum vector length for vector allocation. ARPACK does not dynamic
+memory at different processor, so we allocate maximum nshg for every
+proc.
+
+There are 3 things you may want to modify for this GGB implementation. 
+1) You may want to do lu-decomposition first in the setup, then in GGB
+apply, do a simple back-substitution. (like we did in coarsest solver
+if using direct). This saves time.
+2) You may want to figure out how the tolerance are related to the
+actual performance (tol = 1.0E-3)? 
+3) Eventually you want your own eigen calculator, can't use ARPACK
+forever.
+
+* ramg_ITAI.f
+
+This does A_(l+1)=Q^T*A_l*Q, creation of coarser matrices.
+
+Note in the code we use "I" instead of "Q".
+
+When you do sparse matrix-matrix product, don't attempt to do it in one
+loop. Use three loops, calculate nnz, create colm, then create rowp and
+mtx. This looks like you are using 3 loops over 1, but it saves you
+time. and easier for compiler to vectorify.
+
+As to diagonal scaling to unity, maybe you want to test out how to
+disable that with modification to the smoother (polynomial smoother)
+
+* ramg_mls.f
+
+Read thesis, and appendix too, everything's straight-forward if you do
+so. For the setup, similar structure as you do GGB. There are segments
+of the code that do the so called "post-smoothing", but they are never
+activated. Don't worry about that though.
+
+I'm writing things in ramg_cheby.f here too, coz they are all polynomial
+smoothers. ramg_chebyratio is an input coefficient to determine the
+smallest eigenvalue you want to smooth using chebyshev polynomial, it is
+set to 10 in input.config. You can change it to the ratio of coarse/fine
+nodes, though I don't think there will be substantial difference.
+
+* ramg_paratools.f
+
+Very important tools for parallelization.
+
+global_lhs is a function that reads in lhsP (in sparse format so there
+will be three arrays), and output lhsGP (summation of boundary-boundary
+interactions then put back to each processor, read thesis and slides).
+There are tricky steps, first you need to extract the G_bb matrices,
+then the summation will alter the sparse structure, and you will have to
+alter the structure of lhsP too. This is done task by task.  There are
+mappings, reverse mappings all used inside this routine. I suggest you
+leave this subroutine as is. If you really want to do something, read
+the source very carefully. One thing about this, is that we are not
+considering triple boundaries, if a boundary node has 3 or more
+representations (lives in 2 or more tasks), only one will be considered.
+This will result the G_bb value for two such nodes slightly smaller,
+which won't be a big issue for the overall performance. It is a direct
+result from the task structure of phasta. I'm mentioning it here because
+if you look really really carefully you will find this problem, but
+don't worry about it. (slightly different value of G_bb only).
+
+PPE_Ap routines perform matrix-vector product for PPE, just pay
+attention to scaling and corresponding function calls in ramg_tools.f
+
+init_ilwork initialize all the ilwork structure for higher level AMG
+matrices. Everything is similar to plain CG, but smaller in size because
+of coarsening.
+
+init_bcflag initialize global array amg_paramap. Ignore the first bunch
+of the code (if (numpe.lt.2) then) because that's for reduced serial,
+which we no longer use.
+
+ramg_commout, ramg_commin, same commout, commin for higher level AMG
+systems.
+
+Okay that's it, again, be very carefull in this file. 
+
+* ramg_smoother.f
+
+It's a wrapper for G-S, Jacobi, Cheby, and MLS. Nothing fancy here.
+
+Only thing to note is in Gauss-Seidel, we follow red-black smoothing,
+coarse first fine second (or other way around). In direct solve we can't
+do parallel direct solve (or CG! Farzin said so because that destroy
+preconditioner. i.e. preconditioner is not the same solve by solve,
+while it should be the same and symmetric). Let's suggest a smoother to
+make the direct solve. 
+
+* ramg_tools.f
+
+nothing fancy here. but there are  a lot of output tools you may want to
+use ramg_dump* functions. Search for them to find examples, very
+convenient when you go to parallel debugging, and do matlab
+verification.
+
+calcAv_g is the global Ap-product for all AMG-matrices, the kernel is
+here.
+
+
+Good luck.

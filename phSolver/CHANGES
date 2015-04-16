@@ -1,0 +1,709 @@
+NOTES on building phasta.:
+the usual command line is
+
+ARCHOS needs to be specified when ever the build target is different from the native
+ARCHOS of the build machine.
+
+gmake [ VERSION=xyz ] [ COMPRESSIBLE=1 ] [ VERS=opt ]  
+PARALLEL=[ mpich2, mpigm,mpivmi,sunmpi,sgimpi,decmpi,ibmmpi]
+
+VERSION needs to be specified if the source base is in the dirtory structure
+phSolver/xyz/phSolver
+
+PARALLEL can take any of the values specified above based on the target architechture
+and mpi build one would like to use.
+
+if PARALLEL=mpich2 is specified, we also need to specify a MPICOMM type ch_shmem or
+ch_p4. the comm type also has a -icc extension for the intel compiler based builds on
+linix.
+
+at the moment phasta expectes the libraries phastaIO, shapeFunction and metis to have a
+-$(PARALLEL) extension on them...simple symbolic links should suffice.
+
+
+9/17/2007 KJ
+After severe neglect we are back to version control.  We start with a rollback to 1.9_7b and then bring AMG into the main trunk.
+EXPORT environment variable AMG  to include (AMG=1) or exclude (AMG=0) AMG specific code.  Note if you include you have to either compile your own PARPACK libraries or link to those compiled by someone else (sunc2 or kjansen).  They are not put into SVN because they the only changes that have been made are those contained within the download instructions. Note there is also now a directory under phSolver called AMG.  If you are looking to build AMG code you will need to execute the Makefile in that directory between the common build and the incompressible build.
+
+
+
+5/3/2006 KJ
+Fixed several places that compressible code was broken in the 3 previous commits.
+Modified the Makefile so that it gets the MKL libraries properly under their current placement.  This is a temporary fix that hopefully will move into the buildUtil environment soon.
+
+
+4/20/2006 EB
+two files were added: symline.c and shptri.c
+
+1/16/2006 EB TAGGED as v1_9_8
+phasta works with 2D meshes for scalar solve (advection diffusion) with specified initial velocity.
+
+July 28 2005  TAGGED AS v1_9_7b
+Stanford deformable wall and generalized outflow boundary conditions merged onto top of the trunk.  Ditched the use of common.h by .c functions (instead used extern of phasta_iotype.  Also adopted Nathan's changes to partition.cc.
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES common/asbnabi.f common/bctint.f common/common.h 
+CVS: 	common/common_c.h common/fillsparse.f common/gendat.f 
+CVS: 	common/genini.f common/input.config common/input.f 
+CVS: 	common/input_fform.cc common/local_mass.f 
+CVS: 	common/new_interface.c common/partition.cc common/phasta.cc 
+CVS: 	common/pointer.f common/proces.f common/pvsqbi.f common/qpbc.f 
+CVS: 	common/readnblk.f common/rwvelb.f common/solvecon.f 
+CVS: 	common/timeseries.f incompressible/Makefile 
+CVS: 	incompressible/advLES.f incompressible/asbflx.f 
+CVS: 	incompressible/asbmfg.f incompressible/asigmr.f 
+CVS: 	incompressible/bc3lhs.f incompressible/bc3res.f 
+CVS: 	incompressible/bflux.f incompressible/e3b.f 
+CVS: 	incompressible/e3bvar.f incompressible/e3ivar.f 
+CVS: 	incompressible/elmgmr.f incompressible/forces.f 
+CVS: 	incompressible/itrPC.f incompressible/itrdrv.f 
+CVS: 	incompressible/lesSparse.f incompressible/solfar.f 
+CVS: 	incompressible/stats.f incompressible/usr.c 
+CVS: ----------------------------------------------------------------------
+
+=======
+
+June 27 2005 JM/OS
+v1_9_7 -tagged commit
+introduced ybar: time averaged fields:
+ybar(:,1) - ybar(:,3) is average velocity components
+ybar(:,4) is average pressure
+ybar(:,5) is average speed
+turned on upon setting:
+"Print ybar: True"
+dumped into restart files with tag "ybar"
+required to perform avergage speed hessian based aniso adaptivity
+
+
+
+May 18 2005 JM
+small but essential change in genbkb.f
+reads now 'double' instead of 'integer' as the nbc values !
+
+
+February 3 2005
+v1_9_6 -tagged commit
+communication fixed
+
+wall shear stress computation implemented
+wall shear stress print out into restart (via tag 'wall shear stresses' ) is
+turned on by setting 'Print Wall Fluxes' to 'True'
+
+ifdef cplusplus added to common_c.h to allow new_interface.c to use it
+normals fixed so that bflux performs properly on curved surfaces (f3lhs.f)
+GETINTPNTS function specialization for intel platforms removed (getIntPnts.c)
+iotype for arrays can now be binary or ascii (set by user in solver.inp).
+error data arrays are written into restart now 
+syntax cleanup on lessKey function for C++ standards (partition.cc)
+debugger behaviour made more uniform across platforms (phasta.cc)
+phasta became a function in common that is called by main in either incompressible or compressible directory (phasta.cc)
+fixed a rho scaling problem (e3lhs.f and e3stab.f)
+forces_s properly handled for parallel use (forces.f)
+
+CVS: Modified Files:
+CVS: 	phSolver//common/f3lhs.f phSolver//incompressible/bflux.f 
+
+
+
+v1_9_5 September 24th 2003
+Makefiles changed to so that executables are always relinked.
+newshape.cc indented for readability
+
+September 12th 2003
+v1_9_4
+
+make file changes to avoid automatic override of ARCHOS 
+removed unnecessary defines. 
+removed all references to MPI to buildUtil, all parallel builds must
+specify a value of PARALLEL and potentially an MPICOMM(ch_shmem/ch_p4)
+
+PARALLEL can take values ( mpich2, mpigm, ibmmpi, mpivmi, summpi,
+                           sgimpi, decmpi )
+mpivmi is for ia64_linux( mpich built on VMI )
+
+MPICOMM needs to be specified only for PARALLEL=mpich2
+
+MPINATIVE is nolonger a valid build option, one needs to  use
+PARALLEL={arch}mpi
+
+September 11th 2003
+v1_9_3
+
+Unstructured SPEBC is add to phasta
+CVS: Modified Files:
+CVS: 	common/common.h common/common_c.h common/gendat.f 
+CVS: 	common/genini.f common/genscale.f common/getvel.f 
+CVS: 	common/input.config common/input_fform.cc common/proces.f 
+CVS: 	common/readnblk.f common/renum.f common/spebc.f 
+CVS: 	compressible/bc3lhs.f compressible/bc3res.f 
+CVS: 	compressible/itrPC.f compressible/itrdrv.f 
+CVS: Added Files:
+CVS: 	common/elem-search.f common/eqn_plane.f common/get_coeff.f 
+CVS: ----------------------------------------------------------------------
+
+July 18th 2003 
+v1_9_0 
+
+Branch for windows returns to the tree.  This version also uses SCOREC
+makefiles and as such has a makefile in each of the three
+subdirectories (common makes a library that is used by incompressible
+or compressible). Many files have changed but almost all in a superficial way 
+
+
+1)removal of stdcall for intel which was a digital fortran need (now using Intel compiler for the fortran).
+
+2) SCOREC makefiles wanted cc instead of cpp
+
+3) mpistub.f90 is gone so now you have to get mpich for windows
+
+There are bug fixes for surface tension relative to the earlier version as 
+well and restart.latest.<nproc> should again work..
+
+
+CVS: Modified Files:
+CVS: 	Makefile common/auxmpi.h common/commu.f common/ctypes.f 
+CVS: 	common/gltri.c common/new_interface.c common/proces.f 
+CVS: 	common/qpbc.f common/readnblk.f common/shp6w.c common/shphex.c 
+CVS: 	common/shppyr.c common/shptet.c common/symhex.c 
+CVS: 	common/sympyr.c common/symquad.c common/symquadw.c 
+CVS: 	common/symtet.c common/symtri.c common/symtripyr.c 
+CVS: 	common/symwdg.c common/tmrc.c compressible/get_h.c 
+CVS: 	compressible/gltet.c incompressible/getSol.c 
+CVS: 	incompressible/lestools.c incompressible/usr.c 
+CVS: 	incompressible/usr.h incompressible/write_hessian.c 
+CVS: Added Files:
+CVS: 	common/Cinput.cc common/Makefile common/ValType.cc 
+CVS: 	common/flush.c common/input_fform.cc common/missing_win32.c 
+CVS: 	common/newshape.cc common/partition.cc common/phasta.cc 
+CVS: 	compressible/Makefile incompressible/Makefile 
+CVS: 	compressible/stats.f 
+CVS: Removed Files:
+CVS: 	common/Cinput.cpp common/ValType.cpp common/input_fform.cpp 
+CVS: 	common/mpistub.f90 common/newshape.cpp common/partition.cpp 
+CVS: 	common/phasta.cpp incompressible/mpistub.f90 
+
+June 13th 2003
+v1_8_0
+
+File: Makefile          Status: Modified
+File: auxmpi.h          Status: Modified
+File: commu.f           Status: Modified
+File: ctypes.f          Status: Modified
+File: genbkb.f          Status: Modified
+File: genblk.f          Status: Modified
+File: input.config      Status: Modified
+File: input_fform.cpp   Status: Modified
+File: phasta.cpp        Status: Modified
+File: readnblk.f        Status: Modified
+File: bflux.f           Status: Modified
+
+Needs NSpre 3.6.2 or higher.
+
+1) NSpre_Parallel now integrated with phSolver
+   
+   1/ now phSolver can start from a 1 proc output and partition the problem
+   2/ it still retains the capability to run on already partitioned problems
+   3/ mesh dual info now in phasta I/O format
+   4/ dual.dat ceases to exist, dual is now written to geombc.dat.1
+
+2) SONFATH is now specified in solver.inp
+
+3) I/O format specified in  solver.inp
+
+4) A new MPI data type added to avoid commu error for error indicators.
+   kdof=14 corresponds to n = 10
+
+-------------------------------------------------------------------------------
+
+May 22, 2003
+v1_7_2
+File: CHANGES           Status: Modified
+File: Makefile          Status: Modified
+File: itrdrv.f          Status: Modified
+File: les.h             Status: Modified
+File: usr.c             Status: Modified
+File: usr.h             Status: Modified
+
+1) implemented restarting of les Solves, the aperm vector is now saved to
+   the restart file and again read in before starting a solve.
+
+2) the myfles routines now call the C routines inside insted of fortran
+   routines.   
+
+------------------------------------------------------------------------   
+
+May 22, 2003
+v1_7_1
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES common/common.h common/common_c.h common/input.config 
+CVS: 	common/input_fform.cpp common/qpbc.f common/readnblk.f 
+CVS: 	incompressible/bflux.f incompressible/e3b.f 
+CVS: 	incompressible/e3ivar.f incompressible/e3lhs.f 
+CVS: 	incompressible/e3q.f incompressible/e3stab.f 
+CVS: 	incompressible/elmgmr.f incompressible/itrdrv.f 
+CVS: 	incompressible/solfar.f 
+CVS: ----------------------------------------------------------------------
+
+1) (IC) bflux now uses phastaIO and flux array is written into restart file
+2) (IC) bflux correctly accounts for periodicity
+3) (IC) bugs in discontinuous field reconstruction (second derivative of velocity and normal) were resolved which should fix surface tension bug
+4) (IC) fixed lumped mass scalar bug
+5) ascii I/O is now supported with iotype variable set in solver.inp (almost)
+6) somewhat improved messages in readnblk.f with regard to non-fatal reading errors.
+7) (IC) fixed a bug in the lhs for the scalar solver.  It was not accounting for the phi_{,t} term in the stabilization tangent.
+8) (IC) scalar can be run as Galerkin.  After 7) we have verified that scalar advection diffusion converges to requested solver tolerance (as a linear problem should)
+
+
+March 31, 2003
+Fixed a bug in compressible/itrdrv.f: the second argument to the final call of
+ Bflux was ac.  To get restart behavior consistent with continuous running, we
+ now pass acold instead.
+
+March 10, 2003
+Fixed a bug in common/settauw.f:  iLES.ge.0 was being used as a condition upon
+ which we use LES quantities for near-wall modeling.  Sadly, these quantities
+ are only present when iLES.gt.0, so this is the condition we adopt instead.
+
+
+
+v1_7_0 
+
+* new phastaIO libarary introduced
+* linux debugging support included
+
+Modified Files:
+--------------
+        Makefile
+        common/new_interface.c
+        common/phasta.cpp
+        common/readnblk.f
+        incompressible/itrdrv.f
+
+Removed Files:
+-------------
+        common/genbcb.f
+
+
+--------------------------------------------------------------------------
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES common/bctint.f common/blkdta.f common/common.h 
+CVS: 	common/common_c.h common/input.config common/input_fform.cpp 
+CVS: 	common/proces.f compressible/e3massl.f compressible/e3source.f 
+CVS: 	compressible/itrdrv.f common/new_interface.c
+CVS: ----------------------------------------------------------------------
+
+
+1) both Analytical and IC sponge enabled
+   changes to input.config include
+#     Body Force Option: Cooling Analytic  # ibody=4 => matflag(5,n)
+#     Body Force Option: Cooling Initial Condition  # ibody=5 => matflag(5,n)
+
+2) Prandtl number (and thereby conductivity) is set in input.config (or solver.inp)
+     Prandtl Number: 0.72  # Compressible code sets diffusivity with this
+
+
+3) Ability to set sponge on one equation at a time
+	Sponge for Continuity Equation : False
+        Sponge for x Momentum Equation : False
+        Sponge for y Momentum Equation : False
+        Sponge for z Momentum Equation : False
+        Sponge for Energy Equation : False
+}
+4) Upper limit set on sponge coefficient
+
+	Maximum Value of Sponge Parameter: 1.0
+
+5) Changes to io interface ANIL DESCRIBE ( Anil: no changes, memory leaks fixed , code
+   indented properly )
+   
+   link and unlink used instead of ln -s for making restart.latest.*
+
+June 21 2002 v1_6_3
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES Makefile Test_C/solver.inp common/bardmc.f 
+CVS: 	common/common.h common/common_c.h common/genbkb.f 
+CVS: 	common/genblk.f common/genscale.f common/genshp.f 
+CVS: 	common/input.config common/input_fform.cpp common/newshape.cpp 
+CVS: 	common/proces.f common/readnblk.f compressible/asigmr.f 
+CVS: 	compressible/bc3res.f compressible/e3.f compressible/e3conv.f 
+CVS: 	compressible/e3juel.f compressible/e3ls.f 
+CVS: 	compressible/e3wmlt.f compressible/elmgmr.f 
+CVS: 	compressible/elmmfg.f compressible/itrdrv.f 
+CVS: 	compressible/localt.f compressible/solgmr.f 
+CVS: 	compressible/solmfg.f incompressible/asbflx.f 
+CVS: 	incompressible/asigmr.f incompressible/e3.f 
+CVS: 	incompressible/e3b.f incompressible/e3dc.f 
+CVS: 	incompressible/e3ivar.f incompressible/e3res.f 
+CVS: 	incompressible/elmgmr.f incompressible/itrdrv.f 
+CVS: ----------------------------------------------------------------------
+
+Cleaned up a number of bugs and made it DEC compliant (mostly harmless "bugs")
+
+Modified the way scalar parameters are handled:
+  a) solver tolerance
+  b) number of solves per LHS formation
+  c) limiting
+
+In the incompressible code, temperature is also afforded the same type of descriptors
+
+The easiest way to understand the above two changes is to compare input.config of this version to an earliear version.
+
+To add the capability to change the number of solves per LHS formation to scalars required rewiring the use of iprec and ilhs back into the scalar routines. This was "cleaned up" throughout the code with iprec and ilhs flags being set at the itrdrv.f level with the exception of matrix free where it changes.
+
+Returned the option to use pressure outflow boundary condition for the compressible code in the "entropy variable W" form. Default is to simply zero res(:,1) but if you set
+      Entropy Form of Pressure Constraint on Weight Space: 1  # 1 turns it on
+you will get what the name implies (see bc3res.f).
+
+Fixed a bug that prevented you from solving the second scalar without solveing the first.  We were trying too hard to save memory when allocating the LHS matrix.
+
+Some of the changes above have "taken over" arrays previously used for iteration sequences.  As this capability has long been depricated, in this version forward it is officially pronounced DEAD.
+
+May 25 2002  tagged as v1_6_3Almost
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES common/input_fform.cpp compressible/getdiff.f 
+CVS: 	compressible/itrbc.f 
+
+Fixed substantial bug in itrbcSclr.f that was keeping axisymmetric RANS from converging
+
+Fixed solver tolerance error problem that was present when the incompressible code solved temperature equation.
+
+Fixed e3tau_nd.f bug with DC
+
+May 8 2002  tagged as v1_6_2
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	Test_C/solver.inp common/asbwmod.f common/aveprep.f 
+CVS: 	common/bardmc.f common/bctint.f common/common.h 
+CVS: 	common/common_c.h common/filtprep.f common/genblk.f 
+CVS: 	common/gendat.f common/genini.f common/gensvb.f common/getdmc.f 
+CVS: 	common/getstrl.f common/input.config common/input.f 
+CVS: 	common/input_fform.cpp common/pointer.f common/proces.f 
+CVS: 	common/readnblk.f common/rwvelb.f common/settauw.f 
+CVS: 	compressible/asiflx.f compressible/asigmr.f 
+CVS: 	compressible/asimfg.f compressible/asiq.f 
+CVS: 	compressible/asires.f compressible/bflux.f compressible/e3.f 
+CVS: 	compressible/e3b.f compressible/e3bvar.f compressible/e3ivar.f 
+CVS: 	compressible/e3q.f compressible/e3ql.f compressible/e3qvar.f 
+CVS: 	compressible/e3source.f compressible/e3tau.f 
+CVS: 	compressible/e3visc.f compressible/elmgmr.f 
+CVS: 	compressible/elmmfg.f compressible/getdiff.f 
+CVS: 	compressible/itrdrv.f compressible/itrres.f 
+CVS: 	compressible/solgmr.f incompressible/advLES.f 
+CVS: 	incompressible/asbflx.f incompressible/asbmfg.f 
+CVS: 	incompressible/asigmr.f incompressible/asiq.f 
+CVS: 	incompressible/bflux.f incompressible/e3.f 
+CVS: 	incompressible/e3b.f incompressible/e3bvar.f 
+CVS: 	incompressible/e3ivar.f incompressible/e3q.f 
+CVS: 	incompressible/e3ql.f incompressible/e3res.f 
+CVS: 	incompressible/e3source.f incompressible/e3stab.f 
+CVS: 	incompressible/elmgmr.f incompressible/filters.f 
+CVS: 	incompressible/itrdrv.f incompressible/rstatic.f 
+CVS: Added Files:
+CVS: 	incompressible/getdiff.f 
+CVS: Removed Files:
+CVS: 	compressible/scatnu.f incompressible/e3visc.f 
+CVS: 	incompressible/scatnu.f 
+CVS: ----------------------------------------------------------------------
+
+The above routines:
+
+1) added auto-sponge wherein a flow can be forced to remain close to
+   its initial condition by a cooling body force where the target flow
+   state is set to be the initial condition
+
+2) First cut at a DES (Detatched Eddy Simulation) model
+   added. Basically the code solves both RANS (Spalart-Allmaras) and any
+   of the LES models and uses a user specified edge length as a switch to
+   govern which local eddy viscosity to use.  This necessitated:
+
+	iturb replaced by iRANS and iLES which are both set when DES is the 
+              selected model.
+        eLES  the edge length set by "DES Edge Length" in solver.inp
+	blend of viscosities in getdiff
+
+3) First steps towards a common getDiff (e3visc.f removed from incompressible 
+   and renamed getDiff
+
+4) xmudml is now xmudmi (since it is at quadrature points not local nodes) 
+   and is now correctly dimensioned throughout code (along with strl)
+
+5) scatnu made its way to common
+
+6) gensvb had a bug that distributed piecewise constant boundary flux
+   data (what is provided by NSpre) to all nshlb shapefunction
+   coefficients (which means that quadratic and higher modes had this
+   value).  Now it is only distributed to vertices.
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	Makefile Test_C/solver.inp common/common.h common/common_c.h 
+CVS: 	common/input.config common/input_fform.cpp common/localy.f 
+CVS: 	common/proces.f compressible/e3bdg_nd.f compressible/e3ivar.f 
+CVS: 	compressible/itrdrv.f incompressible/asbflx.f 
+CVS: 	incompressible/asbmfg.f incompressible/asigmr.f 
+CVS: 	incompressible/asiq.f incompressible/e3.f incompressible/e3b.f 
+CVS: 	incompressible/e3bvar.f incompressible/e3ivar.f 
+CVS: 	incompressible/e3q.f incompressible/e3res.f 
+CVS: 	incompressible/e3source.f incompressible/e3stab.f 
+CVS: 	incompressible/e3visc.f incompressible/itrPC.f 
+CVS: 	incompressible/itrdrv.f 
+CVS: Added Files:
+CVS: 	common/elm3keps.f common/turbke.f 
+CVS: ----------------------------------------------------------------------
+
+The above routines changed to incorporate the k-epsilon model into the incompressible code.  Other minor fixes to a misplaced tdecay in input_fform.cpp.
+Note also that scalar solver tolerances must now be individually set (default for all is 1.0e-3) in both the compressible and incompressible code (see input.config). Incompressible scalars can also now be solved using the conservation restoring velocity. In this way if one can work with the advective form and still have conservative scalars (as is the case with flow).
+
+
+
+
+4/23/02
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	phSolver/CHANGES phSolver/Makefile phSolver/Test_C/solver.inp 
+CVS: 	phSolver/common/bctint.f phSolver/common/common.h 
+CVS: 	phSolver/common/common_c.h phSolver/common/input.config 
+CVS: 	phSolver/common/input_fform.cpp 
+CVS: 	phSolver/common/new_interface.c phSolver/common/rwvelb.f 
+CVS: 	phSolver/compressible/asigmr.f phSolver/compressible/asires.f 
+CVS: 	phSolver/compressible/au1mfg.f phSolver/compressible/au2mfg.f 
+CVS: 	phSolver/compressible/e3.f phSolver/compressible/e3ls.f 
+CVS: 	phSolver/compressible/e3source.f phSolver/compressible/e3tau.f 
+CVS: 	phSolver/compressible/e3visc.f phSolver/compressible/itrdrv.f 
+CVS: 	phSolver/compressible/itrfdi.f phSolver/compressible/itrres.f 
+CVS: 	phSolver/compressible/solmfg.f 
+CVS: 	phSolver/incompressible/asigmr.f 
+CVS: 	phSolver/incompressible/e3ivar.f 
+CVS: 	phSolver/incompressible/itrdrv.f 
+CVS: Added Files:
+CVS: 	phSolver/common/timedata.f phSolver/compressible/e3bdg_nd.f 
+CVS: 	phSolver/compressible/e3eig1.f phSolver/compressible/e3eig1.f~ 
+CVS: Removed Files:
+CVS: 	phSolver/compressible/e3cool.f 
+CVS: ----------------------------------------------------------------------
+
+Re-instated matrix tau and extended it to higher order cubics 
+Added timeseries through arbitrary points including higher order
+eliminated e3cool.f (this technique is in e3source now)
+
+Changed restart naming convention.  Now a soft link is created and updated for the last restart (restart.lastest.[1..nproc]).  This can be nice for script chained jobs at ncsa sinc tarred solution files can go one way while the restart needed to restart the calculation is put elsewhere (without having to know its name).  To disable this feature simply remove restart.latest.* and old behavior of looking for numstart.dat and reading the restart that it points to is recovered.
+
+To facilitate transitions from RANS to LES a flag was created to turn off source terms to scalar (turbulence model) equations.  
+A second flag was created to force the decay of the scalar fields according to
+
+s_{n+1}=df*s{n}
+
+where df is the decay factor.
+
+Source term for a harmonic oscillator has been added.
+
+Compressible code now also uses minIters and maxIters like ACUSIM
+solver. WARNING this may change regression test values unless you set
+minIters to be 1 as it was before. WARNING II note that the word ACUSIM has been removed from the key phrases
+
+     Minimum Number of Iterations per Nonlinear Iteration: 5  # minIters
+     Maximum Number of Iterations per Nonlinear Iteration: 50 # maxIter
+
+Rational for change is that you typically spent quite  bit of time forming the LHS, if you have a loose tolerance that is satified quickly you might as well solve it a bit better after investing the CPU time in forming a LHS.  This argument is diminished if you are able to reform LHS infrequently. Currently, only minIters is used in the compressible code but consolidation effort underway to address duplicity of this with nGMRES and Kspace.
+
+4/22/02
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES common/asithf.f common/common.h common/common_c.h 
+CVS: 	common/filtprep.f common/genshp.f common/getdmc.f 
+CVS: 	common/getstrl.f common/input.config common/input_fform.cpp 
+CVS: 	common/proces.f compressible/asbflx.f compressible/asbmfg.f 
+CVS: 	compressible/asbres.f compressible/asigmr.f compressible/e3.f 
+CVS: 	compressible/e3dc.f compressible/e3ivar.f compressible/e3q.f 
+CVS: 	compressible/e3source.f compressible/getdiff.f 
+CVS: 	compressible/itrbc.f incompressible/advLES.f 
+CVS: 	incompressible/asbmfg.f incompressible/asigmr.f 
+CVS: 	incompressible/asiq.f incompressible/e3.f incompressible/e3b.f 
+CVS: 	incompressible/e3dc.f incompressible/e3ivar.f 
+CVS: 	incompressible/e3lhs.f incompressible/e3q.f 
+CVS: 	incompressible/e3ql.f incompressible/e3qvar.f 
+CVS: 	incompressible/e3res.f incompressible/e3source.f 
+CVS: 	incompressible/e3stab.f incompressible/e3visc.f 
+CVS: 	incompressible/elmgmr.f incompressible/itrdrv.f 
+CVS: 	incompressible/solfar.f 
+CVS: Added Files:
+CVS: 	common/solvecon.f 
+CVS: Removed Files:
+CVS: 	compressible/solvecon.f 
+CVS: ----------------------------------------------------------------------
+
+Significant memory savings for dynamic model
+   introduced maxnint to common (it tells the maximum numberof integration 
+   points FOR A SPECIFIC RUN which allows savings of memory)
+split turbvar block to avoid strange behavior
+ivart was still being used, now iconvflow is used correctly in its place
+Major cleanup of two phase flow work including addition of surface tension to incompressible flow
+
+
+bugfixes
+shapefunctions mis-dimensioned in e3q
+MAXSH=32 NOT 125
+several asb* and e3q routines had benign misdimensioning problems (benign because array was not used).
+bugs in DC lhs
+
+4/18/02
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in .
+CVS: 
+CVS: Modified Files:
+CVS: 	CHANGES Makefile common/asadj.f common/bardmc.f 
+CVS: 	common/bctint.f common/fillsparse.f common/genadj.f 
+CVS: 	common/genbc.f common/gendat.f common/genini.f 
+CVS: 	common/getIntPnts.c common/getdmc.f common/proces.f 
+CVS: 	common/settauw.f common/symtripyr.c common/symwdg.c 
+CVS: 	compressible/bc3lhs.f compressible/e3.f compressible/elmgmr.f 
+CVS: 	compressible/get_h.c compressible/gltet.c 
+CVS: 	compressible/itrdrv.f compressible/solvecon.f 
+CVS: 	incompressible/advLES.f incompressible/bc3lhs.f 
+CVS: 	incompressible/e3res.f incompressible/elmgmr.f 
+CVS: 	incompressible/forces.f incompressible/itrdrv.f 
+CVS: Added Files:
+CVS: 	common/qpbc.f common/rerun_check.f 
+CVS: Removed Files:
+CVS: 	compressible/qpbc.f incompressible/qpbc.f 
+CVS: ----------------------------------------------------------------------
+Bug fixes
+1) locblkb bug in settauw.f
+2) cubic quadrature rule fixed
+3) qpbc moved to common
+4) removed the inline absolute values on pointers to ien (this confuses people at the very least and may have been a performance hit in fortran90)
+
+KAPL REPORTED CHANGES
+ K1) bardmc.f and getdmc.f  nsons(nshg)->nsons(nfath)
+ K2) x and shape functions passed into BCint.f
+ K3) genbc.f now uses nenl (properly) instead of nen
+ K4) genini gets shape functions (for K2)
+ K5) dec-> decalp for ifdefing in c routines
+ K6) 1 point quadrature added for wedges
+ K7) extra arrays removed from solvecon.f
+ K8) rotating frame added back to incompressible code
+ K9) surface forces added to forces.f
+K10) itrdrv now checks at each step to see if job should be stopped
+
+
+11/15/01
+
+Fixed a bug that was preventing us from using the temporally averaged
+dynamic model without wall functions. rwvelb.f now writes
+bar.<stepno>.<procno> instead of velb.<stepno>.<procno>.  In that file
+you may find the y field averaged over the past runs, the dynamic
+model numerater and denominator coefficient or both.
+
+This commit also brought in changes to the sponge as needed for the
+jet simulation (from 1 diameter to 1.5 diameters downstream).  Changes
+only in e3source.f
+
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in common
+CVS: 
+CVS: Modified Files:
+CVS: 	Cinput.cpp GaussLegendreSimplex.c asbnabi.f asithf.f common.h 
+CVS: 	common_c.h dtn.f filtprep.f genbkb.f gendat.f genibc.f 
+CVS: 	getvel.f input.config input_fform.cpp new_interface.c 
+CVS: 	phasta.cpp proces.f settauw.f shp6w.c shphex.c shptet.c 
+CVS: Added Files:
+CVS: 	bardmc.f cmass.f getdmc.f getstrl.f vec_func.h 
+CVS: Removed Files:
+CVS: 	les.h 
+CVS: ----------------------------------------------------------------------
+
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in compressible
+CVS: 
+CVS: Modified Files:
+CVS: 	bc3per.f e3.f e3b.f e3bvar.f e3cool.f e3dc.f e3ivar.f e3mtrx.f 
+CVS: 	e3source.f e3tau.f elmgmr.f elmmfg.f get_h.c getthm.f itrbc.f 
+CVS: 	itrdrv.f qpbc.f rstat.f solgmr.f 
+CVS: Removed Files:
+CVS: 	bardmc.f getdmc.f getstrl.f vec_func.h 
+CVS: ----------------------------------------------------------------------
+
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in incompressible
+CVS: 
+CVS: Modified Files:
+CVS: 	bflux.f e3b.f elmgmr.f itrdrv.f qpbc.f scatnu.f usr.c 
+CVS: Removed Files:
+CVS: 	Input.h auxmpi.h bardmc.f getdmc.f getstrl.f advLES.f filters.f 
+CVS: ----------------------------------------------------------------------
+
+
+not yet tagged changes 
+
+commu can now handle multiple communications per processor boundary
+(bi-directional).
+
+parallel scalars now work (for sgi only as it was a bug in the solver
+library and other architectures have not been updated yet).
+appropriate changes were also made to file usr.c, routine myflesnew
+
+
+STEP sequence size removed from input.config since it is calculated now
+
+CVS: ----------------------------------------------------------------------
+CVS: Enter Log.  Lines beginning with `CVS:' are removed automatically
+CVS: 
+CVS: Committing in common
+CVS: 
+CVS: Modified Files:
+CVS: 	commu.f input.config 
+CVS: ----------------------------------------------------------------------
+CVS: Committing in incompressible
+CVS: 
+CVS: Modified Files:
+CVS: 	les.h usr.c 
+CVS: ----------------------------------------------------------------------
+
+For previous changes see phSolverI v1_6_0 and phSolverC v1_5_3

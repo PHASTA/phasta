@@ -1,0 +1,21 @@
+project(M2N)
+cmake_minimum_required(VERSION 2.8)
+enable_language(Fortran)
+
+find_package(MPI REQUIRED)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include(FortranCInterface)
+FortranCInterface_VERIFY(CXX)
+FortranCInterface_HEADER(FCMangle.h)
+#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+if(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -qstrict -qnullterm -qfixed=132")
+endif(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+
+add_definitions(-DMPICH_SKIP_MPICXX)
+add_definitions(-DOMPI_SKIP_MPICXX=1)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${MPI_C_INCLUDE_PATH})
+include_directories(${MPI_Fortran_INCLUDE_PATH})
+add_subdirectory(src)

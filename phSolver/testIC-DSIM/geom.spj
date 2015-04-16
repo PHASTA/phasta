@@ -1,0 +1,179 @@
+AttDBVersion 5
+VisSimEditor
+1 1 0 11 13
+4 0 2
+./geom.sdm
+discrete
+
+0
+0
+0
+1 6 13
+
+initial pressure
+
+0
+0
+0 3 0
+2 -1
+
+1
+0
+1 6 12
+
+initial velocity
+
+0
+0
+1 3 0
+7 3
+
+2
+2 -1
+
+12
+1.5*(1-x2^2)
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+1 6 11
+0
+initial temperature
+
+0
+0
+0 3 0
+2 -1
+
+1
+0
+1 6 10
+zero
+traction vector
+
+0
+0
+1 3 0
+7 3
+
+2
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+2 -1
+
+1
+0
+1 6 9
+exit pressure
+natural pressure
+
+0
+0
+0 3 0
+2 -1
+
+1
+0
+1 6 8
+
+vector direction
+
+0
+0
+1 3 0
+7 3
+
+2
+2 1
+
+0
+2 1
+
+0
+2 1
+
+1
+1 3 7
+
+vector magnitude
+
+0
+0
+2 -1
+
+1
+0
+1 7 6
+wall
+comp1
+
+0
+2 7 8
+1 6 5
+
+vector direction
+
+0
+0
+1 3 0
+7 3
+
+2
+2 1
+
+1
+2 1
+
+0
+2 1
+
+0
+1 3 4
+
+vector magnitude
+
+0
+0
+2 -1
+
+12
+1.5*(1-x2^2)
+1 7 3
+inflow
+comp3
+
+0
+2 4 5
+3 1 1
+test_case
+problem definition
+cfd
+0
+7 3 6 9 10 11 12 13
+2
+7 7
+7
+1 9 0 1 13
+6
+1 9 0 1 12
+5
+1 9 0 1 11
+4
+1 2 5 1 10
+3
+1 2 5 1 9
+2
+2 2 1 2 0 1 6
+1
+3 2 4 2 2 2 3 1 3

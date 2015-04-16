@@ -1,0 +1,21 @@
+5 # Number of restart files to read
+1 # Accumulate error field? (0/1)
+2 # Accumulate phase_average field? (0/n phase average fields)
+1 # copy vorticity field? (0/1)
+1 # copy dwal? (0/1)
+104 4
+108 4
+112 4
+116 4
+120 4
+ 
+### What follows is a short manual and is not read by AcuStat ###
+This Script is primary used to accumulate the statistics from the ybar field and write the solution from the last time step.
+This script can also handle additional fiels. In summary, it writes the following fields: 
+        1) solution of the last time step;
+        2) accumulated ybar field;
+        3) If requested (optional), accumulated error field.
+        4) If requested (optional), accumulated phase average fields.
+        5) If requested (optional), vorticity field (from the last time step).
+        6) If requested (optional), dwal field (from the last time step).
+The next lines contain the time steps series for restart files along with the associated number of time steps inside the ybar, error and yphavg fields

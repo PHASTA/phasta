@@ -1,0 +1,93 @@
+# PHASTAC Version 1.0 Input File
+#
+#  Basic format is
+#
+#    Key Phrase  :  Acceptable Value (integer, double, logical, or phrase
+#                                     list of integers, list of doubles )
+#
+
+# To find the Key Phrases, first look in input.config.  There you will
+# find the default values for everything that is allowed to have a
+# default. Some things are not allowed to default and must be entered
+# in this file.  In most cases, the acceptable inputs also appear in
+# the input.config file. To add acceptable inputs you should only have
+# to modify:
+
+#     input_fform.cpp :which matches the string and translates it to the 
+#                    parameter change. If it is a new parameter, you must
+#                    modify:
+#
+#                      common.h (to carry new parameter through code)
+#                      common_c.h (to carry the parameter from C to Fortran)
+#     
+#
+# In case it is not clear by now, # allows you to comment either from the 
+# beginning of the line or to the right as shown below.
+#
+#SOLUTION CONTROL 
+#{               
+     Equation of State :  Compressible
+     Number of Timesteps:  10        #replaces nsteps(1) (ntseq wired =1)
+     Time Step Size: 1.0               # Delt(1)
+     Turbulence Model:  No-Model       #  No-Model iturb=0, RANS =-1  LES=1 #}
+
+#MATERIAL PROPERTIES
+#{
+     Viscosity: 1.0e-2      # fills datmat (2 values REQUIRED if iLset=1)
+#}
+
+OUTPUT CONTROL
+{
+#     Number of Force Surfaces: 3
+#     Surface ID's for Force Calculation: 1 2 3
+     Number of Timesteps between Restarts: 10 #replaces nout/ntout
+     Print Statistics: True          #False=> ioform=1, True=> ioform=2
+#     Print Error Indicators: True       # F ierrcalc = 0, T ierrcalc = 1 
+}
+
+#LINEAR SOLVER
+#{
+#     Solver Type: GMRES Matrix Free
+#     Solver Type: GMRES EBE
+     Number of Solves per Left-hand-side Formation: 2  #nupdat/LHSupd(1)
+     ACUSIM Verbosity Level               : 0   #iverbose
+     Tolerance on Momentum Equations: 1.0e-4                   # epstol(1)
+     Tolerance on ACUSIM Pressure Projection: 1.0e-2           # prestol 
+#}
+
+#DISCRETIZATION CONTROL
+#{
+#    Entropy Form of Pressure Constraint on Weight Space: 1  # 1 turns it on
+     Basis Function Order: 1                 # ipord
+     Time Integration Rule: Second Order    # Second Order sets rinf next
+     Time Integration Rho Infinity: -1     # rinf(1) Only used for 2nd order
+     Include Viscous Correction in Stabilization: False    # if p=1 idiff=1
+                                                           # if p=2 idiff=2  
+     Quadrature Rule on Interior: 2           #int(1)
+     Quadrature Rule on Boundary: 2           #intb(1)
+     Lumped Mass Fraction on Left-hand-side: 1.0           # flmpl
+     Lumped Mass Fraction on Right-hand-side: 1.0          # flmpr
+#     Tau Matrix: Matrix-Mallet               #itau=1
+#     Discontinuity Capturing:  DC-mallet      #Sets IDC to 1
+     Tau Time Constant: 2.                      #dtsfct
+     Tau C Scale Factor: 1                    # taucfct  best value depends  #}
+
+TURBULENCE MODELING PARAMETERS  
+{ 
+#	Dynamic Model Type : Standard   # adds zero to iturb       LES
+#        Filter Integration Rule: 1  #ifrule adds ifrule-1 to iturb LES
+#	Turbulence Wall Model Type: Effective Viscosity  #itwmod=2 RANSorLES
+3	Velocity Averaging Steps : 500. # wtavei= 1/this           RANSorLES
+3	Dynamic Model Averaging Steps : 500. # dtavei= 1/this      LES
+3	Filter Width Ratio        : 6.  # fwr1                     LES
+ 	}
+#
+#STEP SEQUENCE 
+#{
+      Step Construction  : 0 1    # this is the standard two iteration
+#}
+
+
+
+
+
