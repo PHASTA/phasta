@@ -17,6 +17,12 @@
 #define Write_PhAvg2  FortranCInterface_GLOBAL_(write_phavg2,WRITE_PHAVG2)
 #define Write_d2wall  FortranCInterface_GLOBAL_(write_d2wall,WRITE_D2WALL)
 //MR CHANGE END
+//NM CHANGE BEGIN
+#define Write_Debug   FortranCInterface_GLOBAL_(write_debug,WRITE_DEBUG)
+#define POSIX 1
+#define SYNCIO 2
+#define WRITE_DEBUG_OUTPUT_TYPE POSIX
+//NM CHANGE END
 #define read_d2wall FortranCInterface_GLOBAL_(read_d2wall,READ_D2WALL)
 
 extern char phasta_iotype[80];
@@ -61,6 +67,16 @@ Write_Field(  int *pid,
               int* nshg,
               int* numvars,
               int* stepno);
+
+void
+Write_Debug(int *pid,			//ramk of mpi process
+			char* filetag,		//Name of the file to write. This will be appended with %d.%d to track step and processor. WARNING: this must be null terminated. 
+			char* fieldtag,		//name of field to write data into. WARNING: this must be null terminated. When calling from Fortran, use //char(0) 
+			void* array,		//data array to write to file
+			char* arraytype,	//arraytype[0] == 'd': double, arraytype[0] == 'i': int
+			int* nshg,			//total number of shape functions
+			int* numvars,		//number of variables per state (i.e. size of the matrix in dimension 2)
+			int* stepno);		//step number
 
 void
 Write_Field(  int *pid,

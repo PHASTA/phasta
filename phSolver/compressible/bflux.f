@@ -38,7 +38,7 @@ c
 c Zdenek Johan, Summer 1991.
 c----------------------------------------------------------------------
 c
-	use pointer_data
+        use pointer_data
 c
         include "common.h"
 c
@@ -56,8 +56,8 @@ c
      &            q(nshg,ndof),             qq(nshg,8),
      &            ilwork(nlwork)
 c
-        character*20 fname1,                 fname2,
-     &               fmt1,                   fmt2
+        character(len=20) fname1,           fname2,
+     &                    fmt1,             fmt2
 c
 c.... ************************>>  Restart  <<***************************
 c

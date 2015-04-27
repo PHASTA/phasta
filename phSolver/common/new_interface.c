@@ -227,7 +227,7 @@ void countfieldstowriterestart()
   if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
 
     //projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)
-    nfields = nfields +2;
+    if(matdat.matflg[0][0]==-1) nfields = nfields +2;
 
     //if Print Error Indicators = true (call write_error in itrdrv)
     if(turbvar.ierrcalc == 1){
@@ -870,6 +870,109 @@ Write_Displ(  int* pid,
 }
 
 void
+Write_Debug(	int *pid,			//ramk of mpi process
+				char* filetag,		//Name of the file to write. This will be appended with %d.%d to track step and processor. WARNING: this must be null terminated. 
+				char* fieldtag,		//name of field to write data into. WARNING: this must be null terminated. When calling from Fortran, use //char(0) 
+				void* array,		//data array to write to file
+				char* arraytype,	//arraytype[0] == 'd': double, arraytype[0] == 'i': int
+				int* nshg,			//total number of shape functions
+				int* numvars,		//number of variables per state (i.e. size of the matrix in dimension 2)
+				int* stepno) {		//step number
+//Wites the field in array to a set of files of the form [filetag].[time step].[file number]. 
+//
+//WARNING:  Both filetag and fieldtag must be null terminated. Fortran does not normally do this when storing strings. 
+//          To get around this, the string MUST be concatenated with char(0) before or in the function call, e.g. 
+//          Write_FieldDebug(myrank, 'foo'//char(0) ...)
+//
+  
+//	int irstou;
+//	int magic_number = 362436;
+//	int* mptr = &magic_number;
+//	double version=0.0;
+//	char fmode[10];
+//	strcpy(fmode, "write");
+//    memset((void*)filename,   0, 255);	//unnecessary with if arrays are zeroed at allocation using 
+//    memset((void*)fieldtag_s, 0, 255);	// name[size] = {0}
+
+    int nfields = 1; // outpar.nsynciofieldswriterestart;
+    int numparts = workfc.numpe;
+    int irank = *pid;
+    int nprocs = workfc.numpe;
+#if(WRITE_DEBUG_OUTPUT_TYPE == POSIX)		//set in new_interface.h
+	int nfiles = nprocs;
+#elif(WRITE_DEBUG_OUTPUT_TYPE == SYNCIO)
+    int nfiles = outpar.nsynciofiles;
+#endif
+
+    // Calculate number of parts each  proc deal with and where it start and end ...
+    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
+    int nppf = numparts/nfiles;
+    int GPID;
+    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
+//	int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
+
+	int magic_number = 362436;
+	int* mptr = &magic_number;
+	int isize, nitems;
+	int iarray[10];
+
+    char filename[255] = {0}, fieldtag_s[255] = {0};
+	sprintf(filename, "%s.%d.%d",filetag, *stepno, (int)(irank/(nprocs/nfiles))+1 );
+
+    char datatype[10];
+    if(arraytype[0] == 'i')		
+		strcpy(datatype,"int");
+    else 								// default is double
+		strcpy(datatype,"double");
+
+//    initphmpiio(&nfields, &nppf, &nfiles, &f_descriptor, "write");
+	if (irank == 0) 
+		printf("Filename is %s \n",filename);
+    openfile(filename, "write", &f_descriptor);
+
+    /////////////////////////////// Start of writing using new-lib ////////////////////////////
+
+    if(irank == 0)
+		printf("\nStarting to write the field '%s'\n", fieldtag);
+
+	int i;
+    for (i = 0; i < nppp; i++  ) {			//loop over all prarts per processor
+        GPID = startpart + i;
+
+        // Write solution field ...
+#if(WRITE_DEBUG_OUTPUT_TYPE == POSIX)
+		//write the byte order magic number before the main field
+		isize = 1;
+		nitems = 1;
+		iarray[ 0 ] = 1;
+		writeheader(    &f_descriptor, "byteorder magic number ", (void*)iarray, &nitems, &isize, "integer", phasta_iotype );
+		writedatablock( &f_descriptor, "byteorder magic number ", (void*)mptr, &nitems, "integer", phasta_iotype );
+
+		sprintf(fieldtag_s, "%s", fieldtag);
+#elif(WRITE_DEBUG_OUTPUT_TYPE == SYNCIO)
+        sprintf(fieldtag_s, "%s@%d",fieldtag, GPID);
+#endif
+
+        isize = (*nshg)*(*numvars);
+        nitems = 3;
+        iarray[ 0 ] = (*nshg);
+        iarray[ 1 ] = (*numvars);
+        iarray[ 2 ] = (*stepno);
+
+        writeheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, &isize, datatype, phasta_iotype);
+//		nitems = (*nshg)*(*numvars);
+        writedatablock( &f_descriptor, fieldtag_s, array, &isize, datatype, phasta_iotype );
+    }
+
+    closefile(&f_descriptor, "write");
+//	finalizephmpiio(&f_descriptor);
+
+	if (irank == 0) 
+		printf("Finish writting the field '%s'! \n\n", fieldtag);
+}
+//N Mati change end
+
+void
 Write_Field(  int *pid,
               char* filemode,
               char* fieldtag,
@@ -925,21 +1028,16 @@ Write_Field(  int *pid,
 */
     /////////////////////////////// Start of writing using new-lib ////////////////////////////
 
-    int nfiles;
-    int nfields;
-    int numparts;
-    int irank;
-    int nprocs;
+    int nfiles = outpar.nsynciofiles;
+    int nfields = outpar.nsynciofieldswriterestart;
+    int numparts = workfc.numpe;
+    int irank = *pid;
+    int nprocs = workfc.numpe;
 
 //    unsigned long long timer_start;
 //    unsigned long long timer_end;
 //    double time_span;
 
-    nfiles = outpar.nsynciofiles;
-    nfields = outpar.nsynciofieldswriterestart;
-    numparts = workfc.numpe;
-    irank = *pid; //workfc.myrank;
-    nprocs = workfc.numpe;
 
     int nppf = numparts/nfiles;
     int GPID;
@@ -959,7 +1057,7 @@ Write_Field(  int *pid,
     if(*pid==0) {
 //      printf("\n*****************************\n");
       printf("\n");
-      printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldlabel);
+      printf("The %d/%d the field to be written is '%s'\n",field_flag,nfields,fieldtag);
     }
 
     sprintf(filename,"restart-dat.%d.%d",*stepno,((int)(irank/(nprocs/nfiles))+1));
@@ -1327,7 +1425,7 @@ Write_PhAvg2( int* pid,
     if(*pid==0) {
 //      printf("\n*****************************\n");
       printf("\n");
-      printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldlabel);
+      printf("The %d/%d the field to be written is '%s'\n",field_flag,nfields,fieldlabel);
     }
 
     sprintf(filename,"restart-dat.%d.%d",*stepno,((int)(irank/(nprocs/nfiles))+1));

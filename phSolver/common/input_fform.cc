@@ -10,11 +10,21 @@
 #include "Input.h"
 #include "common_c.h"
 
+#include <FCMangle.h>
+#define BC_setVars FortranCInterface_MODULE_(blowercontrol, bc_setvars,		BLOWERCONTROL, BC_SETVARS)
+
 using namespace std; //::cout;
 void print_error_code(int ierr);
 int input_fform(char inpfname[]);
 int SONFATH=0;
 extern "C" char phasta_iotype[80];
+//extern "C"
+extern "C" void BC_setVars(		int*, 		int*, 		
+								int*,		int*, 
+								double*, 	double*,	double*,
+								double*, 	double*,	double*,
+								double*, 	double*,	double*, 
+								double*		);
 
 extern "C" {
 
@@ -28,9 +38,10 @@ int input_fform(char inpfname[])
 {
 
   int ierr = 0 ;
-  int i,j;
+  int i,j,n_tmp;
   char* path_to_config = 0 ;
   char complete_filename[256];
+  vector<int> ivec;
 
   try {
     // get the input file stream
@@ -88,35 +99,110 @@ int input_fform(char inpfname[])
         amgvarr.ramg_chebyratio       = inp.GetValue("AMG Chebyshev Eigenvalue ratio");
 
         amgvari.mlsdeg = inp.GetValue("AMG MLS Degree");
-        amgvari.iamg_reduce = inp.GetValue("AMG Run Reduced Serial");
+		amgvari.iamg_reduce = inp.GetValue("AMG Run Reduced Serial");
 	}	
 #endif    
 
 /////////////////////////////chen Sep 25 2009  Flow Control Parameters ////////
 // Take BC from IC at inlet
-      ctrlvari.iI2Binlet = (int)inp.GetValue("Take BC from IC at Inlet");
-      if(ctrlvari.iI2Binlet > 0 )
-        {
-         ctrlvar.inletVelX = inp.GetValue("Inlet Bulk x Velocity");
-        }
+	ctrlvari.iI2Binlet = (int)inp.GetValue("Take BC from IC at Inlet");
+	if(ctrlvari.iI2Binlet > 0 )
+		ctrlvar.inletVelX = inp.GetValue("Inlet Bulk x Velocity");
+	
 // set uniform outlet pressure
-      ctrlvari.isetOutPres = (int)inp.GetValue("Set Outlet Pressure");
-      if(ctrlvari.isetOutPres > 0 )
-        {
-         ctrlvar.outPres1 = inp.GetValue("Uniform Outlet Pressure");
-        }
+	//	ctrlvari.isetOutPres = (int)inp.GetValue("Set Outlet Pressure");
+	//	if(ctrlvari.isetOutPres > 0 )
+
+    ductvari.isetOutletID  = (int)inp.GetValue("Duct Outlet ID");
+    if(ductvari.isetOutletID > 0 )
+		ctrlvar.outPres1 = inp.GetValue("Duct Uniform Outlet Pressure");
+	
+// Override Eddy Vicosity IC and BC
+	ductvari.isetEV_IC_BC=(int)inp.GetValue("Override Eddy Viscosity");
+	if(ductvari.isetEV_IC_BC==1){
+		ductvar.evis_IC_BC=inp.GetValue("Eddy Viscosity Value for Override");
+	}
+
+	if(ductvari.isetEVramp = (int)inp.GetValue("Specify Initial Eddy Viscosity Ramp")){
+		ductvar.EVrampXmin	=inp.GetValue("Initial Scalar 1 ramp start");
+		ductvar.EVrampXmax	=inp.GetValue("Initial Scalar 1 ramp end");
+		ductvar.EVrampMax	=inp.GetValue("Initial Scalar 1 high");
+		ductvar.EVrampMin   =inp.GetValue("Initial Scalar 1 low");
+	}
+
 // set initial condition
-      ctrlvari.isetInitial=(int)inp.GetValue("Specify Initial Conditions");
-      if(ctrlvari.isetInitial==1)
-        {
-         ctrlvar.xvel_ini=inp.GetValue("Initial X Velocity");
-         ctrlvar.yvel_ini=inp.GetValue("Initial Y Velocity");
-         ctrlvar.zvel_ini=inp.GetValue("Initial Z Velocity");
-         ctrlvar.temp_ini=inp.GetValue("Initial Temp");
-         ctrlvar.pres_ini=inp.GetValue("Initial Pressure");
-         ctrlvar.evis_ini=inp.GetValue("Initial Scalar 1");
-        }
+	ctrlvari.isetInitial=(int)inp.GetValue("Specify Initial Conditions");
+	if(ctrlvari.isetInitial==1){
+		ctrlvar.xvel_ini = inp.GetValue("Initial X Velocity");
+		ctrlvar.yvel_ini = inp.GetValue("Initial Y Velocity");
+		ctrlvar.zvel_ini = inp.GetValue("Initial Z Velocity");
+		ctrlvar.temp_ini = inp.GetValue("Initial Temp");
+		ctrlvar.pres_ini = inp.GetValue("Initial Pressure");
+		ctrlvar.evis_ini = inp.GetValue("Initial Scalar 1");
+	}
+
+    
+
       
+//initial condition for duct
+	ductvari.isetInitial_Duct=(int)inp.GetValue("Set Initial Condition for Duct");
+//inlet condition for duct
+	ductvari.isetInlet_Duct=(int)inp.GetValue("Set Inlet Condition for Duct");
+
+    //surfID, t_cycle, t_riseTime, t_fallTime, t_fullOn, vmax, vmin, T, nu, deltaBL, enable
+    n_tmp = (int) inp.GetValue("Number of Blower Surfaces");	//BC_setNBlower(&n_tmp);
+
+	if(n_tmp > 0){
+		vector<int>    *ivec[3];
+		vector<double> *dvec[10];
+
+		for(i = 0; i < 3; i++)	ivec[i] = new vector<int>;
+		for(i = 0; i < 10; i++)	dvec[i] = new vector<double>;
+		
+        *ivec[0] = inp.GetValue("Blower Mode");
+		*ivec[1] = inp.GetValue("Blower Surface ID");	
+		*ivec[2] = inp.GetValue("Blower Enable");
+		
+		*dvec[0] = inp.GetValue("Blower Cycle Period");
+        *dvec[1] = inp.GetValue("Blower Full On Period");
+		*dvec[2] = inp.GetValue("Blower Rise Time");
+		*dvec[3] = inp.GetValue("Blower Fall Time");
+        *dvec[4] = inp.GetValue("Blower Maximum u_normal");
+        *dvec[5] = inp.GetValue("Blower Minimum u_normal");
+		*dvec[6] = inp.GetValue("Blower Temperature");	
+		*dvec[7] = inp.GetValue("Blower Eddy Viscosity");
+		*dvec[8] = inp.GetValue("Blower BL Thickness");		
+		*dvec[9] = inp.GetValue("Blower BL Thickness (scalar)");
+		
+		BC_setVars(	&n_tmp, 		
+					&(*ivec[0])[0], 	//mode	
+					&(*ivec[1])[0], 	//surfID
+					&(*ivec[2])[0],		//enable
+					&(*dvec[0])[0],		//t_cycle
+					&(*dvec[1])[0],		//t_fullOn
+					&(*dvec[2])[0],		//t_riseTime
+					&(*dvec[3])[0],		//t_fallTime
+				 	&(*dvec[4])[0],		//vmax
+					&(*dvec[5])[0],		//vmin
+					&(*dvec[6])[0],		//T
+					&(*dvec[7])[0],		//nu
+				 	&(*dvec[8])[0],		//delta BL velocity
+					&(*dvec[9])[0]	);	//delta BL scalar
+
+	}
+        
+//suction condition for duct
+	ductvari.isetSuctionID_Duct=(int)inp.GetValue("Duct Set Suction Surface ID");        //suction patch surface IDs
+	if(ductvari.isetSuctionID_Duct > 0){
+		ductvari.suctionVbottom     = inp.GetValue("Duct Bottom Suction Normal Velocity");
+		ductvari.suctionVside_lower = inp.GetValue("Duct Lower Side Suction Normal Velocity");
+		ductvari.suctionVside_upper = inp.GetValue("Duct Upper Side Surface Normal Velocity");
+		ductvari.suctionVtop        = inp.GetValue("Duct Top Surface Normal Velocity");	
+	}
+
+//  duct geometry type      
+	ductvari.iDuctgeometryType = (int)inp.GetValue("Duct Geometry Type");
+
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -595,6 +681,8 @@ int input_fform(char inpfname[])
     genpar.dtsfct = inp.GetValue("Tau Time Constant");
     genpar.taucfct = inp.GetValue("Tau C Scale Factor");
 
+	genpar.iLHScond = inp.GetValue("LHS BC heat flux enable");
+
     // FLOW DISCONTINUITY CAPTURING
 
       if((string)inp.GetValue("Discontinuity Capturing") == "Off") solpar.iDC = 0;
@@ -627,9 +715,11 @@ int input_fform(char inpfname[])
       }
     else { genpar.idiff = 0;}
 
+// ------ Only For duct S duct Project ------------------------------------------------
     genpar.irampViscOutlet = (int)inp.GetValue("Ramp Up Viscosity Near Outlet");
 
     genpar.istretchOutlet = (int)inp.GetValue("Stretch X Coordinate Near Outlet");
+// -----------------------------------------------------------------------------------
 
     genpar.iremoveStabTimeTerm = (int)inp.GetValue("Remove Time Term from Stabilization");
 
@@ -645,7 +735,7 @@ int input_fform(char inpfname[])
     genpar.ibksiz = inp.GetValue("Number of Elements Per Block");
 
     ((string)inp.GetValue("Turn Off Source Terms for Scalars") 
-     == "True")? sclrs.nosource=1:sclrs.nosource=0;
+         == "True") ? sclrs.nosource = 1 : sclrs.nosource = 0;
     sclrs.tdecay=inp.GetValue("Decay Multiplier for Scalars");
 
     // TURBULENCE MODELING PARAMETER
@@ -743,7 +833,7 @@ int input_fform(char inpfname[])
       nomodule.bcttimescale = inp.GetValue("BCT Time Scale Factor");
 
     nomodule.ipvsq=0;
-    if(nomodule.icardio = inp.GetValue("Number of Coupled Surfaces")){
+    if( (nomodule.icardio = inp.GetValue("Number of Coupled Surfaces")) ){
       if ( nomodule.icardio > MAXSURF ) {
         cout << "Number of Coupled Surfaces > MAXSURF \n";
         exit(1);
@@ -757,7 +847,7 @@ int input_fform(char inpfname[])
       if ( (string)inp.GetValue("Pressure Coupling") == "P-Implicit") 
         nomodule.ipvsq=3;
 
-      if(nomodule.numResistSrfs=inp.GetValue("Number of Resistance Surfaces")){
+      if( (nomodule.numResistSrfs=inp.GetValue("Number of Resistance Surfaces")) ){
           ivec = inp.GetValue("List of Resistance Surfaces");          
           for(i=0;i<MAXSURF+1; i++) nomodule.nsrflistResist[i] = 0;
           for(i=0; i< nomodule.numResistSrfs; i++){
@@ -768,7 +858,7 @@ int input_fform(char inpfname[])
           for(i =0; i< nomodule.numResistSrfs ; i++) nomodule.ValueListResist[i+1] = vec[i];
           vec.erase(vec.begin(),vec.end());
       }
-      if(nomodule.numImpSrfs=inp.GetValue("Number of Impedance Surfaces")){
+      if( (nomodule.numImpSrfs=inp.GetValue("Number of Impedance Surfaces")) ){
           ivec = inp.GetValue("List of Impedance Surfaces");
           for(i=0;i<MAXSURF+1; i++) nomodule.nsrflistImp[i] = 0;
           for(i=0; i< nomodule.numImpSrfs; i++){
@@ -777,7 +867,7 @@ int input_fform(char inpfname[])
           if ( (string)inp.GetValue("Impedance From File") == "True")
               nomodule.impfile = 1; else nomodule.impfile = 0;
       }
-      if(nomodule.numRCRSrfs=inp.GetValue("Number of RCR Surfaces")){
+      if( (nomodule.numRCRSrfs=inp.GetValue("Number of RCR Surfaces")) ){
           ivec = inp.GetValue("List of RCR Surfaces");
           for(i=0;i<MAXSURF+1; i++) nomodule.nsrflistRCR[i] = 0;
           for(i=0; i< nomodule.numRCRSrfs; i++){

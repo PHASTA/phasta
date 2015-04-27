@@ -9,7 +9,7 @@ c
 c input:
 c  global (nshg,n)             : global array
 c  rlocal (npro,n,nenl)         : local array
-c  ien    (npro,nshape)      : nodal connectivity
+c  ien    (npro,nshl)      : nodal connectivity
 c  n                            : number of d.o.f.'s to be copied
 c  code                         : the transfer code
 c                                  .eq. 'gather  ', from global to local
@@ -22,8 +22,8 @@ c----------------------------------------------------------------------
 c
         include "common.h"
 
-        dimension global(nshg,n),           rlocal(npro,n,nshape),
-     &            ien(npro,nshape)
+        dimension global(nshg,n),           rlocal(npro,n,nshl),
+     &            ien(npro,nshl)
 c
         character*8 code
 c
@@ -39,7 +39,7 @@ c.... gather the data
 c
           ttim(3) = ttim(3) - secs(0.0)
 
-          do j = 1, nshape
+          do j = 1, nshl
             do i = 1, n
               rlocal(:,i,j) = global(ien(:,j),i)
             enddo
@@ -70,7 +70,7 @@ c.... scatter the data (possible collisions)
 c
           ttim(4) = ttim(4) - secs(0.0)
 
-          do j = 1, nshape
+          do j = 1, nshl
             do i = 1, n
               do nel = 1,npro
                 global(ien(nel,j),i) = global(ien(nel,j),i) 
@@ -99,7 +99,7 @@ c
 c
 c.... scatter the data (possible collisions)
 c
-          do j = 1, nshape
+          do j = 1, nshl
             do i = 1, n
               do nel = 1,npro
                 global(ien(nel,j),i) = rlocal(nel,i,j)
@@ -133,8 +133,8 @@ c a transposed local, or the oposite.
 c
 c input:
 c  global (nshg)              : global array
-c  rlocal (npro,nshape)         : local array
-c  ien    (npro,nshape)         : nodal connectivity
+c  rlocal (npro,nshl)         : local array
+c  ien    (npro,nshl)         : nodal connectivity
 c  n                            : number of d.o.f.'s to be copied
 c  code                         : the transfer code
 c                                  .eq. 'gather  ', from global to local
@@ -147,8 +147,8 @@ c----------------------------------------------------------------------
 c
         include "common.h"
 
-        dimension global(nshg),           rlocal(npro,nshape),
-     &            ien(npro,nshape)
+        dimension global(nshg),           rlocal(npro,nshl),
+     &            ien(npro,nshl)
 c
         character*8 code
 c
@@ -164,7 +164,7 @@ c.... gather the data
 c
           ttim(3) = ttim(3) - tmr()
 
-          do j = 1, nshape
+          do j = 1, nshl
               rlocal(:,j) = global(ien(:,j))
           enddo
 
@@ -173,7 +173,7 @@ c
 c
 c.... transfer count
 c
-c          gbytes = gbytes + n*nshape*npro
+c          gbytes = gbytes + n*nshl*npro
 c
 c.... return
 c
@@ -193,7 +193,7 @@ c.... scatter the data (possible collisions)
 c
           ttim(4) = ttim(4) - tmr()
 
-          do j = 1, nshape
+          do j = 1, nshl
              do nel = 1,npro
                 global(ien(nel,j)) = global(ien(nel,j)) 
      &               + rlocal(nel,j)
@@ -205,8 +205,8 @@ c
 c
 c.... transfer and flop counts
 c
-c          sbytes = sbytes + n*nshape*npro
-c          flops  = flops  + n*nshape*npro
+c          sbytes = sbytes + n*nshl*npro
+c          flops  = flops  + n*nshl*npro
 c
 c.... return
 c
@@ -220,7 +220,7 @@ c
 c
 c.... scatter the data (possible collisions)
 c
-          do j = 1, nshape
+          do j = 1, nshl
               do nel = 1,npro
                 global(ien(nel,j)) = rlocal(nel,j)
               enddo

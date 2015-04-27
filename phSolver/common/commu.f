@@ -76,8 +76,8 @@ c
          kdof = 13
       elseif (n .eq. 10 ) then
          kdof = 14
-       elseif (n .eq. nflow*nsd ) then   !surface tension + qres
-         kdof = 15 
+      elseif (n .eq. nflow*nsd ) then   !surface tension + qres
+         kdof = 15
       else
         call error ('commu   ','n       ',n)
       endif

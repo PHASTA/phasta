@@ -3,7 +3,8 @@
 #include "Input.h"
 #include "ValType.h"
 #include <stdexcept>
-#include <strstream>
+#include <sstream>
+//#include <strstream>
 //MR CHANGE
 #include <cstdlib>
 //MR CHANGE END
@@ -13,14 +14,14 @@ ValType Input::GetValue(const string &str) const
 {
   if (input_map->find(str) != input_map->end()) {
     if ( (*input_map)[str] == "NODEFAULT" ) {
-      ostrstream ost;
-      ost << "required input variable not set: " << str << ends;
-      throw invalid_argument( ost.str() );
+      ostringstream ostr;
+      ostr << "required input variable not set: " << str << ends;
+      throw invalid_argument( ostr.str() );
     }
   } else {
-    ostrstream ost;
-    ost << "required input variable not set: " << str << ends;
-    throw invalid_argument( ost.str() );
+    ostringstream ostr;
+    ostr << "required input variable not set: " << str << ends;
+    throw invalid_argument( ostr.str() );
   }
 
   return ValType( (*input_map)[str] );

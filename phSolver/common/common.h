@@ -22,7 +22,7 @@ c                                         4= Wedge (quad-first) 5=pyramid
 c
 c  The two types of face topology are  1= tri, 2=quad
 c
-        parameter     ( MAXTOP = 6, MAXSURF=30 )
+        parameter     ( MAXTOP = 6, MAXSURF=1000 )
  
 c the common block nomodule holds all the things which have been removed
 c from different modules
@@ -120,11 +120,39 @@ c
 
 c...........................................................................
         common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial
-
+        
+        common /Ductvari/  BlowingVelDuct,
+     &                    BlowingIniMdotDuct,
+     &                    BlowingFnlMdotDuct,
+     &                    suctionVbottom, 
+     &                    suctionVside_lower,
+     &                    suctionVside_upper, 
+     &                    suctionVtop, 
+     &                    blowerVelocity, 
+     &                    blowerTemperature, 
+     &                    blowerEV,
+     &                    isetOutletID, 
+     &                    isetInitial_Duct,
+     &                    isetInlet_Duct, 
+     &                    isetSuctionID_Duct,
+     &                    isetBlowerID_Duct,  
+     &                    iDuctgeometryType, 
+     &                    iStraightPrint,
+     &                    isetEV_IC_BC,
+     &                    isetEVramp,
+     &                    isetBlowing_Duct,
+     &                    ifixBlowingVel_Duct, 
+     &                    nBlowingStepsDuct
         real*8 inletVelX
         common /ctrlvar/  inletVelX,   outPres1, 
      &                    xvel_ini,    yvel_ini,    zvel_ini,
      &                    temp_ini,    pres_ini,    evis_ini
+
+        common /Ductvar/   evis_IC_BC,
+     &                    EVrampXmin, 
+     &                    EVrampXmax,
+     &                    EVrampMin,
+     &                    EVrampMax
 c...........................................................................
 
 c
@@ -152,7 +180,7 @@ c
      &                  idiff,  lhs,    itau,   ipord,  ipred,  lstres,
      &                  iepstm, dtsfct, taucfct, ibksiz, iabc, isurf,
      &                  idflx,  Bo,     EntropyPressure, irampViscOutlet,
-     &                  istretchOutlet, iremoveStabTimeTerm
+     &                  istretchOutlet, iremoveStabTimeTerm, iLHScond
 
 c
         common /inpdat/ epstol(6),  Delt(MAXTS),    CFLfl(MAXTS),
@@ -397,6 +425,8 @@ c ibound        : boundary element flag
 c idiff         : diffusive flux vector flag
 c                 ( = 0 not used; = 1 global reconstruction )
 c itau          : type of tau to be used
+c iLHScond      : add contributiosn from the heat flux BC to the LHS 
+c                 tangency matrix. 
 c
 c----------------------------------------------------------------------
 c

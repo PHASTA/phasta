@@ -336,10 +336,31 @@ c      print *, "read out @@@@@@ is ", numnp
      & 'double' // char(0), iotype)
       point2x = xread
 
-!      call closefile( igeom, "read" )
-!      call finalizephmpiio( igeom )
-
-!       print *, "Finished finalize"
+c..............................for Duct
+      if(istretchOutlet.eq.1)then
+         
+c...geometry6
+        if(iDuctgeometryType .eq. 6) then
+          xmaxn = 1.276
+          xmaxo = 0.848
+          xmin  = 0.42
+c...geometry8
+        elseif(iDuctgeometryType .eq. 8)then
+          xmaxn=1.6*4.5*0.0254+0.85*1.5
+          xmaxo=1.6*4.5*0.0254+0.85*1.0
+          xmin =1.6*4.5*0.0254+0.85*0.5
+        endif
+c...
+        alpha=(xmaxn-xmaxo)/(xmaxo-xmin)**2
+        where (point2x(:,1) .ge. xmin)
+c..... N=# of current elements from .42 to exit(~40)
+c..... (x_mx-x_mn)/N=.025
+c..... alpha=3    3*.025=.075
+           point2x(:,1)=point2x(:,1)+
+     &     alpha*(point2x(:,1)-xmin)**2
+c..... ftn to stretch x at exit
+        endwhere
+      endif
 
 c      deallocate (point2x)
 c      deallocate (xread)

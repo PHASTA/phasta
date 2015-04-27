@@ -1,0 +1,3 @@
+skipped mege of some ngc stuff in readnblk and proces as it seems outdated
+
+moved timedata.f to incompressible and brought Nicholas's timedata.f90 to compressible as a temporary resolutoin of different approaches to varts
