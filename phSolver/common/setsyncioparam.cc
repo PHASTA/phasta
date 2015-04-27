@@ -35,7 +35,7 @@ void setIOparam()
   if(workfc.myrank == 0){
     if( (d = opendir(".")) != NULL) {
       count=0;
-      while(filename=readdir(d)) {
+      while( (filename=readdir(d)) ) {
         //printf("%s\n", filename->d_name);
         if(strncmp(filename->d_name,"geombc-dat",10)==0) {
           count=count+1;
@@ -73,7 +73,7 @@ void detectd2wallfiles(int* numd2wallfiles)
   if(workfc.myrank == 0){
     if( (d = opendir(".")) != NULL) {
       count=0;
-      while(filename=readdir(d)) {
+      while( (filename=readdir(d)) ) {
         //printf("%s\n", filename->d_name);
         if(strncmp(filename->d_name,"d2wall",6)==0) {
           count=count+1;

@@ -196,7 +196,7 @@ c
 c
 c
       subroutine e3sourceSclr(Sclr,    rho,    rmu,
-     &                          dist2w,  vort,   con,
+     &                          dist2w,  vort,   gVnrm, con,
      &                          g1yti,   g2yti,  g3yti,
      &                          rti,     rLyti,  srcp,
      &                          ycl,      shape,  u1,
@@ -214,6 +214,7 @@ c  rho    (npro)              : density at intpt
 c  rmu    (npro)              : molecular viscosity
 c  dist2w (npro)              : distance from intpt to the nearest wall
 c  vort   (npro)              : magnitude of the vorticity
+c  gVnrm  (npro)              : magnitude of the velocity gradient
 c  con    (npro)              : conductivity
 c  g1yti  (npro)              : grad-Sclr in direction 1
 c  g2yti  (npro)              : grad-Sclr in direction 2
@@ -230,7 +231,7 @@ c
 c
       dimension Sclr   (npro),        ycl(npro,nshl,ndof),
      &          dist2w (npro),          shape(npro,nshl),          
-     &          vort   (npro),             rho    (npro),
+     &          vort   (npro), gVnrm(npro), rho   (npro),
      &          rmu    (npro),             con    (npro),
      &          g1yti  (npro),             g2yti  (npro),
      &          g3yti  (npro),             u1     (npro),
@@ -254,30 +255,35 @@ c
      &          bf     (npro),             srcp   (npro),
      &          gp6    (npro),             tmp    (npro),
      &          tmp1   (npro),             fwog   (npro)  
-	real*8 elDwl(npro) ! local quadrature point DES dvar
-	real*8 sclrm(npro) ! modified for non-negativity
+      real*8 elDwl(npro) ! local quadrature point DES dvar
+      real*8 sclrm(npro) ! modified for non-negativity
+      real*8 saCb1Scale(npro)  !Hack to change the production term and BL thickness
+      real*8 xl_xbar(npro)     !Hack to store mean x location of element. 
 c... for levelset 
       real*8  sign_levelset(npro), sclr_ls(npro), mytmp(npro),
-     & 		xl(npro,nenl,nsd)
+     &        xl(npro,nenl,nsd)
     
 c
       if(iRANS.lt.0) then    ! spalart almaras model
-	sclrm=max(rmu/100.0,Sclr)
-	if(iles.lt.0) then	
-	do i=1,npro
-         dx=maxval(xl(i,:,1))-minval(xl(i,:,1))
-         dy=maxval(xl(i,:,2))-minval(xl(i,:,2))
-         dz=maxval(xl(i,:,3))-minval(xl(i,:,3))
-         dmax=max(dx,max(dy,dz))
-c....    limit edge length for DES based on SA model
-c....    (only useful when DES_SA_hmin is greater than 0.0 as element lengths are positive)
-         dmax=max(DES_SA_hmin,dmax)
-         dmax=0.65d0*dmax
-         dist2w(i)=min(dmax,dist2w(i))
-        enddo
-	endif	
-	
-	elDwl(:)=elDwl(:)+dist2w(:)
+        sclrm=max(rmu/100.0,Sclr)
+        if(iles.lt.0) then
+          do i=1,npro
+            dx=maxval(xl(i,:,1))-minval(xl(i,:,1))
+            dy=maxval(xl(i,:,2))-minval(xl(i,:,2))
+            dz=maxval(xl(i,:,3))-minval(xl(i,:,3))
+            dmax=max(dx,max(dy,dz))
+            dmax=0.65d0*dmax
+            if( iles.eq.-1) then !original DES97
+               dist2w(i)=min(dmax,dist2w(i))
+            elseif(iles.eq.-2) then ! DDES
+               rd=sclrm(i)*saKappaP2Inv/(dist2w(i)**2*gVnrm(i)+1.0d-12)
+               fd=one-tanh((8.0000000000000000d0*rd)**3)
+               dist2w(i)=dist2w(i)-fd*max(zero,dist2w(i)-dmax)
+            endif
+          enddo
+        endif
+
+        elDwl(:)=elDwl(:)+dist2w(:)
 c
 c  determine chi
         chi = rho*sclrm/rmu
@@ -315,8 +321,32 @@ c        srcrat=saCb1*(one-ft2)*Stilde*sclrm
 c     &      -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w)**2
 c        srcrat=srcrat/sclrm
 
-        srcrat=saCb1*(one-ft2)*Stilde
-     &       -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
+!----------------------------------------------------------------------------
+!HACK: lower the EV production rate within a region to decrease BL thickness. 
+! Appear NM was not finished yet        if(scrScaleEnable) then  
+        if(one.eq.zero) then  
+          do i = 1,nenl !average the x-locations
+            xl_xbar(:) = xl_xbar(:) + xl(:,i,1)
+          enddo
+          xl_xbar = xl_xbar/nenl
+          
+          saCb1Scale = one
+          where(xl_xbar < saCb1alterXmin .and. xl_xbar > saCb1alterXmax)
+            saCb1Scale(:) = seCb1alter
+          endwhere
+          
+          srcrat = saCb1Scale*saCb1*(one-ft2)*Stilde
+     &         -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
+        else
+          srcrat=saCb1*(one-ft2)*Stilde
+     &         -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
+        endif 
+
+!Original:
+!        srcrat=saCb1*(one-ft2)*Stilde
+!     &       -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
+!End Hack
+!----------------------------------------------------------------------------
 
 c
 c        term1=saCb1*(one-ft2)*Stilde*sclrm

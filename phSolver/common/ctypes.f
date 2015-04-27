@@ -6,13 +6,18 @@
       include "mpif.h"
       include "auxmpi.h"
 
-      integer  sizeofdouble
+      integer  sizeofdouble,sizeofInt64
 
       dimension ilwork(nlwork)
       dimension isbegin(maxseg), lenseg(maxseg), ioffset(maxseg)
 
       CALL MPI_TYPE_EXTENT (MPI_DOUBLE_PRECISION,sizeofdouble,ierr)
       lstride = nshg * sizeofdouble
+c
+c  you would need the next two lines if you commu-ed vectors of integers
+c
+c      CALL MPI_TYPE_EXTENT (MPI_LONG_LONG,sizeofInt64,ierr)
+c      lstrideInt = nshg * sizeofInt64
 c
 c.... maxfront is a common variable being set in this routine
 c
@@ -96,6 +101,9 @@ c                   first segment
 c          MPI_DOUBLE_PRECISION: type to set for each of the blocks
 c
         call MPI_TYPE_INDEXED (numseg, lenseg, ioffset,
+     &                  MPI_LONG_LONG_INT, sevsegtype(itask,16), ierr)
+
+        call MPI_TYPE_INDEXED (numseg, lenseg, ioffset,
      &                  MPI_DOUBLE_PRECISION, sevsegtype(itask,1), ierr)
 c
 c.... now create a new data type for each of the types of arrays we 
@@ -138,7 +146,7 @@ c
 c.... now this must be done to make MPI recognize each of the data
 c     types that were just defined
 c
-        do kdof = 1,15
+        do kdof = 1,16
           call MPI_TYPE_COMMIT (sevsegtype(itask,kdof), ierr)
         enddo
 c

@@ -117,11 +117,11 @@ cccccccccccccccccccccccccccccccccccccccccccccccccc
       enddo
     
 
-c        call write_field(myrank,'a',
-c     &      'wnrm',4,wlnorm(:,:,1),'d',nshg,3,701) 
+c        call write_field(myrank,'a'//char(0),
+c     &      'wnrm'//char(0),4,wlnorm(:,:,1),'d'//char(0),nshg,3,701) 
 cc 7 is the number of charaters of the name of array wnrm701
-c        call write_field(myrank,'a',
-c     &      'wnrm',4,wlnorm(:,:,2),'d',nshg,3,702)
+c        call write_field(myrank,'a'//char(0),
+c     &      'wnrm'//char(0),4,wlnorm(:,:,2),'d'//char(0),nshg,3,702)
 c      stop
  
       return

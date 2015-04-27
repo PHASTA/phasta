@@ -324,7 +324,7 @@ c
 
         echeck=abs(eBrg(iKs+1))
         if (echeck .le. epsnrm) exit
-        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction', 
+        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction',
      &  (one-echeck/unorm)/(one-etol)*100
 c     
 c.... end of mGMRES loop
@@ -534,13 +534,13 @@ c
 c.... perform the A x product
 c
             call SparseAp (iper,ilwork,iBC, col, row, lhsK,  temp)
-	call tnanq(temp,5, 'q_spAPrs')
+c           call tnanq(temp,5, 'q_spAPrs')
 
 c     
 c.... periodic nodes have to assemble results to their partners
 c
-            call bc3per (iBC,  temp,  iper, ilwork, nflow)
-	call tnanq(temp,5, 'q_BCprs')
+            call bc3per (iBC,  temp,  iper, ilwork, nflow) 
+c           call tnanq(temp,5, 'q_BCprs')
 c
 c.... subtract A x from residual and calculate the norm
 c           
@@ -580,13 +580,13 @@ c
             call SparseAp (iper, ilwork, iBC,
      &                     col,  row,    lhsK,
      &                     uBrg(:,:,iKs+1) )
-	call tnanq(uBrg(:,:,iKS+1),5, 'q_spAP')
+c           call tnanq(uBrg(:,:,iKS+1),5, 'q_spAP')
 
 c     
 c.... periodic nodes have to assemble results to their partners
 c
             call bc3per (iBC,  uBrg(:,:,iKs+1),  iper, ilwork, nflow)
-	call tnanq(uBrg(:,:,iKS+1),5, 'q_bc')
+c           call tnanq(uBrg(:,:,iKS+1),5, 'q_bc')
 
 c
 c.... orthogonalize and get the norm
@@ -618,7 +618,7 @@ c
 c  the last inner product was with what was left of the vector (after
 c  projecting off all of the previous vectors
 c
-	if(beta.le.0) write(*,*) 'beta in solgrm non-positive'
+        if(beta.le.0) write(*,*) 'beta in solgmr non-positive'
             unorm           = sqrt(beta)
             HBrg(iKs+1,iKs) = unorm ! this fills the 1 sub diagonal band
 c
@@ -695,8 +695,8 @@ c.... check for convergence
 c     
         echeck=abs(eBrg(iKs+1))
         if (echeck .le. epsnrm) exit
-        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction', 
-     &  (one-echeck*etol/epsnrm)/(one-etol)*100
+!        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction',
+!     &  (one-echeck*etol/epsnrm)/(one-etol)*100
 
 c     
 c.... end of mGMRES loop
@@ -719,6 +719,15 @@ c
 c.... output the statistics
 c
       call rstat (res, ilwork) 
+      
+      if(myrank.eq.master) then
+        if (echeck .le. epsnrm) then
+            write(*,*)
+        else
+            write(*,*)'solver tolerance %satisfaction',
+     &  (one-echeck*etol/epsnrm)/(one-etol)*100
+        endif
+      endif
 c    
 c.... stop the timer
 c     
@@ -733,7 +742,7 @@ c
         subroutine SolGMRSclr(y,       ac,      yold,
      &                        acold,   EGmasst,
      &                        x,       elDw, 
-     &			      iBC,      BC,           
+     &                        iBC,      BC,           
      &                        rest,     HBrg,     eBrg,
      &                        yBrg,     Rcos,     Rsin,    iper,
      &                        ilwork,
@@ -828,7 +837,8 @@ c
 c
 c Check the residual for divering trend
 c
-	call rstatCheckSclr(rest,ilwork,y,ac)
+
+        call rstatCheckSclr(rest,ilwork,y,ac)
 
 c     
 c.... copy rest in uBrgt(1)
@@ -1040,7 +1050,7 @@ c
 c     
 c.... output the statistics
 c
-      call rstatSclr( rest, ilwork,lgmrest,iKst)
+      call rstatSclr(rest, ilwork,lgmrest,iKst)
 c.... stop the timer
 c     
  3002 continue                  ! no solve just res.

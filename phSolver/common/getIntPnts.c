@@ -2,6 +2,7 @@
 /* Interpolation points for a tet based on the Chen - Babuska paper.  */
 /**********************************************************************/
 #include <stdio.h>
+#include <stdlib.h> //exit, EXIT_FAILURE
 
 #include <FCMangle.h>
 
@@ -276,7 +277,7 @@ void getintpnts(double points[][3], int *npts)
   default:
     fprintf(stderr,"\n%d interpolation points not supported...\n",*npts);
     fprintf(stderr,"\ngive {4,10,20,35,56,84}\nexiting...\n");
-    exit(-1);
+    exit(EXIT_FAILURE);
   }
 
   /* copy points to the fortran array */

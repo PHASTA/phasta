@@ -54,6 +54,13 @@ c
 c.... read q from [RESTAR.INP], reset LSTEP
 c
         call restar ('in  ',  y,  ac)
+ 
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+        if(matflg(1,1).eq.0)then ! compressible code
+          call INIprofile(BC,y,x)
+          call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        endif
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
         if((itwmod.gt.0) 
      &     .or. (nsonmax.eq.1 .and. iLES.gt.0) ) then 
@@ -146,6 +153,24 @@ c
         if((irscale.ge.0) .and. (myrank.eq.master)) then
            call genscale(y, x, iBC)
         endif
+
+c------------- Duct debug, output initial condition confined with boundary conditions --------
+c         lstep_orig=lstep       
+c         lstep=-2
+c         call restar('out ',y,ac)
+c         lstep=lstep_orig
+c         if (myrank.eq.master) then
+c          open(unit=72,file='numstart.dat',status='old')
+c           write(72,*) lstep
+c           write(*,*) lstep
+c           close(72)
+c         endif
+c         call MPI_BARRIER(MPI_COMM_WORLD,ierr)  
+c         if (myrank .eq. master) then
+c             write(*,*) 'writing initial data...'
+c         endif
+c         stop
+c.................      
 c
 c.... --------------------------->  Echo  <----------------------------
 c

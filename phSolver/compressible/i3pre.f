@@ -172,7 +172,7 @@ c
       dimension  EGmassT(numel,nshape,nshape),
      &           Dinv(nshg), ilwork(nlwork)
 c     
-      dimension  Dinvl(numel,nshl), Diag(nshg)
+      dimension  Dinvl(numel,nshape), Diag(nshg)
 c
       Dinv = one/Diag
 c      

@@ -29,10 +29,10 @@ c
      &            shpb(MAXTOP,maxsh,MAXQPT),
      &            shglb(MAXTOP,nsd,maxsh,MAXQPT)
     
-	real*8, allocatable :: tmpshp(:,:), tmpshgl(:,:,:)
+        real*8, allocatable :: tmpshp(:,:), tmpshgl(:,:,:)
         real*8, allocatable :: tmpshpb(:,:), tmpshglb(:,:,:)
 
-	ttim(81) = ttim(81) - secs(0.0)
+        ttim(81) = ttim(81) - secs(0.0)
 
 c
 c.... -------------------->   interior elements   <--------------------
@@ -70,10 +70,10 @@ c
 c.... compute and assemble the residuals and the preconditioner
 c
           allocate (tmpshp(nshl, MAXQPT))
-	  allocate (tmpshgl(nsd,nshl,MAXQPT))
+          allocate (tmpshgl(nsd,nshl,MAXQPT))
 
-	  tmpshp(1:nshl,:) = shp(lcsyst,1:nshl,:)
-	  tmpshgl(:,1:nshl,:) = shgl(lcsyst,:,1:nshl,:)
+          tmpshp(1:nshl,:) = shp(lcsyst,1:nshl,:)
+          tmpshgl(:,1:nshl,:) = shgl(lcsyst,:,1:nshl,:)
 
           call AsIRes (yp,                      yc,
      &                 x,                       mxmudmi(iblk)%p,
@@ -81,8 +81,8 @@ c
      &                 mien(iblk)%p,            mmat(iblk)%p,
      &                 rmes,                    ac)
 
-	  deallocate (tmpshp)
-	  deallocate (tmpshgl)
+          deallocate (tmpshp)
+          deallocate (tmpshgl)
 
 c
 c.... end of interior element loop
@@ -146,7 +146,7 @@ c
 
         endif
 
-	ttim(81) = ttim(81) + secs(0.0)
+        ttim(81) = ttim(81) + secs(0.0)
 
 c
 c.... ---------------------->   communications  <-----------------------

@@ -191,14 +191,13 @@ c
      &                 (al(e,3,1)*al(e,2,2)
      &                 - al(e,2,1)*al(e,3,2))*(xts3-al(e,1,3)))
                
-                  if ((zi0(e,1)+zi0(e,2)+zi0(e,3))
-     &                 .lt.(one+tolpt).and.
-     &                 zi0(e,1).lt.(one+tolpt).and.zi0(e,1)
-     &                 .gt.(zero-tolpt).and.
-     &                 zi0(e,2).lt.(one+tolpt).and.zi0(e,2)
-     &                 .gt.(zero-tolpt).and.
-     &                 zi0(e,3).lt.(one+tolpt).and.zi0(e,3)
-     &                 .gt.(zero-tolpt)) then
+                  if ((zi0(e,1)+zi0(e,2)+zi0(e,3)).lt.(one+tolpt).and.
+     &                 zi0(e,1).lt.(one +tolpt).and.    !should not be necessary; the limit in the tet is already defined by the previous line
+     &                 zi0(e,1).gt.(zero-tolpt).and.
+     &                 zi0(e,2).lt.(one +tolpt).and.    !should not be necessary 
+     &                 zi0(e,2).gt.(zero-tolpt).and.
+     &                 zi0(e,3).lt.(one +tolpt).and.    !should not be necessary 
+     &                 zi0(e,3).gt.(zero-tolpt)) then
                      
                      call shptet (ipord, zi0(e,:), shape(:),
      &                    shgradl(:,:))

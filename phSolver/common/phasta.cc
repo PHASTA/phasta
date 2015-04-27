@@ -5,7 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#ifdef HAVE_PETSC
+#include <petscsys.h>
+#include <petscviewer.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -13,7 +16,7 @@
 
 #if !(defined IOSTREAMH)
 #include <iostream>
-#include <strstream>
+#include <sstream>
 using namespace std;
 #endif
 
@@ -71,6 +74,11 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
+#ifdef __bgq__
+    extern "C" void print_bgq_net_info();
+#endif
+
+
 extern "C" int 
 phasta( int argc,   
         char *argv[] ) {
@@ -83,7 +91,29 @@ phasta( int argc,
     MPI_Init(&argc,&argv);
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(myrank == 0)
+    {
+	    printf("About to init PETSc\n");
+	    fflush(stdout);
+    }
+#ifdef __bgq__
+    print_bgq_net_info();
+#endif
 
+#ifdef HAVE_PETSC
+    PETSC_COMM_WORLD=MPI_COMM_WORLD;
+    PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+    PetscInitializeFortran();
+    PetscPopSignalHandler(); //Let us segfault in peace ;-)
+    PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_INDEX);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(myrank == 0)
+    {
+	    printf("PETSc Initialized\n");
+	    fflush(stdout);
+    }
+#endif
     workfc.numpe = size;
     workfc.myrank = myrank;
 
@@ -103,7 +133,7 @@ phasta( int argc,
         if( gdb_child == 0 ) {
      
             cout << "Debugger Process initiating" << endl;
-            strstream exec_string;
+            stringstream exec_string;
          
 #if ( defined decalp )
             exec_string <<"xterm -e idb " 
@@ -121,7 +151,8 @@ phasta( int argc,
             exec_string <<"xterm -e dbx " 
                         << " -p "<< parent_pid <<" "<< argv[0] << endl;
 #endif
-            system( exec_string.str() );
+
+			system( exec_string.str().c_str() ); //check for dangling pointer
             exit(0);
         }
         catchDebugger();
@@ -167,15 +198,9 @@ phasta( int argc,
     else{
         printf("error during reading ascii input \n");
     }
-   
-//MR CHANGE
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    if ( myrank == 0 ) {
-      printf("phasta.cc - last call before finalize!\n");
-    }
-//MR CHANGE
- 
+#ifdef HAVE_PETSC
+    PetscFinalize();
+#endif
     MPI_Finalize();
     return 0;
 }

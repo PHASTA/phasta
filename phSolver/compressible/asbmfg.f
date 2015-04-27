@@ -1,6 +1,6 @@
         subroutine AsBMFG (y,       x,       shpb,    shglb,
      &                     ienb,    materb,  iBCB,    BCB,
-     &                     res,     rmes)
+     &                     res,     rmes,    EGmass)
 c
 c----------------------------------------------------------------------
 c
@@ -21,7 +21,8 @@ c
 c
         dimension ycl(npro,nshl,ndofl),  xlb(npro,nenl,nsd),
      &            rl(npro,nshl,nflow),
-     &            rml(npro,nshl,nflow)
+     &            rml(npro,nshl,nflow),
+     &            EGmass(npro, nshl, nshl) 
 c        
         dimension sgn(npro,nshl)
 c
@@ -39,8 +40,8 @@ c
         call localx(x,      xlb,    ienb,   nsd,    'gather  ')
 c
 
-c.... get the boundary element residuals
-c
+        !get the boundary element residuals
+
         rl  = zero
         rml = zero
 c
@@ -51,19 +52,14 @@ c
  !  properly from this location.
 c
         call e3b  (ycl,     ycl,     iBCB,    BCB,     shpb,    shglb,
-     &             xlb,     rl,      rml,     sgn)
-c
-c.... assemble the residual and the modified residual
-c
+     &             xlb,     rl,      rml,     sgn,     EGmass)
+
+        !assemble the residual and the modified residual
         call local(res,    rl,     ienb,   nflow,  'scatter ')
-
-
-c
         if (Navier .eq. 1 .and. ires.ne.1 )
-     &  call local(rmes,   rml,    ienb,   nflow,  'scatter ')
-c
-c.... end
-c
+     &    call local(rmes,   rml,    ienb,   nflow,  'scatter ')
+        
+        !end
         return
         end
 c

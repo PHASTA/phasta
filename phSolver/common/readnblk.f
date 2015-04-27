@@ -20,6 +20,8 @@ c
       real*8, allocatable :: BCinp(:,:)
 
       integer, allocatable :: point2ilwork(:)
+!      integer, allocatable :: fncorp(:)
+      integer, allocatable :: twodncorp(:,:)
       integer, allocatable :: nBC(:)
       integer, allocatable :: point2iper(:)
       integer, allocatable :: point2ifath(:)
@@ -32,14 +34,18 @@ c
       subroutine readnblk
 c
       use readarrays
+      use fncorpmod
       include "common.h"
+      include "mpif.h"
 c
       real*8, allocatable :: xread(:,:), qread(:,:), acread(:,:)
       real*8, allocatable :: uread(:,:)
       real*8, allocatable :: BCinpread(:,:)
       integer, allocatable :: iperread(:), iBCtmpread(:)
       integer, allocatable :: ilworkread(:), nBCread(:)
-      character*10 cname2
+      integer, allocatable :: fncorpread(:)
+      integer fncorpsize
+      character*10 cname2, cname2nd
       character*8 mach2
 !MR CHANGE
 !      character*20 fmt1
@@ -306,6 +312,28 @@ cc MR CHANGE
 
          point2ilwork = ilworkread
          call ctypes (point2ilwork)
+
+       if(usingPETSc.eq.1) then
+         fncorpsize = nshg
+         allocate(fncorp(fncorpsize))
+         call gen_ncorp(fncorp, ilworkread, nlwork, fncorpsize)
+!
+! the  following code finds the global range of the owned nodes
+!
+         maxowned=0
+         minowned=maxval(fncorp)
+         do i = 1,nshg      
+            if(fncorp(i).gt.0) then  ! don't consider remote copies
+               maxowned=max(maxowned,fncorp(i))
+               minowned=min(minowned,fncorp(i))
+            endif
+         enddo
+!
+!  end of global range code
+!
+         call commuInt(fncorp, point2ilwork, 1, 'out')
+         ncorpsize = fncorpsize 
+       endif
       else
            nlwork=1
            allocate( point2ilwork(1))
@@ -336,10 +364,31 @@ c      print *, "read out @@@@@@ is ", numnp
      & 'double' // char(0), iotype)
       point2x = xread
 
-!      call closefile( igeom, "read" )
-!      call finalizephmpiio( igeom )
-
-!       print *, "Finished finalize"
+c..............................for Duct
+      if(istretchOutlet.eq.1)then
+         
+c...geometry6
+        if(iDuctgeometryType .eq. 6) then
+          xmaxn = 1.276
+          xmaxo = 0.848
+          xmin  = 0.42
+c...geometry8
+        elseif(iDuctgeometryType .eq. 8)then
+          xmaxn=1.6*4.5*0.0254+0.85*1.5
+          xmaxo=1.6*4.5*0.0254+0.85*1.0
+          xmin =1.6*4.5*0.0254+0.85*0.5
+        endif
+c...
+        alpha=(xmaxn-xmaxo)/(xmaxo-xmin)**2
+        where (point2x(:,1) .ge. xmin)
+c..... N=# of current elements from .42 to exit(~40)
+c..... (x_mx-x_mn)/N=.025
+c..... alpha=3    3*.025=.075
+           point2x(:,1)=point2x(:,1)+
+     &     alpha*(point2x(:,1)-xmin)**2
+c..... ftn to stretch x at exit
+        endwhere
+      endif
 
 c      deallocate (point2x)
 c      deallocate (xread)

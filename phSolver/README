@@ -1,0 +1,2 @@
+
+moved timedata.f to incompressible and brought Nicholas's timedata.f90 to compressible as a temporary resolution of different approaches to varts

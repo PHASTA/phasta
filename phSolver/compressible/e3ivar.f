@@ -491,7 +491,7 @@ c       endif
      &                         shape,    shgl,     xl,      
      &                         T,        cp,
      &                         dxidx,    Sclr,               
-     &                         WdetJ,    vort,  
+     &                         WdetJ,    vort,     gVnrm, 
      &                         g1yti,    g2yti,    g3yti,
      &                         rho,      rmu,      con,
      &                         rk,       u1,       u2,
@@ -516,6 +516,7 @@ c  Sclr   (npro)                : Scalar variable at intpt
 c  dist2w (npro)                : distance to nearest wall at intpt
 c  WdetJ  (npro)                : weighted Jacobian at intpt
 c  vort   (npro)                : vorticity at intpt
+c  gVnrm  (npro)                : gradV norm at intpt
 c  g1yti  (npro)                : grad-Sclr in direction 1 at intpt
 c  g2yti  (npro)                : grad-Sclr in direction 2 at intpt
 c  g3yti  (npro)                : grad-Sclr in direction 3 at intpt
@@ -568,7 +569,7 @@ c
      &            ql(npro,nshl,(nflow-1)*nsd),Sclr(npro),
      &            dwl(npro,nenl),            
      &            dist2w(npro),              
-     &            vort(npro),
+     &            vort(npro),                gVnrm(npro),
      &            rmu(npro),                 con(npro),
      &            g1yti(npro),
      &            g2yti(npro),               g3yti(npro)
@@ -675,21 +676,21 @@ c  Y_{,x_i}=SUM_{a=1}^nshl (N_{a,x_i}(intp) Ya)
 c
         do n = 1, nshl
 c         g1yi(:,1) = g1yi(:,1) + shg(:,n,1) * ycl(:,n,1)
-c         g1yi(:,2) = g1yi(:,2) + shg(:,n,1) * ycl(:,n,2)
+          g1yi(:,2) = g1yi(:,2) + shg(:,n,1) * ycl(:,n,2)
           g1yi(:,3) = g1yi(:,3) + shg(:,n,1) * ycl(:,n,3)
           g1yi(:,4) = g1yi(:,4) + shg(:,n,1) * ycl(:,n,4)
 c         g1yi(:,5) = g1yi(:,5) + shg(:,n,1) * ycl(:,n,5)
 c
 c         g2yi(:,1) = g2yi(:,1) + shg(:,n,2) * ycl(:,n,1)
           g2yi(:,2) = g2yi(:,2) + shg(:,n,2) * ycl(:,n,2)
-c         g2yi(:,3) = g2yi(:,3) + shg(:,n,2) * ycl(:,n,3)
+          g2yi(:,3) = g2yi(:,3) + shg(:,n,2) * ycl(:,n,3)
           g2yi(:,4) = g2yi(:,4) + shg(:,n,2) * ycl(:,n,4)
 c         g2yi(:,5) = g2yi(:,5) + shg(:,n,2) * ycl(:,n,5)
 c
 c         g3yi(:,1) = g3yi(:,1) + shg(:,n,3) * ycl(:,n,1)
           g3yi(:,2) = g3yi(:,2) + shg(:,n,3) * ycl(:,n,2)
           g3yi(:,3) = g3yi(:,3) + shg(:,n,3) * ycl(:,n,3)
-c         g3yi(:,4) = g3yi(:,4) + shg(:,n,3) * ycl(:,n,4)
+          g3yi(:,4) = g3yi(:,4) + shg(:,n,3) * ycl(:,n,4)
 c         g3yi(:,5) = g3yi(:,5) + shg(:,n,3) * ycl(:,n,5)
 c
        enddo
@@ -720,6 +721,12 @@ c
      &             +(g3yi(:,2)-g1yi(:,4))**2
      &             +(g1yi(:,3)-g2yi(:,2))**2
      &            ) 
+       if(iles.lt.0) then
+       gVnrm = sqrt(g1yi(:,2)**2+g2yi(:,2)**2+g3yi(:,2)**2     
+     &             +g1yi(:,3)**2+g2yi(:,3)**2+g3yi(:,3)**2
+     &             +g1yi(:,4)**2+g2yi(:,4)**2+g3yi(:,4)**2)
+       endif  ! safe to not define since use is only in same condtnl
+
 c ***********************************************************
 
        ttim(7) = ttim(7) + tmr()

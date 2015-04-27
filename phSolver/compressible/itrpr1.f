@@ -6,7 +6,7 @@ c This routine preconditions a given vector, element-by-element.
 c The preconditioner used is Gauss-Siedel.
 c
 c input:
-c  ien    (npro,nshape)         : element nodal connectivity
+c  ien    (npro,nshl)         : element nodal connectivity
 c  Binv   (npro,nedof,nedof)	: LHS element preconditioner matrices
 c  code				: preconditioning code
 c				    .eq. 'R_Pcond ', Right precond.
@@ -21,7 +21,7 @@ c
         include "common.h"
 c
 	dimension Binv(npro,nedof,nedof),  uBrg(nshg,nflow),
-     &		  uBrgl(npro,nshape*nflow), ien(npro,nshape),
+     &		  uBrgl(npro,nshl*nflow), ien(npro,nshl),
      &            uBtmp(nshg,nflow)
 c
 	character*8 code
