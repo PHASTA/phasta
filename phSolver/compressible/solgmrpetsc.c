@@ -424,6 +424,7 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
                         "solWork \0"); // char(0))
+      itrpar.ntotGM += (int) its;
       rstat (res, ilwork);
 //    
 // .... stop the timer
