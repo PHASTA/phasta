@@ -31,6 +31,8 @@ c from different modules
         integer consrv_sclr_conv_vel
         integer spongecontinuity, spongemomentum1, spongemomentum2
         integer spongeenergy, spongemomentum3
+c MR CHANGE
+        integer*8 nshgt,minowned, maxowned
 	common /amgvarr/strong_eps,ramg_eps,ramg_relax,ramg_trunc,
      &              ramg_chebyratio
 	common /amgvari/irun_amg,irun_amg_prec,

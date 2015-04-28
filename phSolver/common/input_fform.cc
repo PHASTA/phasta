@@ -547,6 +547,7 @@ int input_fform(char inpfname[])
 
 
     //Linear Solver parameters
+      conpar.usingpetsc=0;  // default is to have PETSc off
     if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
     else if ( (string)inp.GetValue("Solver Type") =="ACUSIM" ){
