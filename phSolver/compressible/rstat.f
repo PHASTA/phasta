@@ -141,8 +141,13 @@ c
         if (myrank .eq. master) then
           !modified to not advance so that solver tolerance satisfaction failure
           ! can be appended. The line wrap occurs in solgmr
-          write(*, 2000, advance="no")       lstep+1, cputme, totres, jtotrs, nrsmax, 
+          if(usingPETSc.eq.0) then
+           write(*, 2000, advance="no")       lstep+1, cputme, totres, jtotrs, nrsmax, 
      &                     jresmx, lGMRES,  iKs, ntotGM
+          else
+           write(*, 2000)       lstep+1, cputme, totres, jtotrs, nrsmax, 
+     &                     jresmx, lGMRES,  iKs, ntotGM
+          endif
           write (ihist,2000) lstep+1, cputme, totres, jtotrs, nrsmax,
      &                     jresmx, lGMRES,  iKs, ntotGM
           call flush(ihist)
