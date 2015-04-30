@@ -256,9 +256,8 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       }
 //      MPI_Barrier(MPI_COMM_WORLD); 
  //     if(workfc.myrank ==0) printf("Before MatZeroEntries  \n");
-      ierr = MatZeroEntries(lhsP);
+      if(genpar.lhs ==1) ierr = MatZeroEntries(lhsP);
 
-      genpar.lhs = 1; // TODO: Figure out what this is for 
       get_time(duration, (duration+1)); 
          
 //      MPI_Barrier(MPI_COMM_WORLD); 
@@ -328,6 +327,7 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         ierr =  ISLocalToGlobalMappingCreateIS(GlobalIndexSet,&GblVectorMapping);
 //        printf("after 2nd ISLocalToGlobalMappingCreateIS %d\n",ierr);
       }
+      if(genpar.lhs == 1) {
       get_time((duration), (duration+1));
       ierr = MatAssemblyBegin(lhsP, MAT_FINAL_ASSEMBLY);
       ierr = MatAssemblyEnd(lhsP, MAT_FINAL_ASSEMBLY);
@@ -335,7 +335,8 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
                         "MatAssembly \0"); // char(0))
-      get_time(duration, (duration+1)); 
+      get_time(duration, (duration+1));
+      } 
       if(firstpetsccall == 1) {
         ierr = MatGetLocalSize(lhsP, &LocalRow, &LocalCol);
 //  TODO Should this be LocalRow? LocalCol? or does LocalRow always == LocalCol
@@ -588,9 +589,8 @@ void     SolGMRpSclr(double* y,         double* ac,
       }
 //      MPI_Barrier(MPI_COMM_WORLD); 
  //     if(workfc.myrank ==0) printf("Before MatZeroEntries  \n");
-      ierr = MatZeroEntries(lhsPs);
+      if(genpar.lhs == 1) ierr = MatZeroEntries(lhsPs);
 
-      genpar.lhs = 1; // TODO: Figure out what this is for 
       get_time(duration, (duration+1)); 
          
 //      MPI_Barrier(MPI_COMM_WORLD); 
@@ -639,8 +639,10 @@ void     SolGMRpSclr(double* y,         double* ac,
         ierr = ISLocalToGlobalMappingCreateIS(LocalIndexSets,&VectorMappings);
         ierr =  ISLocalToGlobalMappingCreateIS(GlobalIndexSets,&GblVectorMappings);
       }
+      if(genpar.lhs ==1) {
       ierr = MatAssemblyBegin(lhsPs, MAT_FINAL_ASSEMBLY);
       ierr = MatAssemblyEnd(lhsPs, MAT_FINAL_ASSEMBLY);
+      }
       if(firstpetsccalls == 1) {
         ierr = MatGetLocalSize(lhsPs, &LocalRow, &LocalCol);
         ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &resPs);

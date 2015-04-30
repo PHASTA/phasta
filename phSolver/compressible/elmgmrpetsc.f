@@ -203,7 +203,7 @@ c
 c.... end of interior element loop
 c
        enddo
-         call cycle_count_print()
+       if(lhs.eq.1)   call cycle_count_print()
 !        call commu (res  , ilwork, nflow  , 'in ') !FOR TEST
 !        call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 !        if(myrank.eq.0) write (*,*) 'after fillsparsepetscc '
