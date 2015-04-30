@@ -516,6 +516,17 @@ c
      &                                       LHSupd(isclr+2)))
                      iprec = lhs
                      istop=0
+                 if(usingPETSc.eq.1) then
+                     call SolGMRpSclr(y,             ac,  
+     &                    x,             elDw,
+     &                    iBC,           BC,          
+     &                    colm,           rowp, 
+     &                    iper,          ilwork,
+     &                    shp,           shgl,
+     &                    shpb,          shglb,     rest,
+     &                    solinc(1,isclr+5),fncorp)
+
+                 else
                      call SolGMRSclr(y,             ac,         yold,
      &                    acold,         EGmasst(1,isclr),
      &                    x,             elDw,
@@ -526,6 +537,7 @@ c
      &                    iper,          ilwork,
      &                    shp,           shgl,
      &                    shpb,          shglb, solinc(1,isclr+5))
+                  endif
 c     
                   endif         ! end of scalar type solve
 c     

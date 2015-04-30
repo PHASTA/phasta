@@ -211,7 +211,7 @@ c /*         common /andres/ fwr1,ngaussf,idim,nlist */
      &                  frstin, frstou, fhist,  ferror, ftable, fforce,
      &                  fgraph, ftime
 c
-        common /itrpar/ eGMRES, lGMRES, iKs,    ntotGM
+        common /itrpar/ eGMRES, lGMRES, lGMRESs, iKs, iKss,    ntotGM, ntotGMs
 c
         common /itrpnt/ mHBrg,  meBrg,  myBrg,  mRcos,  mRsin
 c
@@ -245,7 +245,7 @@ c
 c
         common /propar/ npro
 c
-        common /resdat/ resfrt
+        common /resdat/ resfrt, resfrts
 c
         common /solpar/ imap,   ivart,  iDC,    iPcond, Kspace, nGMRES,
      &                  iconvflow, iconvsclr, idcsclr(2)

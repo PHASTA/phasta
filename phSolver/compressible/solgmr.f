@@ -504,7 +504,7 @@ c
 c.... check if GMRES iterations are required
 c
       iKs    = 0
-      lGMRES = 0
+      lGMRESs = 0
 c
 c.... if we are down to machine precision, don't bother solving
 c
@@ -519,7 +519,7 @@ c
 c.... loop through GMRES cycles
 c
       do 2000 mGMRES = 1, nGMRES
-         lGMRES = mGMRES - 1
+         lGMRESs = mGMRES - 1
 c
          if (lGMRES .gt. 0) then
 c
@@ -854,7 +854,7 @@ c
 c
 c.... check if GMRES iterations are required
 c
-        iKst    = 0
+        iKss    = 0
         lGMRESt = 0
 c
 c.... if we are down to machine precision, don't bother solving
@@ -916,54 +916,54 @@ c
 c.... loop through GMRES iterations
 c
         do 1000 iK = 1, Kspace
-           iKst = iK
+           iKss = iK
 
-           uBrgt(:,iKst+1) = uBrgt(:,iKst)
+           uBrgt(:,iKss+1) = uBrgt(:,iKss)
 
 c.... Au product  ( u_{i+1} <-- EGmass u_{i+1} )
 c
-           call Au1GMRSclr ( EGmasst, uBrgt(:,iKst+1),  ilwork, iper )
+           call Au1GMRSclr ( EGmasst, uBrgt(:,iKss+1),  ilwork, iper )
 
 c
 c.... periodic nodes have to assemble results to their partners
 c
-           call bc3perSclr (iBC,  uBrgt(:,iKst+1),  iper)
+           call bc3perSclr (iBC,  uBrgt(:,iKss+1),  iper)
 c
 c.... orthogonalize and get the norm
 c
-          do jK = 1, iKst+1  
+          do jK = 1, iKss+1  
 c
             if (jK .eq. 1) then
 c
-              tempt = uBrgt(:,iKst+1) * uBrgt(:,1)  ! {u_{i+1}*u_1} vector 
+              tempt = uBrgt(:,iKss+1) * uBrgt(:,1)  ! {u_{i+1}*u_1} vector 
               call sumgat (tempt, 1, beta, ilwork) ! sum vector=(u_{i+1},u_1)
 c
             else
 c
 c project off jK-1 vector
 c
-          uBrgt(:,iKst+1) = uBrgt(:,iKst+1) - beta * uBrgt(:,jK-1)
+          uBrgt(:,iKss+1) = uBrgt(:,iKss+1) - beta * uBrgt(:,jK-1)
 c
-              tempt = uBrgt(:,iKst+1) * uBrgt(:,jK) !{u_{i+1}*u_j} vector
+              tempt = uBrgt(:,iKss+1) * uBrgt(:,jK) !{u_{i+1}*u_j} vector
               call sumgat (tempt, 1, beta, ilwork) ! sum vector=(u_{i+1},u_j)
 c
             endif
 c
-            HBrg(jK,iKst) = beta   ! put this in the Hessenberg Matrix
+            HBrg(jK,iKss) = beta   ! put this in the Hessenberg Matrix
 c
         enddo
 c
-        flops = flops + (3*iKst+1)*ndof*numnp+(iKst+1)*numnp
+        flops = flops + (3*iKss+1)*ndof*numnp+(iKss+1)*numnp
 c
 c  the last inner product was with what was left of the vector (after
 c  projecting off all of the previous vectors
 c
         unorm           = sqrt(beta)
-        HBrg(iKst+1,iKst) = unorm   ! this fills the 1 sub diagonal band
+        HBrg(iKss+1,iKss) = unorm   ! this fills the 1 sub diagonal band
 c
 c.... normalize the Krylov vector
 c
-        uBrgt(:,iKst+1) = uBrgt(:,iKst+1) / unorm  ! normalize the next Krylov
+        uBrgt(:,iKss+1) = uBrgt(:,iKss+1) / unorm  ! normalize the next Krylov
 c vector
 c
 c.... construct and reduce the Hessenberg Matrix
@@ -977,31 +977,31 @@ c  will be unaffected by this rotation.
 c     
 c     H Y = E ========>   R_i H Y = R_i E
 c     
-           do jK = 1, iKst-1
-              tmp            =  Rcos(jK) * HBrg(jK,  iKst) +
-     &                          Rsin(jK) * HBrg(jK+1,iKst)
-              HBrg(jK+1,iKst) = -Rsin(jK) * HBrg(jK,  iKst) +
-     &                          Rcos(jK) * HBrg(jK+1,iKst)
-              HBrg(jK,  iKst) =  tmp
+           do jK = 1, iKss-1
+              tmp            =  Rcos(jK) * HBrg(jK,  iKss) +
+     &                          Rsin(jK) * HBrg(jK+1,iKss)
+              HBrg(jK+1,iKss) = -Rsin(jK) * HBrg(jK,  iKss) +
+     &                          Rcos(jK) * HBrg(jK+1,iKss)
+              HBrg(jK,  iKss) =  tmp
            enddo
 c     
-           tmp        = sqrt(HBrg(iKst,iKst)**2 + HBrg(iKst+1,iKst)**2)
-           Rcos(iKst) = HBrg(iKst,  iKst) / tmp
-           Rsin(iKst) = HBrg(iKst+1,iKst) / tmp
-           HBrg(iKst,  iKst) = tmp
-           HBrg(iKst+1,iKst) = zero
+           tmp        = sqrt(HBrg(iKss,iKss)**2 + HBrg(iKss+1,iKss)**2)
+           Rcos(iKss) = HBrg(iKss,  iKss) / tmp
+           Rsin(iKss) = HBrg(iKss+1,iKss) / tmp
+           HBrg(iKss,  iKss) = tmp
+           HBrg(iKss+1,iKss) = zero
 c     
 c.... rotate eBrg    R_i E
 c     
-           tmp         = Rcos(iKst)*eBrg(iKst) + Rsin(iKst)*eBrg(iKst+1)
-           eBrg(iKst+1)=-Rsin(iKst)*eBrg(iKst) + Rcos(iKst)*eBrg(iKst+1)
-           eBrg(iKst)  = tmp
+           tmp         = Rcos(iKss)*eBrg(iKss) + Rsin(iKss)*eBrg(iKss+1)
+           eBrg(iKss+1)=-Rsin(iKss)*eBrg(iKss) + Rcos(iKss)*eBrg(iKss+1)
+           eBrg(iKss)  = tmp
 c     
 c.... check for convergence
 c     
-           ercheck=eBrg(iKst+1)
-           ntotGMt = ntotGMt + 1
-           if (abs(eBrg(iKst+1)) .le. epsnrm) exit
+           ercheck=eBrg(iKss+1)
+           ntotGMs = ntotGMs + 1
+           if (abs(eBrg(iKss+1)) .le. epsnrm) exit
 c     
 c.... end of GMRES iteration loop
 c     
@@ -1013,7 +1013,7 @@ c.... if converged or end of Krylov space
 c
 c.... solve for yBrg
 c
-        do jK = iKst, 1, -1
+        do jK = iKss, 1, -1
            yBrg(jK) = eBrg(jK) / HBrg(jK,jK)
            do lK = 1, jK-1
               eBrg(lK) = eBrg(lK) - yBrg(jK) * HBrg(lK,jK)
@@ -1022,17 +1022,17 @@ c
 c     
 c.... update Dy
 c
-        do jK = 1, iKst
+        do jK = 1, iKss
            Dyt = Dyt + yBrg(jK) * uBrgt(:,jK)
         enddo
 c     
 c.... flop count
 c
-        flops = flops + (3*iKst+1)*ndof*numnp
+        flops = flops + (3*iKss+1)*ndof*numnp
 c
 c.... check for convergence
 c     
-        if (abs(eBrg(iKst+1)) .le. epsnrm) exit
+        if (abs(eBrg(iKss+1)) .le. epsnrm) exit
 c     
 c.... end of mGMRES loop
 c
@@ -1050,7 +1050,7 @@ c
 c     
 c.... output the statistics
 c
-      call rstatSclr(rest, ilwork,lgmrest,iKst)
+      call rstatSclr(rest, ilwork)
 c.... stop the timer
 c     
  3002 continue                  ! no solve just res.

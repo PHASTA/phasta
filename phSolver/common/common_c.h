@@ -451,8 +451,11 @@ extern "C" {
   extern struct { 
     double eGMRES;
     int lGMRES;
+    int lGMRESs;
     int iKs;
+    int iKss;
     int ntotGM;
+    int ntotGMs;
   } itrpar ;
 
   extern struct { 
@@ -523,6 +526,7 @@ extern "C" {
 
   extern struct { 
     double resfrt;
+    double resfrts;
   } resdat ;
 
   extern struct { 

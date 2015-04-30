@@ -164,7 +164,7 @@ c
      &         ' [',i3,'-',i3,']',i10)
 c
         end
-        subroutine rstatSclr (rest, ilwork,lgmrest,ikst)
+        subroutine rstatSclr (rest, ilwork)
 c
 c----------------------------------------------------------------------
 c
@@ -235,8 +235,8 @@ c
         totres = resnrm / float(nshgt)
         totres = sqrt(totres)
         resmax = sqrt(resmax)
-        if (resfrt .eq. zero) resfrt = totres
-        jtotrs = int  ( 10.d0 * log10 ( totres / resfrt ) )
+        if (resfrts .eq. zero) resfrts = totres
+        jtotrs = int  ( 10.d0 * log10 ( totres / resfrts ) )
         jresmx = int  ( 10.d0 * log10 ( resmax / totres ) )
 c
 c.... get the CPU-time
@@ -248,9 +248,9 @@ c.... output the result
 c
         if (myrank .eq. master) then
           print 2000,        lstep+1, cputme, totres, jtotrs, nrsmax,
-     &                     jresmx, lgmrest,  iKst, ntotGM
+     &                     jresmx, lgmress,  iKss, ntotGMs
           write (ihist,2000) lstep+1, cputme, totres, jtotrs, nrsmax,
-     &                     jresmx, lgmrest,  iKst, ntotGM
+     &                     jresmx, lgmress,  iKss, ntotGMs
           call flush(ihist)
         endif
         if(totres.gt.1.0e-9) istop=istop-1

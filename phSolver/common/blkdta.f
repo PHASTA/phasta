@@ -176,8 +176,8 @@ c
 c.... residual statistics data
 c.... common /resdat/ resfrt
 c
-        data    resfrt
-     &  /       0.00000000000000d+0     /
+        data    resfrt, resfrts
+     &  /       0.00000000000000d+0, 0.00000000000000d+0     /
 c
 c----------------------------------------------------------------------
 c
