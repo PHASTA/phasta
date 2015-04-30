@@ -484,9 +484,9 @@ c                        write(*,*) 'lhs=',lhs
                      endif
 c     
                 else          ! solve a scalar  (encoded at isclr*10)
-                     ifuncs(isclr+2)  = ifuncs(isclr+2) + 1
-                     etol=epstol(isclr+1)
                      isclr=isolve
+                     etol=epstol(isclr+2) ! note that for both epstol and LHSupd 1 is flow 2 temp isclr+2 for scalars
+                     ifuncs(isclr+2)  = ifuncs(isclr+2) + 1
                      if((iLSet.eq.2).and.(ilss.eq.0)
      &                    .and.(isclr.eq.2)) then 
                         ilss=1  ! throw switch (once per step)

@@ -419,7 +419,7 @@ c.... Fill-up the global sparse LHS mass matrix
 c
              call fillsparsecpetscs( mieng(iblk)%p, EGmasst, lhsPs)
           endif
-          deallocate ( EGmasst )
+          if(lhs.eq.1) deallocate ( EGmasst )
           deallocate ( tmpshp )
           deallocate ( tmpshgl )
 c.... end of interior element loop
