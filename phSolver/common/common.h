@@ -118,6 +118,11 @@ c
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn
 
+c......................NASA Inlet Woolwine.................................
+        common /nasavari/ BCdtKW, tsBase
+        common /nasavar/  PresFreq, PresAmp, AlphaFreq, AlphaAmp
+c..........................................................................
+
 c...........................................................................
         common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial
         
@@ -221,10 +226,6 @@ c
         common /matdat/ datmat(3,7,MAXTS),      matflg(6,MAXTS),
      &                  nummat,                 mexist
 c
-cMR CHANGE
-c         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
-c      &                  ioform, iowflux, iofieldv, iotype, ioybar,
-c      &                  nstepsincycle, nphasesincycle, ncycles_startphaseavg
         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
      &                  ioform, iowflux, iofieldv, iotype, ioybar,
      &                  nstepsincycle, nphasesincycle, 

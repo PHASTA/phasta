@@ -66,8 +66,11 @@ c
 ! assuming three profiles to control (inlet, bottom FC and top FC)
 ! store velocity profile set via BC
         real*8 vbc_prof(nshg,3)
+        real*8 PresBase, VelBase
         character(len=60) fvarts
         integer ifuncs(6), iarray(10)
+        integer BCdtKW, tsBase
+
         real*8 elDw(numel) ! element average of DES d variable
 c
 c  Here are the data structures for sparse matrix GMRES
@@ -274,7 +277,13 @@ c        tcorewc1 = secs(0.0)
                 isclr=1 ! fix scalar
                 call itrBCsclr(yold,ac,iBC,BC,iper,ilwork)
         endif   
-                                                       
+c  Time Varying BCs------------------------------------(Kyle W 6-6-13)
+c        BCdtKW=0
+        if(BCdtKW.gt.0) then
+           call BCprofileInitKW(PresBase,VelBase,BC)
+        endif
+c  Time Varying BCs------------------------------------(Kyle W 6-6-13)
+                                                        
 867     continue
 
 
@@ -284,8 +293,16 @@ c============ Start the loop of time steps============================c
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 
-         
-        if(iramp.eq.1) 
+           if (myrank.eq.master) write(*,*) 'Time step of current run', 
+     &                                    istp
+
+c  Time Varying BCs------------------------------------(Kyle W 6-6-13)
+           if(BCdtKW.gt.0) then
+              call BCprofileScaleKW(PresBase,VelBase,BC,yold)
+           endif
+c  Time Varying BCs------------------------------------(Kyle W 6-6-13)
+
+           if(iramp.eq.1) 
      &        call BCprofileScale(vbc_prof,BC,yold)
 
 c           call rerun_check(stopjob)
@@ -516,6 +533,22 @@ c
                   iupdate=icode/10 ! what to update
                   if(iupdate.eq.0) then !update flow  
                      call itrCorrect ( y, ac, yold, acold, solinc)
+c------------- NASA debug, output before itrBC --------
+c                     if(myrank.eq.master)then
+c                       write(*,*)'Creating debug restart file...'
+c                     endif
+c                     lstep_orig=lstep
+c                     lstep = 400+lstep
+c                     call restar('out ',y,ac)
+c                     lstep=lstep_orig
+c                     if (myrank.eq.master) then
+c                       open(unit=72,file='numstart.dat',status='old')
+c                       write(72,*) lstep
+c                       close(72)
+c                     endif
+c                     call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c.................
+
                      call itrBC (y,  ac,  iBC,  BC, iper, ilwork)
                      call tnanq(y, 5, 'y_updbc')
 c Elaine-SPEBC
@@ -523,6 +556,12 @@ c Elaine-SPEBC
                         call genscale(y, x, iBC)
 c                       call itrBC (y,  ac,  iBC,  BC, iper, ilwork)
                      endif
+
+c                     if(myrank.eq.master)then
+c                       write(*,*)'icode,end correct', icode
+c                       write(*,*)mien(409)%p(:,1)
+c                     endif
+
                   else          ! update scalar
                      isclr=iupdate !unless
                      if(iupdate.eq.nsclr+1) isclr=0
@@ -552,6 +591,12 @@ c
                      call itrBCSclr (  y,  ac,  iBC,  BC, iper, ilwork)
                   endif
                endif            !end of switch between solve or update
+
+c            if(myrank.eq.master)then 
+c              write(*,*)'icode, end loop over sequence', icode
+c              write(*,*)mien(49)%p(:,1)
+c            endif
+ 
             enddo               ! loop over sequence in step
         if((istop.lt.0).and.(iMoreRANS.lt.5)) then
             iMoreRANS=iMoreRANS+1

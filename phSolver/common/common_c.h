@@ -21,6 +21,8 @@
 #define aerfrc FortranCInterface_GLOBAL_(aerfrc,AERFRC)
 #define astore FortranCInterface_GLOBAL_(astore,ASTORE)
 #define conpar FortranCInterface_GLOBAL_(conpar,CONPAR)
+#define nasavari FortranCInterface_GLOBAL_(nasavari,NASAVARI)
+#define nasavar FortranCInterface_GLOBAL_(nasavar,NASAVAR)
 #define ctrlvari FortranCInterface_GLOBAL_(ctrlvari,CTRLVARI)
 #define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
 #define ctrlvar FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
@@ -253,6 +255,19 @@ extern "C" {
     int nnz_tot;
     int idtn;
   } conpar ;
+
+/*Woolwine June 4 2014 NASA Inlet*/
+  extern struct{
+    int BCdtKW;
+    int tsBase;
+  } nasavari;
+
+  extern struct{
+    double PresFreq;
+    double PresAmp;
+    double AlphaFreq;
+    double AlphaAmp;
+  } nasavar;
  
 /*chen Sep 25 2009  Flow Control Parameters*/
   extern struct{
