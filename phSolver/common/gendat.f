@@ -139,23 +139,6 @@ c==== specify blowing conditions
 
 c====== specify wall conditions 
          call findTurbWall(iTurbWall)
-         do nn=1,nshg
-           if(iTurbWall(nn).eq.1)then
-             !Add scalar 1 to the set of essential BCs that are updated.
-             !This should generally be true for the SA and (I think) k-w
-             !turbulence models and provides a good way to catch stupid
-             !mistakes. The other boundary conditions specified here
-             !drove me crazy for several months. - Nicholas Mati
-             iBC(nn) = ior(iBC(nn), int(64))     !add scalar 1 to the update.     
-             BC(nn,7) = 0   ! set varSA = 0
-
-!             iBC(nn)  = 122 ! temp,u,v,w,slcr_1     
-!             BC(nn,2) = 317 ! Wall temp
-!             BC(nn,3) = 0   ! set x velocity
-!             BC(nn,4) = 0   ! set y velocity
-!             BC(nn,5) = 0   ! set zVel=0
-           endif
-         enddo
 
 c==== apply suction patch on sides
 c suction is applied at the end so it will overwrite the velocity at any nodes shared by the no-slip walls
