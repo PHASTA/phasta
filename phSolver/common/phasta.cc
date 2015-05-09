@@ -33,7 +33,7 @@ extern "C" char phasta_iotype[80];
 char phasta_iotype[80];
 
 extern int SONFATH;
-extern void Partition_Problem( int, char[], char[], int );
+extern int Partition_Problem( int, char[], char[], int );
 extern "C" void proces();
 extern "C" void input();
 extern int input_fform(char inpfname[]);
@@ -143,15 +143,20 @@ phasta( int argc,
         /* Partition the problem to the correct number of processors */
         if( size > 1 ) {
             if( myrank == 0 ) {
-                 Partition_Problem( size, phasta_iotype, 
+                 ierr=Partition_Problem( size, phasta_iotype, 
                                     phasta_iotype, SONFATH );
                  MPI_Barrier(MPI_COMM_WORLD);
+                 if(ierr ==1) {
+                       MPI_Finalize();
+                       return 1;
+                 }
             } else { 
                  MPI_Barrier(MPI_COMM_WORLD);
                  sprintf(inpfilename,"%d-procs_case/",size);
                  if( chdir( inpfilename ) ) {
                     cerr << "could not change to the problem directory "
                               << inpfilename << endl;
+                       MPI_Finalize();
                     return 1;
                  }
             }
