@@ -27,7 +27,7 @@ ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
-SET(CMAKE_Fortran_FLAGS "-g -O3 -W0 -xW -ip -cm -w95 -132 -fpp ${CMAKE_Fortran_FLAGS}" )
+SET(CMAKE_Fortran_FLAGS "-O3 -W0 -xW -ip -cm -w95 -132 -fpp -heap-arrays ${CMAKE_Fortran_FLAGS}" )
 message(STATUS "Found ifort")
 message(STATUS ${CMAKE_Fortran_FLAGS})
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)

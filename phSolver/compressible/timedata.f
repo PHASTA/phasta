@@ -44,14 +44,14 @@
         allocate (vartsbuffstep(nbuff))
 
         !test if the varts folder exists. If it doesn't create it. 
-        if(myrank .eq. master) then
-          inquire(file="./varts/.", exist=exVarts)
-          if(.not. exVarts) then
-            call system("mkdir varts")    !Only works on *nix, but we
-                                          !never really run on Windows
-                                          !anymore so...
-          endif
-        endif
+!        if(myrank .eq. master) then
+!          inquire(file="./varts/.", exist=exVarts)
+!          if(.not. exVarts) then
+!            call system("mkdir varts")    !Only works on *nix, but we
+!                                          !never really run on Windows
+!                                          !anymore so...
+!          endif
+!        endif
 
 !       initProbePoints = exts
 !     end function

@@ -46,12 +46,12 @@
         integer :: tstep
         vBCg = 0
         
-        if(myrank == master) then 
-          inquire(file="./MachControl/.", exist=MC_existDir)
-          if(.not. MC_existDir) then
-            call system("mkdir ./MachControl")  !Doesn't seem to work on BGQ.
-          endif
-        endif
+!        if(myrank == master) then 
+!          inquire(file="./MachControl/.", exist=MC_existDir)
+!          if(.not. MC_existDir) then
+!            call system("mkdir ./MachControl")  !Doesn't seem to work on BGQ.
+!          endif
+!        endif
 
         call MC_readState(tstep)
         
