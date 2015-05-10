@@ -6,16 +6,11 @@
 #define _PHASTAIO_H_
 
 #include <FCMangle.h>
-#include <mpi.h>
 
 #ifdef intel
 #define ios_base ios
 #endif
 
-#define queryphmpiio FortranCInterface_GLOBAL_(queryphmpiio,QUERYPHMPIIO)
-#define initphmpiio FortranCInterface_GLOBAL_(initphmpiio,INITPHMPIIO)
-#define initphmpiiosub FortranCInterface_GLOBAL_(initphmpiiosub,INITPHMPIIOSUB)
-#define finalizephmpiio FortranCInterface_GLOBAL_(finalizephmpiio,FINALIZEPHMPIIO)
 
 #define openfile FortranCInterface_GLOBAL_(openfile, OPENFILE)
 #define closefile FortranCInterface_GLOBAL_(closefile, CLOSEFILE)
@@ -28,58 +23,33 @@
 #define SwapArrayByteOrder FortranCInterface_GLOBAL_(swaparraybyteorder, SWAPARRAYBYTEORDER)
 #define isLittleEndian FortranCInterface_GLOBAL_(islittleendian, ISLITTLEENDIAN)
 
-
 #if defined (__cplusplus)
 extern "C" {
 #endif
 
-  void mem_alloc( void* p, char* type, int size );
-
-  void
-  queryphmpiio( const char filename[],
-		 int *nfields,
-		 int *nppf );
-
-  int
-  initphmpiio( int *nfields,
-		int *nppf,
-		int *nfiles,
-		int *filehandle,
-		const char mode[] );
-  int
-  initphmpiiosub( int *nfields,
-		  int *nppf,
-		  int *nfiles,
-		  int *filehandle,
-		  const char mode[],
-                  MPI_Comm my_local_comm );
-
-  void
-  finalizephmpiio( int *fileDescriptor );
-
-    void
-    SwapArrayByteOrder( void* array,
-                         int   nbytes,
+    void 
+    SwapArrayByteOrder( void* array, 
+                         int   nbytes, 
                          int   nItems ) ;
-    void
+    void 
 
     openfile( const char filename[],
                const char mode[],
                int* fileDescriptor );
 
-    void
+    void 
     closefile( int* fileDescriptor,
                 const char mode[] );
 
-    void
+    void 
     readheader( int*   fileDescriptor,
                  const char  keyphrase[],
                  void*  valueArray,
                  int*   nItems,
-                 const char   datatype[],
+                 const char   datatype[], 
                  const char   iotype[] );
-
-    void
+    
+    void 
     writeheader( const int*  fileDescriptor,
                   const char keyphrase[],
                   const void* valueArray,
@@ -93,19 +63,19 @@ extern "C" {
                     const char keyphrase[],
                     void* valueArray,
                     int*  nItems,
-                    const char  datatype[],
+                    const char  datatype[], 
                     const char  iotype[] );
-
-
-    void
+    
+    
+    void 
     writedatablock( const int*   fileDescriptor,
-                     const char  keyphrase[],
-                     const void*  valueArray,
-                     const int*   nItems,
-                     const char   datatype[],
+                     const char  keyphrase[], 
+                     const void*  valueArray, 
+                     const int*   nItems, 
+                     const char   datatype[], 
                      const char   iotype[]  );
 
-    void
+    void 
     writestring( int* fileDescriptor,
                   const char inString[] );
 
@@ -114,8 +84,6 @@ extern "C" {
 
   int
   isLittleEndian( ) ;
-
-  int computeColor( int myrank, int numprocs, int nfiles);
 
 #ifdef __cplusplus
 } // end of extern "C".
@@ -139,13 +107,13 @@ struct PhastaIO_traits<double> {
 
 
 template<class T>
-void
+void 
 write_data_block( const int   fileDescriptor,
-		  const std::string keyphrase,
-		  const T* const  valueArray,
-		  const int   nItems,
+		  const std::string keyphrase, 
+		  const T* const  valueArray, 
+		  const int   nItems, 
 		  const bool inBinary = false) {
-  writedatablock(&fileDescriptor,
+  writedatablock_(&fileDescriptor, 
 		  keyphrase.c_str(),
 		  reinterpret_cast<const void*>(valueArray),
 		  &nItems,
@@ -154,14 +122,14 @@ write_data_block( const int   fileDescriptor,
 
 }
 template<class T>
-void
+void 
 write_header( const int  fileDescriptor,
 		 const std::string& keyphrase,
 		 const T* valueArray,
 		 const int  nItems,
 		 const int  nDataItems,
 		 const bool inBinary = false) {
-      writeheader(&fileDescriptor,
+      writeheader_(&fileDescriptor,
 		   keyphrase.c_str(),
 		   reinterpret_cast<const void*>(valueArray),
 		   &nItems,
@@ -169,7 +137,7 @@ write_header( const int  fileDescriptor,
 		   PhastaIO_traits<T>::type_string,
 		   inBinary ? "binary" : "text");
 }
-
+ 
 
 } // namespace PHASTA
 
