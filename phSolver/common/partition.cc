@@ -136,7 +136,7 @@ generate_keyphrase(char* target, const char* prefix, block& tpblock) {
 }
 
 
-void 
+int 
 Partition_Problem( int  numProcs,
                         char iformat[],
                         char oformat[],
@@ -180,15 +180,18 @@ Partition_Problem( int  numProcs,
             cout << "using the existing inputfiles" << endl;
             if ( !chdir( _directory_name ) ) {/* cd successful */
                 cout <<"changing to the problem directory " << _directory_name << endl;
-                return;
+                return 0;
             }else { 
                  cout << "Please check the permissions for the problem";
                  cout << " directory " << _directory_name << endl;
-                 exit(0);
+                 return 1;
             }
 
      } else {
             cout << _directory_name << " does not exist or is unusable" << endl;
+            cout << "In this version, rank0 partitioning is disabled" << endl;
+            cout << "Partition correct size with other software or check numProcs "<< endl;
+            return 1;
             cout << "creating a new one" << endl;
 #ifdef intel
             _unlink( _directory_name );
