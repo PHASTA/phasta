@@ -1,27 +1,25 @@
-#include <stdio.h>
+#include <cstdio>
 #include <fstream>
 #include "Input.h"
 #include "ValType.h"
 #include <stdexcept>
-#include <sstream>
-//#include <strstream>
-//MR CHANGE
+#include <iostream>
 #include <cstdlib>
-//MR CHANGE END
+#include <sstream>
 
 // return a given key value (if it's in the map)
 ValType Input::GetValue(const string &str) const
 {
   if (input_map->find(str) != input_map->end()) {
     if ( (*input_map)[str] == "NODEFAULT" ) {
-      ostringstream ostr;
-      ostr << "required input variable not set: " << str << ends;
-      throw invalid_argument( ostr.str() );
+      ostringstream ost;
+      ost << "required input variable not set: " << str << ends;
+      throw invalid_argument( ost.str() );
     }
   } else {
-    ostringstream ostr;
-    ostr << "required input variable not set: " << str << ends;
-    throw invalid_argument( ostr.str() );
+    ostringstream ost;
+    ost << "required input variable not set: " << str << ends;
+    throw invalid_argument( ost.str() );
   }
 
   return ValType( (*input_map)[str] );

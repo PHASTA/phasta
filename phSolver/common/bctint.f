@@ -121,7 +121,7 @@ c-----------------------------------------------------------------------
       
       use     specialBC
       include "common.h"
- 
+      
       real*8   x(numnp,nsd), BC(nshg,ndofBC), rj1,rj2,rj3,rj4,distd,epsd
       integer  iBC(nshg)
       character*80 card

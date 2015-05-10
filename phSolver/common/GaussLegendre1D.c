@@ -1,4 +1,4 @@
-/*$Id$*/
+/*$Id: GaussLegendre1D.c 362 2001-05-31 16:01:30Z kjansen $*/
 #include <stdlib.h>
 
 #ifdef __cplusplus

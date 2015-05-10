@@ -33,7 +33,7 @@ c
 c.... print the error
 c
            write (*,1000) title, routin, variab, num
-           if (num .ne. 0) write (ierror,1000) title, routin, variab,num
+           if (num .ne. 0) write (ierror,1000) title, routin, variab, num
            if (num .eq. 0) write (ierror,1000) title, routin, variab
 c
 c.... halt the process

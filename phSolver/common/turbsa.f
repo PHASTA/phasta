@@ -45,40 +45,31 @@ c-----------------------------------------------------------------------
       include "common.h"
       include "mpif.h"
       
-      character(len=20) fname1,  fmt1
+      character*20 fname1,  fmt1
       real*8   x(numnp,nsd)
       integer  nwall(numpe),      idisp(numpe)
-      character(len=5)  cname      
+      character*5  cname      
       real*8, allocatable :: xwi(:,:,:), xw(:,:,:)
-
-!MR CHANGE
-      integer :: ierr
-      integer :: numparts, nfile, itmp2, id2wall, itwo, ifoundd2wall
-      integer iarray(10)
-      character(len=255) :: fnamer, fname2, temp2
-      character(len=64) :: temp1
-!MR CHANGE END
-
+      
       allocate ( d2wall(numnp) )
-
-!MR CHANGE
-      if(myrank.eq.master) then
-        write (*,*) 'entering initTurb'
+c
+c.... Find out if d2wall is already calculated
+c
+      if (myrank. eq. master )then  
+         write(*,*) 'Open distcalc.dat'
       endif
-      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
 
-      ! First we try to read the d2wall field from either the restart files or the d2wall files
-      call read_d2wall(myrank,numnp,d2wall,ifoundd2wall)
-!MR CHANGE END
+      open(unit=72,file='distcalc.dat',status='old')
+      read(72,*) idistcalc
+c      idistcalc=1
+      close(72)
 
-      if(ifoundd2wall.eq.0) then   ! d2wall was not found so calculate the distance
-        if(myrank.eq.master) then
-          write (*,*) 'Computing the d2wall field'
-        endif    
-c
-c   hard code trip point until we are sure it is worth doing
-c
+      if (myrank.eq. master)then
+         write(*,*) 'Compute wall distance:', idistcalc 
+         write(*,*) 'Close distcalc.dat '
+      endif
 
+      if(idistcalc.eq.1) then   ! calculate the distance
 c
 c.... Count the welts (wall-elements)
 c
@@ -216,38 +207,34 @@ c
 c
 c.... write d2wall to a file so we don't have to do this again
 c
+         write (fmt1,"('(''d2wall.'',i',i1,',1x)')") 1
+         write (fname1,fmt1) 0
+         fname1 = trim(fname1) // cname(myrank+1)
+         if(myrank.eq.master) write (*,*) 'Writing dist file : ', fname1
+         open (unit=72, file=fname1, status='unknown',
+     &                                    form='unformatted', err=996)
 
-!MR CHANGE #Fix this with SyncIO!!!!!
-!         write (fmt1,"('(''d2wall.'',i',i1,',1x)')") 1
-!         write (fname1,fmt1) 0
-!         fname1 = trim(fname1) // cname(myrank+1)
-!         if(myrank.eq.master) write (*,*) 'Writing dist file : ', fname1
-!         open (unit=72, file=fname1, status='unknown',
-!     &                                    form='unformatted', err=996)
-!
-!         write (72) d2wall
-!         close (72)
-
-          call write_d2wall(myrank,numnp,d2wall) !See new_interface.c
-
-!MR CHANGE END
-
+         write (72) d2wall
+         close (72)
 c         write(*,*) "make sure to: echo 0 > distcalc.dat"
 c         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 c         call error ('distcalc','complete',0)
       endif
+      if (idistcalc.eq.0) then ! d2wall is already done, don't calculate it
+        write (fmt1,"('(''d2wall.'',i',i1,',1x)')") 1
+        write (fname1,fmt1) 0
+        fname1 = trim(fname1) // cname(myrank+1)
+        if(myrank.eq.master) write (*,*) 'Reading dist file : ', fname1
 
-!MR CHANGE
-      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-      if(myrank.eq.master) then
-        write (*,*) 'leaving initTurb'
+        open (unit=72, file=fname1, status='old',
+     &        form='unformatted', err=995)
+
+        read (72) d2wall
+        close (72)
       endif
-!MR CHANGE
 
       return
 995     call error ('d2wall  ','opening ', 72)
 996     call error ('d2wall  ','opening ', 72)
 
-      end subroutine
-
-
+      end

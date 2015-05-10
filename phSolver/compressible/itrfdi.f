@@ -105,8 +105,7 @@ c
      &               shgl,            iBC,
      &               BC,              shpb,
      &               shglb,           rtmp,
-     &               iper,            ilwork, ac)
-!Added ac to the end if itrRes, but not tested - Nicholas
+     &               iper,            ilwork)
 c
 c.... compute the second residual and add it to the first one
 c
@@ -122,8 +121,7 @@ c
      &               shgl,            iBC,
      &               BC,              shpb,
      &               shglb,           rtmp,
-     &               iper,            ilwork, ac)
-!Added ac to the end if itrRes, but not tested - Nicholas
+     &               iper,            ilwork)
 c
         call i3LU (BDiag, rtmp, 'forward ')
 c
@@ -209,8 +207,7 @@ c
      &               a(mshgl),        a(mwght),      iBC,
      &               BC,              engBC,         a(mshpb),
      &               a(mshglb),       a(mwghtb),     rtmp,
-     &               iper,            ilwork, ac)
-!Added ac to the end if itrRes, but not tested - Nicholas
+     &               iper,            ilwork)
 c
         iabres = 0
 c
@@ -235,8 +232,7 @@ c
      &               a(mshgl),        a(mwght),      iBC,
      &               BC,              engBC,         a(mshpb),
      &               a(mshglb),       a(mwghtb),     rtmp,
-     &               iper,            ilwork, ac)
-!Added ac to the end if itrRes, but not tested - Nicholas
+     &               iper,            ilwork)
 c
 c.... compute the second residual and add it to the first one
 c
@@ -247,8 +243,7 @@ c
      &               a(mshgl),        a(mwght),      iBC,
      &               BC,              engBC,         a(mshpb),
      &               a(mshglb),       a(mwghtb),     rtmp,
-     &               iper,            ilwork, ac)
-!Added ac to the end if itrRes, but not tested - Nicholas
+     &               iper,            ilwork)
 c
 c.... compute the second derivative and its norm
 c

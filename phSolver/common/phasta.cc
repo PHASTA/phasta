@@ -1,10 +1,7 @@
-//MR CHANGE
-#define OMPI_SKIP_MPICXX 1
-//MR CHANGE END
-#include <mpi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "mpi.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -14,6 +11,7 @@
 #if !(defined IOSTREAMH)
 #include <iostream>
 #include <sstream>
+#include <strstream>
 using namespace std;
 #endif
 
@@ -37,9 +35,6 @@ extern void Partition_Problem( int, char[], char[], int );
 extern "C" void proces();
 extern "C" void input();
 extern int input_fform(char inpfname[]);
-//MR CHANGE
-extern void setIOparam(); // For SyncIO
-//MR CHANGE END
 
 int myrank; /* made file global for ease in debugging */
 
@@ -47,7 +42,7 @@ void
 catchDebugger() {
     while (1) { 
       int debuggerPresent=0;
-      int fakeSTOP = 1; // please stop HERE and assign as next line 
+//      int fakeSTOP = 1; // please stop HERE and assign as next line 
       // assign or set debuggerPresent=1
       if(debuggerPresent) {
         break;
@@ -78,7 +73,6 @@ phasta( int argc,
     int size,ierr;
     char inpfilename[100];
     char* pauseDebugger = getenv("catchDebugger");
-    //cout << "pauseDebugger" << pauseDebugger << endl;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size (MPI_COMM_WORLD, &size);
@@ -92,18 +86,17 @@ phasta( int argc,
       catchDebugger();
     }
 #endif
-#if (1) // ALWAYS ( defined LAUNCH_GDB ) && !( defined WIN32 )
+#if ( defined LAUNCH_GDB ) && !( defined WIN32 )
 
     if ( pauseDebugger ) {
 
         int parent_pid = getpid();
         int gdb_child = fork();
-        cout << "gdb_child" << gdb_child << endl;
 
         if( gdb_child == 0 ) {
      
             cout << "Debugger Process initiating" << endl;
-            stringstream exec_string;
+            strstream exec_string;
          
 #if ( defined decalp )
             exec_string <<"xterm -e idb " 
@@ -121,8 +114,7 @@ phasta( int argc,
             exec_string <<"xterm -e dbx " 
                         << " -p "<< parent_pid <<" "<< argv[0] << endl;
 #endif
-
-			system( exec_string.str().c_str() ); //check for dangling pointer
+            system( exec_string.str() );
             exit(0);
         }
         catchDebugger();
@@ -157,10 +149,6 @@ phasta( int argc,
             }
         }
 
-//MR CHANGE
-        setIOparam();
-//MR CHANGE END
-
         input();
         /* now we can start the solver */
         proces();
@@ -168,15 +156,7 @@ phasta( int argc,
     else{
         printf("error during reading ascii input \n");
     }
-   
-//MR CHANGE
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    if ( myrank == 0 ) {
-      printf("phasta.cc - last call before finalize!\n");
-    }
-//MR CHANGE
- 
+    
     MPI_Finalize();
     return 0;
 }

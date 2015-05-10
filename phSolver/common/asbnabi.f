@@ -30,6 +30,7 @@ c
      &            temp3(npro),
      &            v1(npro,nsd),              v2(npro,nsd)
 
+c        dimension inshlbKW(nshl)
 c
 c.... get the matrix of mode signs for the hierarchic basis functions
 c
@@ -145,8 +146,14 @@ C     elements up to the global level in the array ndsurf
 c
         do iel=1,npro
            if (iBCB(iel,2) .ne. 0) then
-              iface = iBCB(iel,2)
-              ndsurf(ienb(iel,1:nshlb))=iface   
+c------------------------------------------------KW (6-17-13)
+              do kk=1,nshlb
+                 if (ndsurf(ienb(iel,kk)) .ne. 801) then
+                    iface = iBCB(iel,2)
+                    ndsurf(ienb(iel,kk))=iface   
+                 endif
+              enddo
+c------------------------------------------------KW (6-17-13)
            endif
         enddo
 c     
@@ -295,12 +302,25 @@ c
 c     push the surf number which we have associated with boundary
 C     elements up to the global level in the array ndsurf
 c
+c        do iel=1,npro
+c           if (iBCB(iel,2) .ne. 0) then
+c              iface = iBCB(iel,2)
+c              ndsurf(ienb(iel,1:nshlb))=iface   
+c           endif
+c        enddo
         do iel=1,npro
            if (iBCB(iel,2) .ne. 0) then
-              iface = iBCB(iel,2)
-              ndsurf(ienb(iel,1:nshlb))=iface   
+c------------------------------------------------KW (6-17-13)
+              do kk=1,nshlb
+                 if (ndsurf(ienb(iel,kk)) .ne. 801) then
+                    iface = iBCB(iel,2)
+                    ndsurf(ienb(iel,kk))=iface
+                 endif
+              enddo
+c------------------------------------------------KW (6-17-13)
            endif
         enddo
+
 c     
 c.... end
 c

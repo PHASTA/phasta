@@ -22,9 +22,10 @@ c Zdenek Johan,  Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
 c
       use slpw
-      use readarrays            ! used to access BCinp, nBC
+      use readarrays     ! used to access BCinp, nBC
       use specialBC ! filling acs here
       include "common.h"
+      include "mpif.h"
 c
       dimension iBC(nshg),                nsurf(nshg),
      &            BC(nshg,ndofBC),
@@ -48,6 +49,12 @@ c.... --------------------------->  Input  <---------------------------
 c
 c.... convert boundary condition data
 c
+
+c... Duct YiChen
+      integer iTurbWall(nshg)
+      call findTurbWall(iTurbWall)
+c...
+
       BCtmp = zero
 c
       if(numpbc.ne.0) then  
@@ -83,10 +90,14 @@ c
 c.... convert the input boundary conditions to condensed version
 c
       BC = zero
-c
-      if(myrank.eq.0) write(*,*) 'Navier is set to ', navier
-      if(navier.eq.1)then ! zero navier means Euler simulation
-         call genBC1 (BCtmp,  iBC,  BC)
+
+c========= Duct YiChen ===================================================
+
+      call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+      pureNavier = 0
+      if(pureNavier.eq.1)then ! zero navier means Euler simulation
+          call genBC1 (BCtmp,  iBC,  BC)
       elseif(matflg(1,1).eq.0)then !  compressible code 
          allocate(BCtmpg(nshg,ndof+7))
          allocate(BCg(nshg,ndofBC))
@@ -108,10 +119,51 @@ c... apply slip wall condition to wall nodes
      &               wlnorm(nn,:,:)                     )
          enddo
          icd=icdg
-      else
-         if(myrank.eq.0) write(*,*) 'Incompressible code not able to do inviscid at this time'
       endif
 
+c ---------- Outlet, Inlet, Blowing inelt, Suction ---------------------------
+
+         call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+         if(isetOutPres .gt. 0)then
+           call SetUniOutPres(BC)     ! in BCprofile2.f
+         endif
+
+         if(isetInlet_Duct.gt.0)then
+           call setInlet_Duct(x,BC,iTurbWall) ! in BCprofile2.f
+         endif
+
+         if(isetBlowing_Duct.gt.0)then
+            if (ifixBlowingVel_Duct.eq.0)then
+              call setBlowing_Duct(BC,iTurbWall)
+            else
+              call setBlowing_Duct3(x,BC,iTurbWall) ! in setBlowing_Duct3.f, fixed jet inlet velocity
+            endif
+         endif
+
+         if(isetSuction_Duct.gt.0)then
+            call findSuctionNorm(x,iBC,ilwork,iper)
+            call setSuction_Duct(BC)
+         endif
+
+         call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+c---- Turbulent Walls ---------------------------------------
+
+         do nn=1,nshg
+           if(iTurbWall(nn).eq.1)then
+             iBC(nn)  = 122 ! temp,u,v,w,slcr_1
+             BC(nn,2) = 317 ! Wall temp
+             BC(nn,3) = 0   ! set x velocity
+             BC(nn,4) = 0   ! set y velocity
+             BC(nn,5) = 0   ! set zVel=0
+             BC(nn,7) = 0   ! set varSA = 0
+           endif
+         enddo
+
+         call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+c=============== Duct YiChen ======================================================
 
 c
 c.... --------------------------->  Echo  <----------------------------
@@ -129,9 +181,7 @@ c
             endif
          enddo
       endif
-c     
-c.... return
-c
+
       return
 c
  1000 format(a80,//,

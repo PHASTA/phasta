@@ -1,11 +1,7 @@
 #include <string>
 #include <vector>
-//MR CHANGE
 #include <cstring>
-#include <cmath>
 #include <cstdlib>
-//MR CHANGE END
-
 #include "ValType.h"
 
 ValType::operator int()

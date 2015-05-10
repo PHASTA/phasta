@@ -4,13 +4,11 @@
 #include <map>
 #include <utility>
 #include <fstream>
+#include <cstring>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "phastaIO.h"
-//MR CHANGE
-#include <cstdlib>
-#include <cstring>
-//MR CHANGE END
 
 #include <FCMangle.h>
 
@@ -142,7 +140,7 @@ Partition_Problem( int  numProcs,
                         char oformat[],
                         int  SONFATH_VAR   ) {
 
-    int rank =0;
+    
     int stepno;
     int igeombc;  /* file handle for geombc */
     int irestart; /* file handle for restart */
@@ -153,7 +151,6 @@ Partition_Problem( int  numProcs,
     int iseven=7;
     int ieight=8;
     int isize;
-    int ierr;
     int nitems;
 
     /* Lets us first load the dual and partition it */

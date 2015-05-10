@@ -28,21 +28,18 @@ c
 c Zdenek Johan,  Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
 c
-      use pvsQbi        !gives us splag (the spmass at the end of this run 
-      use specialBC     !gives us itvn
-      use timedata      !allows collection of time series
-      use MachControl   !PID to control the inlet velocity. 
-      use blowerControl !gives us BC_enable 
+      use pvsQbi     !gives us splag (the spmass at the end of this run 
+      use specialBC  !gives us itvn
+      use timedata   !allows collection of time series
       use turbSA
-      use wallData
 
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
       
 c
-        dimension y(nshg,ndof),            ac(nshg,ndof),  
-     &            yold(nshg,ndof),         acold(nshg,ndof),           
+        dimension y(nshg,ndof),            ac(nshg,ndof),           
+     &           yold(nshg,ndof),         acold(nshg,ndof),           
      &            x(numnp,nsd),            iBC(nshg),
      &            BC(nshg,ndofBC),         ilwork(nlwork),
      &            iper(nshg),              uold(nshg,nsd)
@@ -57,70 +54,76 @@ c
         real*8   almit, alfit, gamit
         dimension ifath(numnp),    velbar(nfath,ndof),  nsons(nfath)
         real*8 rerr(nshg,10),ybar(nshg,ndof+8) ! 8 is for avg. of square as uu, vv, ww, pp, TT, uv, uw, and vw
-        real*8, allocatable, dimension(:,:) :: vortG
-
-!       integer, allocatable, dimension(:) :: iv_rank  !used with MRasquin's version of probe points
-!       integer :: iv_rankpernode, iv_totnodes, iv_totcores
-!       integer :: iv_node,        iv_core,     iv_thread
-
+        integer, allocatable, dimension(:) :: ivarts
+        integer, allocatable, dimension(:) :: ivartsg
+        real*8, allocatable, dimension(:) :: vartssoln
+        real*8, allocatable, dimension(:) :: vartssolng
+        real*8, allocatable, dimension(:,:,:) :: vartsbuff
 ! assuming three profiles to control (inlet, bottom FC and top FC)
 ! store velocity profile set via BC
         real*8 vbc_prof(nshg,3)
         real*8 PresBase, VelBase
-        character(len=60) fvarts
+        character*20 fname1, fmt1, fname2, fmt2
+        character*4 fname4c ! 4 characters
+        character*60 fvarts
+        character*5  cname
+        character*10  cname2
         integer ifuncs(6), iarray(10)
         integer BCdtKW, tsBase
 
         real*8 elDw(numel) ! element average of DES d variable
+
 c
 c  Here are the data structures for sparse matrix GMRES
 c
-        integer, allocatable, dimension(:,:) :: rowp
-        integer, allocatable, dimension(:) :: colm
-        real*8, allocatable, dimension(:,:) :: lhsK
-        real*8, allocatable, dimension(:,:) :: EGmass
-        real*8, allocatable, dimension(:,:) :: EGmasst
- 
-        integer iTurbWall(nshg) 
-        real*8 yInlet(3), yInletg(3)
-        integer imapped, imapInlet(nshg)  !for now, used for setting Blower conditions
-!        real*8 M_th, M_tc, M_tt
-!        logical  exMc
-!        real*8 vBC, vBCg
-        real*8 vortmax, vortmaxg
+       integer, allocatable, dimension(:,:) :: rowp
+       integer, allocatable, dimension(:) :: colm
+       real*8, allocatable, dimension(:,:) :: lhsK
+       real*8, allocatable, dimension(:,:) :: EGmass
+       real*8, allocatable, dimension(:,:) :: EGmasst
 
+       integer iTurbWall(nshg)
+ 
        call findTurbWall(iTurbWall)
 
-!-------
-! SETUP
-!-------
+       inquire(file='xyzts.dat',exist=exts)
+       lskeep=lstep 
+       if(exts) then
+         
+          open(unit=626,file='xyzts.dat',status='old')
+          read(626,*) ntspts, freq, tolpt, iterat, varcod
+          call sTD              ! sets data structures
+          do jj=1,ntspts        ! read coordinate data where solution desired
+             read(626,*) ptts(jj,1),ptts(jj,2),ptts(jj,3)
+          enddo
+          close(626)
 
-       !HACK for debugging suction
-!       call Write_Debug(myrank, 'wallNormal'//char(0), 
-!     &                          'wnorm'//char(0), wnorm, 
-!     &                          'd', nshg, 3, lstep)
+           statptts(:,:) = 0
+           parptts(:,:) = zero
+           varts(:,:) = zero           
 
-       !Probe Point Setup
-       call initProbePoints()
-       if(exts) then  !exts is set in initProbePoints 
-         write(fvarts, "('./varts/varts.', I0, '.dat')") lstep    
-         fvarts = trim(fvarts)  
+           allocate (ivarts(ntspts*ndof))
+           allocate (ivartsg(ntspts*ndof))
+           allocate (vartssoln(ntspts*ndof))
+           allocate (vartssolng(ntspts*ndof))
 
-         if(myrank .eq. master) then 
-           call TD_writeHeader(fvarts)
-         endif
+           nbuff=ntout
+           allocate (vartsbuff(ntspts,ndof,nbuff))
+
+           if (myrank .eq. master) then
+              do jj=1,ntspts
+                 fvarts='varts/varts'
+                 fvarts=trim(fvarts)//trim(cname2(jj))
+                 fvarts=trim(fvarts)//trim(cname2(lstep))
+                 fvarts=trim(fvarts)//'.dat'
+                 fvarts=trim(fvarts)
+                 open(unit=1000+jj, file=fvarts, status='unknown')
+              enddo
+           endif 
+          
        endif
-       
-       !Mach Control Setup
-       call MC_init(Delt, lstep, BC)
-       exMC = exMC .and. exts   !If probe points aren't available, turn
-                                !the Mach Control off
-       if(exMC) then 
-         call MC_applyBC(BC)
-         call MC_printState()
-       endif
-
-
+ 
+c
 c
 c.... open history and aerodynamic forces files
 c
@@ -138,13 +141,6 @@ c
         time   = 0
         yold   = y
         acold  = ac
-
-!Blower Setup
-       call BC_init(Delt, lstep, BC)  !Note: sets BC_enable
-! fix the yold values to the reset BC
-      if(BC_enable) call itrBC (yold,  ac,  iBC,  BC,  iper, ilwork)
-! without the above, second solve of first steps is fouled up
-!
         if (mod(impl(1),100)/10 .eq. 1) then
 c
 c     generate the sparse data fill vectors
@@ -164,6 +160,7 @@ c
            nedof=nflow*nshape
            allocate  (EGmass(numel,nedof*nedof))
         endif
+cc
 
 c..........................................
         rerr = zero
@@ -176,40 +173,9 @@ c..........................................
         ybar(:,ndof+8) = y(:,2)*y(:,3)
 c.........................................
 
-!  change the freestream and inflow eddy viscosity to reflect different
-!  levels of freestream turbulence
-!
-! First override boundary condition values
-!  USES imapInlet from Mach Control so if that gets conditionaled away
-!  it has to know if it is needed here
-!
-      if(isetEV_IC_BC.eq.1) then
-        allocate(vortG(nshg, 4))
-        call vortGLB(yold, x, shp, shgl, ilwork, vortG)
-        vortmax=maxval(abs(vortG(:,4)))  !column 4 is the magnitude of the shear tensor - should actually probably be calld shearmax instead of vortmax
-        write(*,*) "vortmax = ", vortmax
-        
-        !Find the maximum shear in the simulation
-        if(numpe.gt.1) then
-           call MPI_ALLREDUCE(vortmax, vortmaxg, 1, 
-     &          MPI_DOUBLE_PRECISION, MPI_MAX, MPI_COMM_WORLD, ierr )
-           vortmax = vortmaxg
-        endif
 
-        !Apply eddy viscosity at the inlet
-        do i=1,icountInlet ! for now only coded to catch primary inlet, not blower
-           BC(imapInlet(i),7)=evis_IC_BC
-        enddo
-    
-        !Apply eddy viscosity through the quasi-inviscid portion of the domain
-        do i = 1,nshg
-          if(abs(vortG(i,4)).ge.vortmax*0.01) yold(i,6)=evis_IC_BC
-        enddo
-        isclr=1 ! fix scalar
-        call itrBCsclr(yold,ac,iBC,BC,iper,ilwork)
-        
-        deallocate(vortG)
-      endif
+        vbc_prof(:,1:3) = BC(:,3:5)
+
 c
 c.... loop through the time sequences
 c
@@ -253,7 +219,7 @@ c
 c        tcorecp1 = REAL(secs(0.0)) / 100.
 c        tcorewc1 = secs(0.0)
         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-        if(myrank.eq.master)  then
+        if(myrank.eq.0)  then
            tcorecp1 = TMRC()
         endif
 
@@ -261,7 +227,7 @@ c        tcorewc1 = secs(0.0)
         if(rmutarget.gt.0) then
            rmue=rmutarget
            xmulfact=(rmue/rmub)**(1.0/nstp)
-           if(myrank.eq.master) then
+           if(myrank.eq.0) then
               write(*,*) 'viscosity will by multiplied by ', xmulfact
               write(*,*) 'to bring it from ', rmub,' down to ', rmue
            endif
@@ -286,11 +252,7 @@ c  Time Varying BCs------------------------------------(Kyle W 6-6-13)
                                                         
 867     continue
 
-
 c============ Start the loop of time steps============================c
-!        edamp2=.99
-!        edamp3=0.05
-        deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
 
            if (myrank.eq.master) write(*,*) 'Time step of current run', 
@@ -328,31 +290,31 @@ c
            if(itvn.gt.0) call BCint((lstep+1)*Delt(1), shp, shgl,
      &                              shpb, shglb, x, BC, iBC)
 
-            if(iLES.gt.0) then
+           if(iLES.gt.0) then
 c
 c.... get dynamic model coefficient
 c
-            ilesmod=iLES/10  
+             ilesmod=iLES/10  
 c
 c digit bit set filter rule, 10 bit set model
 c
-            if (ilesmod.eq.0) then ! 0 < iLES < 10 => dyn. model calculated
+             if (ilesmod.eq.0) then ! 0 < iLES < 10 => dyn. model calculated
                                    ! at nodes based on discrete filtering
                call getdmc (yold,       shgl,      shp, 
      &                      iper,       ilwork,    nsons,
      &                      ifath,      x)
-            endif
-            if (ilesmod .eq. 1) then ! 10 < iLES < 20 => dynamic-mixed
+             endif
+             if (ilesmod .eq. 1) then ! 10 < iLES < 20 => dynamic-mixed
                                      ! at nodes based on discrete filtering
                call bardmc (yold,       shgl,      shp, 
      &                      iper,       ilwork,    
      &                      nsons,      ifath,     x) 
-            endif
-            if (ilesmod .eq. 2) then ! 20 < iLES < 30 => dynamic at quad
+             endif
+             if (ilesmod .eq. 2) then ! 20 < iLES < 30 => dynamic at quad
                                      ! pts based on lumped projection filt. 
                call projdmc (yold,       shgl,      shp, 
      &                       iper,       ilwork,    x) 
-            endif
+             endif
 c
            endif ! endif of iLES
 
@@ -360,48 +322,71 @@ c
 c
 c.... set traction BCs for modeled walls
 c
-            if (itwmod.ne.0) then   !wallfn check
-               call asbwmod(yold,   acold,   x,      BC,     iBC,
+           if (itwmod.ne.0) then   !wallfn check
+              call asbwmod(yold,   acold,   x,      BC,     iBC,
      &                      iper,   ilwork,  ifath,  velbar)
-            endif
+           endif
 c
 c.... -----------------------> predictor phase <-----------------------
 c
-            call itrPredict(   yold,    acold,    y,   ac )
-            call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
-            isclr = zero
-            if (nsclr.gt.zero) then
-            do isclr=1,nsclr
+           call itrPredict(   yold,    acold,    y,   ac )
+           call itrBC (y,  ac,  iBC,  BC,  iper, ilwork)
+           isclr = zero
+           if (nsclr.gt.zero) then
+             do isclr=1,nsclr
                call itrBCSclr (y, ac,  iBC, BC, iper, ilwork)
-            enddo
-            endif
+             enddo
+           endif
 c
 c.... --------------------> multi-corrector phase <--------------------
 c
            iter=0
-            ilss=0  ! this is a switch thrown on first solve of LS redistance
+           ilss=0  ! this is a switch thrown on first solve of LS redistance
 c
 cHACK to make it keep solving RANS until tolerance is reached
 c
-       istop=0
-! blocking extra RANS steps for now       iMoreRANS=0 
-       iMoreRANS=6 
+           istop=0
+           iMoreRANS=0 
 c 
 c find the the RANS portion of the sequence
 c
-       do istepc=1,seqsize
-          if(stepseq(istepc).eq.10) iLastRANS=istepc
-       enddo
+           do istepc=1,seqsize
+              if(stepseq(istepc).eq.10) iLastRANS=istepc
+           enddo
 
-       iseqStart=1
-9876   continue
+           iseqStart= 1
+9876       continue
 c
-            do istepc=iseqStart,seqsize
+
+c         open(unit=72,file='ien_solgmrs.dat',
+c     &            status='unknown')
+
+c=========== Start the loop of the non-linear iteration s=========c
+           do istepc=iseqStart,seqsize
+
+c                      if(myrank.eq.master)then
+c                          write(*,*) 'icode, start sequence',icode
+c                          write(*,*) mien(409)%p(:,1)
+c                      endif
+
+c                     do iblk = 407,409
+c                      if( myrank.eq.master)then
+c                        write(*,*) 'generate ien.dat'
+c                        write(72,*)'step construction',istepc
+c                        write(72,*)'ien',iblk
+c                        write(72,*) mien(iblk)%p(:,1)
+c                      endif
+c                     enddo
+
+
                icode=stepseq(istepc)
+c               if(myrank.eq.master)write(*,*) 'Stagger:',istepc,icode
+
                if(mod(icode,10).eq.0) then ! this is a solve
                   isolve=icode/10
                   if(isolve.eq.0) then   ! flow solve (encoded as 0)
 c
+
                      etol=epstol(1)
                      iter   = iter+1
                      ifuncs(1)  = ifuncs(1) + 1
@@ -429,6 +414,26 @@ c
                         iprec=lhs
                         nedof = nflow*nshape
 c                        write(*,*) 'lhs=',lhs
+
+
+c------------- Duct debug, output initial condition confined with boundary conditions --------
+c         lstep_orig=lstep
+c         lstep = 300+istepc
+c         call restar('out ',y,ac)
+c         lstep=lstep_orig
+c         if (myrank.eq.master) then
+c           open(unit=72,file='numstart.dat',status='old')
+c           write(72,*) lstep
+c           close(72)
+c         endif
+c         call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c.................
+c                     if(myrank.eq.master)then
+c                       write(*,*)'icode,start solve', icode
+c                       write(*,*)mien(409)%p(:,1)
+c                     endif
+
+
                       call SolGMRs (y,             ac,            yold,
      &                       acold,         x,
      &                       iBC,           BC,
@@ -440,6 +445,12 @@ c                        write(*,*) 'lhs=',lhs
      &                       shp,           shgl,
      &                       shpb,          shglb,         solinc,
      &                       rerr)
+
+c                      if(myrank.eq.master)then
+c                          write(*,*) 'icode, end solve',icode
+c                          write(*,*) mien(409)%p(:,1)
+c                      endif
+ 
                       else if (mod(impl(1),100)/10 .eq. 2) then ! mfg solve
 c     
 c.... preconditioned matrix-free GMRES solver
@@ -478,7 +489,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       rerr)
                      endif
 c     
-                else          ! solve a scalar  (encoded at isclr*10)
+                  else          ! solve a scalar  (encoded at isclr*10)
                      ifuncs(isclr+2)  = ifuncs(isclr+2) + 1
                      etol=epstol(isclr+1)
                      isclr=isolve
@@ -529,9 +540,10 @@ c.... end of the multi-corrector loop
 c     
  1000             continue      !check this
 
-               else             ! this is an update  (mod did not equal zero)
-                  iupdate=icode/10 ! what to update
-                  if(iupdate.eq.0) then !update flow  
+               else             ! this is an correct  (mod did not equal zero)
+                  iupdate=icode/10 ! what to correct
+                  if(iupdate.eq.0) then !correct flow
+
                      call itrCorrect ( y, ac, yold, acold, solinc)
 c------------- NASA debug, output before itrBC --------
 c                     if(myrank.eq.master)then
@@ -598,11 +610,12 @@ c              write(*,*)mien(49)%p(:,1)
 c            endif
  
             enddo               ! loop over sequence in step
-        if((istop.lt.0).and.(iMoreRANS.lt.5)) then
-            iMoreRANS=iMoreRANS+1
-            if(myrank.eq.master) write(*,*) 'istop =', istop
-       iseqStart=iLastRANS
-       goto 9876
+
+            if((istop.lt.0).and.(iMoreRANS.lt.5)) then
+                iMoreRANS=iMoreRANS+1
+            if(myrank.eq.0) write(*,*) 'istop =', istop
+                iseqStart=iLastRANS
+         goto 9876
        endif
 c     
 c     Find the solution at the end of the timestep and move it to old
@@ -626,57 +639,108 @@ c               call itrBC (y,  ac,  iBC,  BC, iper, ilwork)
             enddo
 c     
             istep = istep + 1
+c     
+c.... compute boundary fluxes and print out
+c     
             lstep = lstep + 1
+
             ntoutv=max(ntout,100) 
-            !boundary flux output moved after the error calculation so
-            !everything can be written out in a single chunk of code -
-            !Nicholas Mati
+            if ((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) then
+c
+c here is where we save our averaged field.  In some cases we want to
+c write it less frequently
+               if( (mod(lstep, ntoutv) .eq. 0) .and.
+     &              ((irscale.ge.0).or.(itwmod.gt.0) .or. 
+     &              ((nsonmax.eq.1).and.(iLES.gt.0))))
+     &              call rwvelb  ('out ',  velbar  ,ifail)
+
+               call Bflux  (yold,          acold,     x,
+     &              shp,           shgl,      shpb,
+     &              shglb,         nodflx,    ilwork)
+
+               call vortGLB(yold, x, shp, shgl, ilwork)
+            endif
+c...  dump TIME SERIES
             
-            !dump TIME SERIES
             if (exts) then
-              !Write the probe data to disc. Note that IO to disc only
-              !occurs when mod(lstep, nbuff) == 0. However, this
-              !function also does data buffering and must be called
-              !every time step. 
-              call TD_bufferData()
-              call TD_writeData(fvarts, .false.)
+               if (mod(lstep-1,freq).eq.0) then
+                  
+                  if (numpe > 1) then
+                     do jj = 1, ntspts
+                        vartssoln((jj-1)*ndof+1:jj*ndof)=varts(jj,:)
+                        ivarts=zero
+                     enddo
+                     do k=1,ndof*ntspts
+                        if(vartssoln(k).ne.zero) ivarts(k)=1
+                     enddo
+                     call MPI_REDUCE(vartssoln, vartssolng, ndof*ntspts,
+     &                    MPI_DOUBLE_PRECISION, MPI_SUM, master,
+     &                    MPI_COMM_WORLD, ierr)
+
+                     call MPI_REDUCE(ivarts, ivartsg, ndof*ntspts,
+     &                    MPI_INTEGER, MPI_SUM, master,
+     &                    MPI_COMM_WORLD, ierr)
+
+                     if (myrank.eq.zero) then
+                        do jj = 1, ntspts
+
+                           indxvarts = (jj-1)*ndof
+                           do k=1,ndof
+                              if(ivartsg(indxvarts+k).ne.0) then ! none of the vartssoln(parts) were non zero
+                                 varts(jj,k)=vartssolng(indxvarts+k)/
+     &                                ivartsg(indxvarts+k)
+                              endif
+                           enddo
+                        enddo
+                     endif !only on master
+                  endif !only if numpe > 1
+        
+                 if( istp.eq. nstp) then !make sure incomplete buffers get purged.
+                    icheck=mod(nstp,nbuff)
+                    if(icheck.ne.0) nbuff=icheck
+                 endif
+
+                  if (myrank.eq.zero) then
+                     k=mod(lstep,nbuff)
+                     if(k.eq.0) k=nbuff
+                     do jj = 1, ntspts
+                       vartsbuff(jj,1:5,k)=varts(jj,1:5)
+                     enddo
+                     if(k.eq. nbuff) then
+                       do jj = 1, ntspts
+                        ifile = 1000+jj
+                        do ibuf=1,nbuff
+                        write(ifile,555) lstep-1 -nbuff+ibuf, 
+     &                  (vartsbuff(jj,k,ibuf), k=1,5) ! assuming ndof to be 5
+                        enddo ! buff empty
+        
+c                        call flush(ifile)
+                       enddo ! jj ntspts
+                        endif !only dump when buffer full
+                  endif !only on master
+
+cc.... Yi Chen Duct geometry8
+         if(isetBlowing_Duct.gt.0)then
+           if(ifixBlowingVel_Duct.eq.0)then
+             if(nstp.gt.nBlowingStepsDuct)then
+               nBlowingStepsDuct = nstp-2
+             endif
+             call setBlowing_Duct2(x,BC,yold,iTurbWall,istp)
+           endif
+         endif
+         if(isetSuction_Duct.gt.0)then
+            call setSuction_Duct2(x,BC,yold)
+         endif
+cc... Yi Chen Duct geometry8
+
+
+                  varts(:,:) = zero ! reset the array for next step
+
+ 555              format(i6,5(2x,E12.5e2))
+
+               endif
             endif
             
-            !Update the Mach Control
-            if(exts .and. exMC) then
-              !Note: the function MC_updateState must be called after
-              !the function TD_bufferData due to dependencies on
-              !vartsbuff(:,:,:). 
-              call MC_updateState()
-              call MC_applyBC(BC)
-              call MC_printState()
-                 
-              !Write the state if a restart is also being written. 
-              if(mod(lstep,ntout).eq.0 ) call MC_writeState(lstep)
-            endif
-
-            !update blower control
-            if(BC_enable) then
-              !Update the blower boundary conditions for the next 
-              !iteration. 
-              call BC_iter(BC)
-
-              !Also write the current phases of the blowers if a 
-              !restart is also being written. 
-              if(mod(lstep, ntout) == 0) call BC_writePhase(lstep)
-            endif
-            
-            !.... Yi Chen Duct geometry8
-            if(isetBlowing_Duct.gt.0)then
-              if(ifixBlowingVel_Duct.eq.0)then
-                if(nstp.gt.nBlowingStepsDuct)then
-                  nBlowingStepsDuct = nstp-2
-                endif
-                call setBlowing_Duct2(x,BC,yold,iTurbWall,istp)
-              endif
-            endif
-          !... Yi Chen Duct geometry8
-
 c
 c.... -------------------> error calculation  <-----------------
             if(ierrcalc.eq.1.or.ioybar.eq.1) then
@@ -697,119 +761,70 @@ c...  ybar(:,ndof+1:ndof+8) is for avg. of square as uu, vv, ww, pp, TT, uv, uw,
      &                          (one-tfact)*ybar(:,ndof+7)
                ybar(:,ndof+8) = tfact*yold(:,2)*yold(:,3) + !vw
      &                          (one-tfact)*ybar(:,ndof+8)
-c... compute err
-               rerr(:, 7)=rerr(:, 7)+(yold(:,1)-ybar(:,1))**2
-               rerr(:, 8)=rerr(:, 8)+(yold(:,2)-ybar(:,2))**2
-               rerr(:, 9)=rerr(:, 9)+(yold(:,3)-ybar(:,3))**2
-               rerr(:,10)=rerr(:,10)+(yold(:,4)-ybar(:,4))**2
             endif
            
-c.. writing ybar field if requested in each restart file		
-            
-            !here is where we save our averaged field.  In some cases we want to
-            !write it less frequently		
-            if( (irs >= 1) .and. (
-     &          mod(lstep, ntout) == 0 .or. !Checkpoint
-     &          istep == nstp) )then        !End of simulation
-
-               if( (mod(lstep, ntoutv) .eq. 0) .and.
-     &              ((irscale.ge.0).or.(itwmod.gt.0) .or. 
-     &              ((nsonmax.eq.1).and.(iLES.gt.0))))
-     &              call rwvelb  ('out ',  velbar  ,ifail)
-
-               !BUG: need to update new_interface to work with SyncIO.
-               !Bflux is presently completely crippled. Note that restar
-               !has also been moved here for readability. 
-!              call Bflux  (yold,          acold,     x,  compute boundary fluxes and print out
-!    &              shp,           shgl,      shpb,
-!    &              shglb,         nodflx,    ilwork)
-                  
-               call timer ('Output  ')      !set up the timer
-
-               !write the solution and time derivative 
-               call restar ('out ',  yold, acold)  
-
-               !Write the distance to wall field in each restart
-               if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
-                 call write_field(myrank,'a'//char(0),'dwal'//char(0),4,
-     &                            d2wall,'d'//char(0), nshg, 1, lstep)
-               endif 
-           
-               !Write the time average in each restart. 
-               if(ioybar.eq.1)then
-                 call write_field(myrank,'a'//char(0),'ybar'//char(0),4,
-     &                              ybar,'d'//char(0),nshg,ndof+8,lstep)
-               endif
-                 
-               !Write the error feild at the end of each step sequence
-               if(ierrcalc.eq.1 .and. istep == nstp) then 
-                 !smooth the error indicators
-             
-                do i=1,ierrsmooth
-                  call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
-                enddo
-                   
-!                call write_error(myrank, lstep, nshg, 10, rerr )
-                 call write_field(
-     &                      myrank, 'a'//char(0), 'errors'//char(0), 6, 
-     &                        rerr, 'd'//char(0), nshg, 10, lstep)
-               endif
-
-c the following is a future way to have the number of steps in the header...done for posix but not yet for syncio
-c
-c              call write_field2(myrank,'a'//char(0),'ybar'//char(0),
-c     &                          4,ybar,'d'//char(0),nshg,ndof+8,
-c     &                         lstep,istep)
+c.. writing ybar field if requested in each restart file
+            if(ioybar.eq.1 .and. mod(lstep,ntout).eq.0 )then
+              call write_field2(myrank,'a','ybar',4,
+     &             ybar,'d',nshg,ndof+8,lstep,istep)
             endif   
 
- 2000    continue  !end of NSTEP loop
- 2001    continue  
+c.... end of the NSTEP and NTSEQ loops...................................
+ 2000    continue
+ 2001    continue
 
          ttim(1) = REAL(secs(0.0)) / 100. - ttim(1)
-         ttim(2) = secs(0.0)              - ttim(2)
+         ttim(2) = secs(0.0)                 - ttim(2)
 
 c         tcorecp2 = REAL(secs(0.0)) / 100.
 c         tcorewc2 = secs(0.0)
          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-         if(myrank.eq.master)  then
+         if(myrank.eq.0)  then
             tcorecp2 = TMRC()
             write(6,*) 'T(core) cpu = ',tcorecp2-tcorecp1
          endif
         
 c     call wtime
 
- 3000 continue !end of NTSEQ loop
+ 3000 continue
 c     
 c.... ---------------------->  Post Processing  <----------------------
 c     
 c.... print out the last step
 c     
-!      if ( (irs .ge. 1) .and. ((mod(lstep, ntout) .ne. 0) .or.
-!     &    (nstp .eq. 0))) then
-!          if( (mod(lstep, ntoutv) .eq. 0) .and.
-!     &        ((irscale.ge.0).or.(itwmod.gt.0) .or. 
-!     &        ((nsonmax.eq.1).and.(iLES.gt.0))))
-!     &        call rwvelb  ('out ',  velbar  ,ifail)
-!
-!          call Bflux  (yold,  acold,     x,
-!     &         shp,           shgl,      shpb,
-!     &         shglb,         nodflx,    ilwork)
-!      endif
+      if ((irs .ge. 1) .and. ((mod(lstep, ntout) .ne. 0) .or.
+     &     (nstp .eq. 0))) then
+         if( (mod(lstep, ntoutv) .eq. 0) .and.
+     &        ((irscale.ge.0).or.(itwmod.gt.0) .or. 
+     &        ((nsonmax.eq.1).and.(iLES.gt.0))))
+     &        call rwvelb  ('out ',  velbar  ,ifail)
 
+         call Bflux  (yold,  acold,     x,
+     &        shp,           shgl,      shpb,
+     &        shglb,         nodflx,    ilwork)
 
-
-c      if(ioybar.eq.1) then
-c         call write_field(myrank,'a'//char(0),'ybar'//char(0),4,
-c     &                      ybar,'d'//char(0),nshg,ndof+8,lstep)
-c      endif
-
-c     if(iRANS.lt.0 .and. idistcalc.eq.1) then
-c        call write_field(myrank,'a'//char(0),'DESd'//char(0),4,
-c     &                      elDw,'d'//char(0),numel,1,lstep)
+      endif
+c     
+      if(ierrcalc.eq.1) then
 c
-c         call write_field(myrank,'a'//char(0),'dwal'//char(0),4,
-c     &                    d2wall,'d'//char(0),nshg,1,lstep)
-c     endif 
+c.....smooth the error indicators
+c
+c ! errsmooth is currently available only for incompressible code
+c        do i=1,ierrsmooth
+c            call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
+c        end do
+
+         call write_error(myrank, lstep, nshg, 10, rerr )
+      endif
+
+
+      if(iRANS.lt.0 .and. idistcalc.eq.1) then
+         call write_field(myrank,'a','DESd',4,
+     &                    elDw,'d',numel,1,lstep)
+
+         call write_field(myrank,'a','dwal',4,
+     &                    d2wall,'d',nshg,1,lstep)
+      endif 
 
 c
 c.... close history and aerodynamic forces files
@@ -817,32 +832,20 @@ c
       if (myrank .eq. master) then
          close (ihist)
          close (iforce)
-             
-         if(exMC) then 
-           call MC_writeState(lstep) 
-           call MC_finalize
-         endif
-             
-         if(exts) then 
-           call TD_writeData(fvarts, .true.)    !force the flush of the buffer. 
-           call TD_finalize
+         if(exts) then
+            deallocate(ivarts)
+            deallocate(ivartsg)
+            deallocate(vartssoln)
+            deallocate(vartssolng)
+            do jj=1,ntspts
+               close(1000+jj)
+            enddo
          endif
       endif
-
-      if(BC_enable) then  !blower is allocated on all processes. 
-        if(mod(lstep, ntout) /= 0) then !May have already written file.
-           call BC_writePhase(lstep)
-        endif
-
-        call BC_finalize
-      endif
-
       close (iecho)
       if(iabc==1) deallocate(acs)
 c
 c.... end
 c
-      return
-      end
-
-
+        return
+        end

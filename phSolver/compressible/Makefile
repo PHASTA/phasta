@@ -74,9 +74,15 @@ else
         LDFLAGS := $(LDFLAGS) -L/opt/ibmcmp/xlf/bg/10.1/blrts_lib -lxlf90 -lxlfmath
   endif
 
+  ifeq ($(ARCHOS),ibm-bgp)
+        FFLAGS := $(FFLAGS) -qnullterm -qfixed=132 -qlist -qsource -qsuffix=cpp=f 
+        DEFS := $(DEFS) -Dibm
+        LDFLAGS := $(LDFLAGS) -L/soft/apps/ibmcmp/xlf/bg/11.1/bglib -lxlopt -lxl -lxlf90 -lxlfmath -L/opt/ibmcmp/xlsmp/bg/1.7/bglib -lxlomp_ser
+  endif
+  
 endif
 
-mods  := stats.f BCprofile.f mod_BCsfIDmap.f
+mods  := stats.f BCprofile.f 
 
 dirs := .
 DEPS := $(DEPS) phasta/phSolver/$(VERSION)/phSolver phasta/phastaIO phasta/phMetis\

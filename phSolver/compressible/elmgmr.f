@@ -42,7 +42,7 @@ c
         real*8, allocatable :: tmpshp(:,:), tmpshgl(:,:,:)
         real*8, allocatable :: tmpshpb(:,:), tmpshglb(:,:,:)
 
-	ttim(80) = ttim(80) - secs(0.0)
+        ttim(80) = ttim(80) - secs(0.0)
 c
 c.... set up the timer
 c
@@ -151,6 +151,7 @@ c
           tmpshp(1:nshl,:) = shp(lcsyst,1:nshl,:)
           tmpshgl(:,1:nshl,:) = shgl(lcsyst,:,1:nshl,:)
 
+c          write(*,*)'Start asigmr... at block', iblk,myrank
           call AsIGMR (y,                   ac,
      &                 x,                   mxmudmi(iblk)%p,
      &                 tmpshp,
@@ -160,7 +161,7 @@ c
      &                 qres,                EGmass(iel:inum,:,:),
      &                 rerr)
 c
-c.... satisfy the BCs on the implicit LHS
+c.... satisfy the BC's on the implicit LHS
 c     
           call bc3LHS (iBC,                  BC,  mien(iblk)%p, 
      &                 EGmass(iel:inum,:,:)  ) 
@@ -170,8 +171,7 @@ c
 c
 c.... end of interior element loop
 c
-        enddo
-        
+       enddo
 c
 c.... -------------------->   boundary elements   <--------------------
 c
@@ -218,7 +218,6 @@ c
 c.... end of boundary element loop
 c
         enddo
-
 c
       ttim(80) = ttim(80) + secs(0.0)
 c
@@ -304,7 +303,9 @@ c
 c
         integer col(nshg+1), row(nnz*nshg)
         real*8 lhsK(nflow*nflow,nnz_tot)
-        
+          
+        integer ientmp(512)
+
         dimension y(nshg,ndof),         ac(nshg,ndof),
      &            x(numnp,nsd),               
      &            iBC(nshg),
@@ -327,6 +328,8 @@ c
         real*8, allocatable :: tmpshp(:,:), tmpshgl(:,:,:)
         real*8, allocatable :: tmpshpb(:,:), tmpshglb(:,:,:)
         real*8, allocatable :: EGmass(:,:,:)
+
+
         ttim(80) = ttim(80) - secs(0.0)
 c
 c.... set up the timer
@@ -358,6 +361,7 @@ c
           lelCat = lcblk(2,iblk)
           lcsyst = lcblk(3,iblk)
           iorder = lcblk(4,iblk)
+          nenl   = lcblk(5,iblk)   ! no. of vertices per element
           nshl   = lcblk(10,iblk)
           mattyp = lcblk(7,iblk)
           ndofl  = lcblk(8,iblk)
@@ -383,9 +387,8 @@ c     and lumped mass matrix, rmass
 
           deallocate ( tmpshp )
           deallocate ( tmpshgl ) 
-        enddo
-
-
+       enddo
+       
 c
 c.... take care of periodic boundary conditions
 c
@@ -399,6 +402,8 @@ c
 c
 c.... initialize the arrays
 c
+c        if(myrank.eq.master)write(*,*)qres(1:10,1)
+
         res    = zero
         rmes   = zero ! to avoid trap_uninitialized
         if (lhs. eq. 1)   lhsK = zero
@@ -407,6 +412,23 @@ c
 c
 c.... loop over the element-blocks
 c
+
+c       do iblk = 407,409
+c        if( myrank.eq.master)then
+c         write(*,*) 'generate ien.dat'
+c         open(unit=72,file='ien2.dat',access='append',status='unknown')
+c         write(72,*)'ien',iblk 
+c         write(72,*) mien(iblk)%p(:,1)
+c        endif
+c       enddo
+        
+
+c        if(myrank.eq.master)then
+c            write(*,*)'elmgmr, start '
+c            write(*,*)mien(49)%p(:,1)
+c        endif
+
+
         do iblk = 1, nelblk
 c
 c.... set up the parameters
@@ -441,6 +463,20 @@ c
           tmpshp(1:nshl,:) = shp(lcsyst,1:nshl,:)
           tmpshgl(:,1:nshl,:) = shgl(lcsyst,:,1:nshl,:)
 
+c          iStraightPrint = iblk
+          
+c          if (iStraightPrint.gt.390 .and. iStraightPrint.lt.420) then
+c          if(myrank.eq.master) write(*,*)'Start asigmr at block', 
+c     &         iStraightPrint
+c          endif
+
+c          if(iblk.gt.407 .and. iblk .lt. 410.and. myrank.eq.master) 
+c     &       write(*,*)'shape',      tmpshp(1,1)   
+c          if(iblk.gt.407 .and. iblk .lt. 410 .and. myrank.eq.master) 
+c     &       write(*,*)'shapeg', tmpshgl(1,1,1)
+c          if(iblk.gt.407 .and. iblk .lt. 410 .and. myrank.eq.master) 
+c     &       write(*,*)'ien',          mien(iblk)%p(:,1)         
+ 
           call AsIGMR (y,                   ac,
      &                 x,                   mxmudmi(iblk)%p,
      &                 tmpshp,
@@ -449,9 +485,11 @@ c
      &                 rmes,                BDiag,
      &                 qres,                EGmass,
      &                 rerr )
+
+
           if(lhs.eq.1) then
 c
-c.... satisfy the BCs on the implicit LHS
+c.... satisfy the BC's on the implicit LHS
 c     
              call bc3LHS (iBC,                  BC,  mien(iblk)%p, 
      &                    EGmass  ) 
@@ -462,22 +500,26 @@ c
              call fillsparseC( mien(iblk)%p, EGmass,
      1                        lhsK, row, col)
           endif
+c          if(myrank.eq.master)write(*,*)'End fillsparseC',iStraightPrint
 c
           deallocate ( EGmass )
           deallocate ( tmpshp )
           deallocate ( tmpshgl )
+      
 c
 c.... end of interior element loop
 c
        enddo
-!ifdef DEBUG !Nicholas Mati
-!        call write_debug(myrank, 'res-afterAsIGMR'//char(0),
-!     &                           'res'//char(0), res, 
-!     &                           'd'//char(0), nshg, nflow, lstep)
-!        call write_debug(myrank, 'y-afterAsIGMR'//char(0),
-!     &                           'y'//char(0), y, 
-!     &                           'd'//char(0), nshg, ndof, lstep)
-!endif //DEBUG
+   
+c      if(myrank.eq.master)then
+c         write(*,*) 'elmgmr, end asigmr'
+c         write(*,*) '408'
+c         write(*,*) mien(408)%p(:,1)
+c         write(*,*) '409'
+c         write(*,*) mien(409)%p(:,1)
+c      endif 
+
+
 c
 c.... -------------------->   boundary elements   <--------------------
 c
@@ -508,38 +550,49 @@ c
 
           allocate (tmpshpb(nshl,MAXQPT))
           allocate (tmpshglb(nsd,nshl,MAXQPT))
-          if(lhs.eq.1 .and. iLHScond >= 1) then
-             allocate (EGmass(npro,nshl,nshl))
-             EGmass = zero
-          else
-             allocate (EGmass(1,1,1))
-          endif
           
           tmpshpb(1:nshl,:) = shpb(lcsyst,1:nshl,:)
           tmpshglb(:,1:nshl,:) = shglb(lcsyst,:,1:nshl,:)
+
+c          write(*,*) iblk, 'start asbmfg'
+c          write(*,*) mien(409)%p(1,1), mien(409)%p(2,1)
 
           call AsBMFG (y,                       x,
      &                 tmpshpb,                 tmpshglb, 
      &                 mienb(iblk)%p,           mmatb(iblk)%p,
      &                 miBCB(iblk)%p,           mBCB(iblk)%p,
-     &                 res,                     rmes, 
-     &                 EGmass)
-          if(lhs == 1 .and. iLHScond > 0) then
-            call fillSparseC_BC(mienb(iblk)%p, EGmass, 
-     &                   lhsk, row, col)
-          endif
+     &                 res,                     rmes)
 
-          deallocate (EGmass)
+c          write(*,*) iblk, 'end asbmfg '
+c          write(*,*) mien(409)%p(1,1), mien(409)%p(2,1)
+  
+c          if (myrank.eq.master)write(*,*)iblk
+c          if(myrank.eq.master)then
+c            write(*,*) 'elmgmr,  asbmfg... '
+c            write(*,*) mien(409)%p(1,1)
+c          endif
+ 
+
           deallocate (tmpshpb)
           deallocate (tmpshglb)
-        enddo   !end of boundary element loop
-    
-!ifdef DEBUG !Nicholas Mati
-!        call write_debug(myrank, 'res-afterAsBMFG'//char(0),
-!     &                           'res'//char(0), res, 
-!     &                           'd'//char(0), nshg, nflow, lstep)
-!        call MPI_ABORT(MPI_COMM_WORLD) 
-!endif //DEBUG
+c
+c.... end of boundary element loop
+c
+        enddo
+
+
+c      ientmp(:)=mien(409)%p(:,1)      
+c      if(myrank.eq.master)then
+c         write(*,*) 'elmgmr, end asbmfg'
+c         do i = 1,2
+c            write(*,*)'408'
+c            write(*,*) i, mien(408)%p(i,1)
+c            write(*,*)'409'
+c            write(*,*) mien(409)%p(1,1), mien(409)%p(2,1) 
+c         enddo
+c         write(*,*) ientmp(:)
+c      endif
+
 
 
 c
@@ -611,6 +664,9 @@ c
 c.... return
 c
       call timer ('Back    ')
+
+
+
       return
       end
 c
@@ -661,7 +717,7 @@ c
         real*8, allocatable :: tmpshpb(:,:), tmpshglb(:,:,:)
         real*8, allocatable :: elDwl(:)
 c
-	ttim(80) = ttim(80) - tmr()
+        ttim(80) = ttim(80) - tmr()
 c
 c.... set up the timer
 c

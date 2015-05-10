@@ -69,10 +69,10 @@ c
         
         ttim(31) = ttim(31) - secs(0.0)
 !  pass the memory location of ycl to both yl and ycl in e3b.  This may
-!  seem dangerous since yl in e3b is :,nflow and ycl is :,ndof but they
-!  do not write to yl (at least not out of bounds), only use the data
-!  there so both will access data
-!  properly from this location.
+ !  seem dangerous since yl in e3b is :,nflow and ycl is :,ndof but they
+ !  do not write to yl (at least not out of bounds), only use the data
+ !  there so both will access data
+ !  properly from this location.
 
             call e3  (ycl,     ycl,     acl,     shp,
      &                shgl,    xl,      rl,      rml, xmudmi,

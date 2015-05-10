@@ -9,13 +9,13 @@ int intersect(double x[4][3],double u[],double points[4][3] );
 int isPntInTri(double [][3],double [], double [], double );
 
 #ifdef sun4_5
-void get_h_(double xtmp[][4], double u[], double *h)
+get_h_(double xtmp[][4], double u[], double *h)
 #endif
 #ifdef LINUX
-void get_h_(double xtmp[][4], double u[], double *h)
+get_h_(double xtmp[][4], double u[], double *h)
 #endif
 #ifdef ibm
-void get_h(double xtmp[][4], double u[], double *h)
+get_h(double xtmp[][4], double u[], double *h)
 #endif
 #ifdef sgi
 void get_h(double xtmp[][4], double u[], double *h)

@@ -127,15 +127,6 @@ c
            allocate (HopRCR(0:MAXSURF)) !for H operator contribution
         endif
 
-
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c  this subroutine initBCprofileScale is called to generate the correct
-c  BC array, including the siuation of Take BC from IC for inlet.
-c  so this subroutine must be called before BCs are applied to ICs
-c  as those following lines do
-c        call INIBCprofile(BC,y,x) 
-c        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
 c.... satisfy the boundary conditions
 c

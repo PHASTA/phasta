@@ -1,4 +1,4 @@
-        subroutine vortGLB  (y, x, shp, shgl, ilwork, vortG)
+        subroutine vortGLB  (y, x, shp, shgl, ilwork)
 
         use pointer_data
         include "common.h"
@@ -68,8 +68,7 @@ c
             vortG(:,i)=vortIntG(:,i)/lpmassG(:)  
          enddo
 
-!         call write_field(myrank,'a'//char(0),'vortG'//char(0),5,
-!     &                    vortG, 'd'//char(0), nshg,4,lstep)
+         call write_field(myrank,'a','vortG',5,vortG,'d',nshg,4,lstep)
 
       return
       end
@@ -209,12 +208,8 @@ c in y the variables are u v w p T
        PresCoeff(:)=(y(:,4)-Pstatic_throat)/(Ptotal_contra-Pstatic_throat) 
        velocity(:,1:3)=y(:,1:3)
        write(*,*)'writing Mach, PR and Cp'
-       call write_field(myrank,'a'//char(0),'M'//char(0),1,Mach,
-     &                         'd'//char(0),nshg,1,lstep)
-       call write_field(myrank,'a'//char(0),'PR'//char(0),2,PresRec,
-     &                         'd'//char(0),nshg,1,lstep)
-       call write_field(myrank,'a'//char(0),'Cp'//char(0),2,PresCoeff,
-     &                         'd'//char(0),nshg,1,lstep)
-       call write_field(myrank,'a'//char(0),'V'//char(0),1,velocity,
-     &                         'd'//char(0),nshg,3,lstep) 
+       call write_field(myrank,'a','M',1,Mach,'d',nshg,1,lstep)
+       call write_field(myrank,'a','PR',2,PresRec,'d',nshg,1,lstep)
+       call write_field(myrank,'a','Cp',2,PresCoeff,'d',nshg,1,lstep)
+       call write_field(myrank,'a','V',1,velocity,'d',nshg,3,lstep) 
       end

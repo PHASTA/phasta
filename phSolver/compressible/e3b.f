@@ -1,5 +1,5 @@
        subroutine e3b (yl,      ycl,  iBCB,    BCB,     shpb,    shglb,
-     &                 xlb,     rl,   rml,     sgn,     EGmass)
+     &                 xlb,     rl,      rml,     sgn)
 c
 c----------------------------------------------------------------------
 c
@@ -37,7 +37,6 @@ c
 c output:
 c  rl     (npro,nshl,nflow)      : element residual
 c  rml    (npro,nshl,nflow)      : element modified residual
-c  EGmass (npro,nshl,nshl)       : LHS from BC for energy-temperature diagonal
 c
 c
 c Note: Always the first side of the element is on the boundary.  
@@ -62,10 +61,7 @@ c
 c
         dimension g1yi(npro,nflow),             g2yi(npro,nflow),
      &            g3yi(npro,nflow),             WdetJb(npro),
-     &            bnorm(npro,nsd),              
-     &            dNadx(npro, nshl, nsd),  !shape function gradient
-     &            dNadn(npro, nshl),       !dN_a/dx_i n_i, i.e. gradient normal to wall
-     &            EGmass(npro, nshl, nshl)
+     &            bnorm(npro,nsd)
 c
         dimension un(npro),                    rk(npro),
      &            u1(npro),                    u2(npro),
@@ -88,10 +84,9 @@ c
      &            heat(npro)
 c
         dimension lnode(27),               sgn(npro,nshl),
-     &            shape(npro,nshl),        shdrv(npro,nsd,nshl)
+     &       shape(npro,nshl),        shdrv(npro,nsd,nshl)
 c
         dimension xmudum(npro,ngauss)
-        integer   aa, b
 
         ttim(40) = ttim(40) - secs(0.0)
 
@@ -133,7 +128,7 @@ c
      &               rho,             ei,           cp,
      &               rk,              rou,          p,
      &               Fv2,             Fv3,          Fv4,
-     &               Fh5,             dNadx)
+     &               Fh5)
 c
 c.... ires = 1 or 3
 c
@@ -189,7 +184,7 @@ c.... get the material properties
 c
         call getDiff (T,        cp,    rho,        ycl,
      &                rmu,      rlm,   rlm2mu,     con, shape,
-     &                xmudum,   xlb)
+     &                xmudum,   xl)
 c
 c.... ------------------------>  viscous flux <------------------------
 c
@@ -223,30 +218,8 @@ c
         heat =   con * ( bnorm(:,1) * g1yi(:,5) +
      &                   bnorm(:,2) * g2yi(:,5) +
      &                   bnorm(:,3) * g3yi(:,5) ) 
-
-        !Note that Fh5 already contains heat flux BCs from e3bvar
-        where (.not.btest(iBCB(:,1),3) ) Fh5 = heat 
-
-
-
-        if(iLHScond > 0) then !compute contributions to the LHS matrix
-          do aa = 1, nshl
-            dNadn(:,aa) = dNadx(:,aa,1)*bnorm(:,1) 
-     &                  + dNadx(:,aa,2)*bnorm(:,2) 
-     &                  + dNadx(:,aa,3)*bnorm(:,3)
-          enddo
-        
-          !EGmass(e, b, a) using the newer nomenclature, i.e. b indexes
-          !the matrix row and a indexes the matrix column. 
-
-          !Calculate \kappa
-          do aa = 1,nshl
-            do b = 1,nshl
-              EGmass(:,b, aa) = con * WdetJb * shape(:,b) * dNadn(:,aa)
-            enddo
-          enddo
-          
-        endif !iLHScond >= 0 or contributions to lhsk are being computed. 
+c
+        where (.not.btest(iBCB(:,1),3) ) Fh5 = heat
 c
 c.... add the Navier-Stokes contribution
 c
@@ -270,9 +243,7 @@ c
         if ((ires .eq. 1) .or. (ires .eq. 3)) then
 c
 c
-          do n = 1, nshlb  
-            !Note that nshlb is different from the dimension of rl and
-            !shape. For tets, the weight of the 4th node is zero. 
+          do n = 1, nshlb
             nodlcl = lnode(n)
 c
             rl(:,nodlcl,1) = rl(:,nodlcl,1)

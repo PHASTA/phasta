@@ -50,11 +50,7 @@ c
 
       integer n, e
       integer wallmask(nshl)
-      real*8  xki, xki3, fv1, evisc, lvisc
-            xx=zero
-            do n=1,nenl
-               xx(:)=xx(:) + shp(:,n) * xl(:,n,1)
-            enddo
+      real*8  xki, xki3, fv1, evisc
 c
 c
 c.... constant viscosity
@@ -73,10 +69,15 @@ c
             prop_blend = max( min(test_it(:), one ), zero  )
             rmu = datmat(1,2,2) + (datmat(1,2,1)-datmat(1,2,2))
      &           *prop_blend
+
          elseif(irampViscOutlet.eq.1)then ! increase viscosity near outlet
+
 c.............ramp rmu near outlet (for a Duct geometry)
+            xx=zero
+            do n=1,nenl
+               xx(:)=xx(:) + shp(:,n) * xl(:,n,1)
+            enddo
             fmax=10.0
-!           fmax=2000.0      
 
 c           if (myrank .eq. master)then
 c              write(*,*) 'viscosity', datmat(1,2,1)
@@ -107,8 +108,9 @@ c             enddo
 
 c... geometry8
            elseif (iDuctgeometryType .eq. 8)then   
-             xstart=1.5  !1.6*4.5*0.0254+0.85*0.5
-             xmidwy=2.0  !1.6*4.5*0.0254+0.85*1.0
+             xstart=1.6*4.5*0.0254+0.85*0.5
+             xmidwy=1.6*4.5*0.0254+0.85*1.0
+             xenddn=1.6*4.5*0.0254+0.85*1.5
              where(xx(:).le.xstart)
                rmu(:)=datmat(1,2,1)
              elsewhere(xx(:).ge.xmidwy)         
@@ -119,36 +121,12 @@ c... geometry8
      &            tanh(5*(xx(:)-(xmidwy+xstart)/2)/(xmidwy-xstart))/2))
              endwhere
 
-
-
            endif
 c..................................................... 
          else ! constant viscosity
             rmu = datmat(1,2,1)
          endif
-!
-!   boundary layer thickening via molecular viscosity
-!
-         scaleCntrl=1.0
-         Lvisc=0.2
-         xbltb=-0.2159-two*Lvisc
-         xblte=-0.2159-Lvisc
-         where((xx(:).gt.xbltb) .and. (xx(:).lt.xblte))
-           rmu(:)=scaleCntrl*datmat(1,2,1)
-         endwhere
-
-!          xvisc1 = -0.3048
-!          xvisc2 = -0.2159
-!          where(xx(:).lt.xvisc1)
-!            rmu(:)=scaleCntrl*datmat(1,2,1)
-!          elsewhere(xx(:).gt.xvisc1 .and. xx(:).lt.xvisc2)
-!            rmu(:)=( scaleCntrl - (scaleCntrl - 1)*
-!     &             (xx(:) - xvisc1)/(xvisc2 - xvisc1))*datmat(1,2,1)
-!          endwhere
-
-         !if(myrank.eq.master) then
-         !   write(*,*) 'adjusting viscosity in region by ', scaleCntrl
-         !endif
+c     
       else
 c     
 c.... generalized Sutherland viscosity

@@ -9,22 +9,8 @@
 #include <sys/resource.h>
 #include <unistd.h>
 
-#ifdef __bgq__
-#include "hwi/include/bqc/A2_inlines.h"
-#endif
-
 double TMRC (void)
 {
-
-#ifdef __bgq__
-
-   // use the GetTimeBase function available on BGQ 
-   uint64_t TB  = GetTimeBase();
-   double t1 = 6.25e-10*TB; // = 1/1.6e9
-
-#else
-
-  // use the gettimeofday function available on any Linux plateform
 
   int rc;
   struct timeval tv;
@@ -36,12 +22,6 @@ double TMRC (void)
   }
   double t1 =  ((double) tv.tv_sec) + 1.e-6 * ((double) tv.tv_usec);
 
-#endif
-
-  return t1;
-
-
-  // Old stuff
   /*
   struct rusage cputimePoints;
   getrusage(RUSAGE_SELF,&cputimePoints);
@@ -50,6 +30,8 @@ double TMRC (void)
   */
 
    /* double t1=rts_get_timebase()/( 2500000000.0); */
+
+   return t1;
 
    /* return time(NULL); */
    /* return clock()/CLOCKS_PER_SEC; */

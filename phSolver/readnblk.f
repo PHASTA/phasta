@@ -174,16 +174,16 @@ c      nsd=intfromfile(2)
       call readdatablock(igeom,fname1,xread,ixsiz, 'double',iotype)
       point2x = xread
 
-c..............................for Duct
+c..............................for NGC
       if(istretchOutlet.eq.1)then
          
 c...geometry6
-        if(iDuctgeometryType .eq. 6) then
+        if(iNGCgeometryType .eq. 6) then
           xmaxn = 1.276
           xmaxo = 0.848
           xmin  = 0.42
 c...geometry8
-        elseif(iDuctgeometryType .eq. 8)then
+        elseif(iNGCgeometryType .eq. 8)then
           xmaxn=1.6*4.5*0.0254+0.85*1.5
           xmaxo=1.6*4.5*0.0254+0.85*1.0
           xmin =1.6*4.5*0.0254+0.85*0.5

@@ -11,20 +11,8 @@ c
       dimension eachproc(m), result(m)
 c     
       if (numpe > 1) then
-         if(impistat.eq.1) then
-           iAllR = iAllR+1
-         elseif(impistat.eq.2) then
-           iAllRScal = iAllRScal+1
-         endif
-         if(impistat2.eq.1) call MPI_BARRIER (MPI_COMM_WORLD, ierr)
-         if(impistat.gt.0) rmpitmr = TMRC()
          call MPI_ALLREDUCE ( eachproc, result, m, 
      &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
-         if(impistat.eq.1) then
-           rAllR = rAllR+TMRC()-rmpitmr
-         elseif(impistat.eq.2) then
-           rAllRScal = rAllRScal+TMRC()-rmpitmr
-         endif
       else
          result = eachproc
       endif
@@ -42,20 +30,8 @@ c
       include "mpif.h"
 c     
       if (numpe > 1) then
-         if(impistat.eq.1) then
-           iAllR = iAllR+1
-         elseif(impistat.eq.2) then 
-           iAllRScal = iAllRScal+1
-         endif
-         if(impistat2.eq.1) call MPI_BARRIER (MPI_COMM_WORLD, ierr)
-         if(impistat.gt.0) rmpitmr = TMRC()
          call MPI_ALLREDUCE ( eachproc, result, 1,
      &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr )
-         if(impistat.eq.1) then
-           rAllR = rAllR+TMRC()-rmpitmr
-         elseif(impistat.eq.2) then
-           rAllRScal = rAllRScal+TMRC()-rmpitmr
-         endif
       else
          result = eachproc
       endif
@@ -82,20 +58,8 @@ c------------------------------------------------------------------------
       if (numpe > 1) then
          irecvcount = 1
          sumvec = summed
-         if(impistat.eq.1) then
-           iAllR = iAllR+1
-         elseif(impistat.eq.2) then 
-            iAllRScal = iAllRScal+1
-         endif
-         if(impistat2.eq.1) call MPI_BARRIER (MPI_COMM_WORLD, ierr)
-         if(impistat.gt.0) rmpitmr = TMRC()
          call MPI_ALLREDUCE (sumvec, summed, irecvcount, 
      &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
-         if(impistat.eq.1) then 
-           rAllR = rAllR+TMRC()-rmpitmr
-         elseif(impistat.eq.2) then
-           rAllRScal = rAllRScal+TMRC()-rmpitmr
-         endif
 c         call MPI_REDUCE_SCATTER (sumvec, summed, irecvcount, 
 c     &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
 
@@ -125,21 +89,8 @@ c     summed = sum(u)
       if (numpe > 1) then
          irecvcount = 1
          sumvec = summed
-
-         if(impistat.eq.1) then
-           iAllR = iAllR+1
-         elseif(impistat.eq.2) then
-            iAllRScal = iAllRScal+1
-         endif
-         if(impistat2.eq.1) call MPI_BARRIER (MPI_COMM_WORLD, ierr)
-         if(impistat.gt.0) rmpitmr = TMRC()
          call MPI_ALLREDUCE (sumvec, summed, irecvcount, 
      &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
-         if(impistat.eq.1) then 
-           rAllR = rAllR+TMRC()-rmpitmr
-         elseif(impistat.eq.2) then 
-           rAllRScal = rAllRScal+TMRC()-rmpitmr
-         endif
 c         call MPI_REDUCE_SCATTER (sumvec, summed, irecvcount, 
 c     &        MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
 
@@ -169,20 +120,8 @@ c$$$      ttim(62) = ttim(62) - tmr()
       if (numpe > 1) then
          irecvcount = 1
          sumvec = summed
-         if(impistat.eq.1) then 
-           iAllR = iAllR+1
-         elseif(impistat.eq.2) then 
-           iAllRScal = iAllRScal+1
-         endif
-         if(impistat2.eq.1) call MPI_BARRIER (MPI_COMM_WORLD, ierr)
-         if(impistat.gt.0) rmpitmr = TMRC()
          call MPI_ALLREDUCE (sumvec, summed, irecvcount, 
      &        MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
-         if(impistat.eq.1) then
-           rAllR = rAllR+TMRC()-rmpitmr
-         elseif(impistat.eq.2) then
-           rAllRScal = rAllRScal+TMRC()-rmpitmr
-         endif
 c         call MPI_REDUCE_SCATTER (sumvec, summed, irecvcount, 
 c     &        MPI_INTEGER, MPI_SUM, MPI_COMM_WORLD, ierr)
 

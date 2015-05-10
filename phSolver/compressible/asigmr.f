@@ -26,9 +26,9 @@ c
      &            qres(nshg,idflx)
 
 c
-        dimension ycl(npro,nshl,ndofl),     acl(npro,nshl,ndof),
-     &            xl(npro,nenl,nsd),        ytargetl(npro,nshl,nflow),
-     &            rl(npro,nshl,nflow),      rml(npro,nshl,nflow),
+        dimension ycl(npro,nshl,ndofl),       acl(npro,nshl,ndof),
+     &            xl(npro,nenl,nsd),          ytargetl(npro,nshl,nflow),
+     &            rl(npro,nshl,nflow),       rml(npro,nshl,nflow),
      &            BDiagl(npro,nshl,nflow,nflow),
      &            ql(npro,nshl,idflx)
 c        
@@ -43,16 +43,23 @@ c.... create the matrix of mode signs for the hierarchic basis
 c     functions. 
 c
 c
+c        if(myrank.eq.0)write(*,*)'asigmr: Start asigmr',iStraightPrint
         if (ipord .gt. 1) then
            call getsgn(ien,sgn)
         endif
+         
 c
 c.... gather the variables
 c
-        call localy(y,      ycl,     ien,    ndofl,  'gather  ')
+c        if(myrank.eq.0)write(*,*)'asigmr: End getsgn',iStraightPrint
+        call localy(y,      ycl,    ien,    ndofl,  'gather  ')
+c        if(myrank.eq.0)write(*,*)'asigmr: End local y',iStraightPrint
         call localy(ac,    acl,     ien,    ndofl,  'gather  ')
+c        if(myrank.eq.0)write(*,*)'asigmr: End local ac ',iStraightPrint
         call localx(x,      xl,     ien,    nsd,    'gather  ')
+c        if(myrank.eq.0)write(*,*)'asigmr: End local x',iStraightPrint
         call local (qres,   ql,     ien,    idflx,  'gather  ')
+c        if(myrank.eq.0)write(*,*)'asigmr: End local qres',iStraightPrint
 
         if(matflg(5,1).ge.4 )
      &   call localy (ytarget,   ytargetl,  ien,   nflow,  'gather  ')
@@ -71,17 +78,28 @@ c
 
         if(ierrcalc.eq.1) rerrl = zero
         ttim(31) = ttim(31) - secs(0.0)
-
+        
+c        if (iStraightPrint.gt.400 .and. iStraightPrint.lt.420) then
+c           if(myrank.eq.0)write(*,*)'asigmr: Start e3',iStraightPrint
+c        endif
         call e3  (ycl,     ycl,     acl,     shp,
      &            shgl,    xl,      rl,      rml,   xmudmi,
      &            BDiagl,  ql,      sgn,     rlsl,  EGmass,
      &            rerrl,   ytargetl)
+c        if (iStraightPrint.gt.400 .and. iStraightPrint.lt.420) then
+c           if(myrank.eq.0) write(*,*)'End e3',iStraightPrint
+c        endif
 
         ttim(31) = ttim(31) + secs(0.0)
 c
 c.... assemble the residual and modified residual
 c
         call local (res,    rl,     ien,    nflow,  'scatter ')
+c        if (iStraightPrint .gt. 407 ) then
+c          if(myrank.eq.0) write(*,*)'localize',iStraightPrint
+c        endif
+
+
 c
         if ( ierrcalc .eq. 1 ) then
            call local (rerr, rerrl,  ien, 6, 'scatter ')
@@ -112,6 +130,11 @@ c
            endif
         endif
         
+c        if (iStraightPrint .gt. 407 ) then
+c          if(myrank.eq.0) write(*,*)'End asigmr',iStraightPrint
+c        endif
+
+
 c
 c.... end
 c

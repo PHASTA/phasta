@@ -15,7 +15,7 @@ c.... parameters  IF YOU CHANGE THES YOU HAVE TO CHANGE THEM IN
 c                  common_c.h ALSO
 c
         parameter     ( MAXBLK = 50000, MAXTS = 100)
-        parameter     ( MAXSH = 32, NSD = 3 , NSDSQ = 9)
+        parameter     ( MAXSH = 32, NSD = 3 )
 c
 c  The five types of region topology are  1= Tet, 2=Hex, 3= Wedge (tri-start),
 c                                         4= Wedge (quad-first) 5=pyramid
@@ -66,16 +66,6 @@ c from different modules
         common /turbvari/iRANS, iLES, idistcalc, isubmod, ifproj,
      &                   i2filt, modlstats, idis, nohomog,
      &                   ierrsmooth, iramp
-        common /mpistats/iISend, iISendScal, iIRecv, iIRecvScal, 
-     &                   iWaitAll,iWaitAllScal, iAllR, iAllRScal,
-     &                   impistat, impistat2, rmpitmr,
-     &                   rISend, rISendScal, rIRecv, rIRecvScal, 
-     &                   rWaitAll, rWaitAllScal, rAllR, rAllRScal, 
-     &                   rCommu, rCommuScal
-
-        common /memstats/rheap,rheapavail,rstack,rstackavail,rshared,
-     &                   rpersist,rguard,rmmap,rmemstats
-
         common /spebcvr/ irscale, intpres, plandist,
      &            thetag, ds, tolerence, radcyl, rbltin, rvscal
 
@@ -104,8 +94,7 @@ c nIDs currently set to MAXSURF, each surface has its own
 c
         common /aerfrc/ flxID(10,0:MAXSURF), Force(3),HFlux, 
      &                  nsrflist(0:MAXSURF), isrfIM, 
-     &                  flxIDsclr(4,MAXSURF),
-     &                  irankfilesforce(0:MAXSURF)
+     &                  flxIDsclr(4,MAXSURF)
 c
         common /astore/ a(100000)
 c
@@ -124,40 +113,16 @@ c......................NASA Inlet Woolwine.................................
 c..........................................................................
 
 c...........................................................................
-        common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial
-        
-        common /Ductvari/  BlowingVelDuct,
-     &                    BlowingIniMdotDuct,
-     &                    BlowingFnlMdotDuct,
-     &                    suctionVbottom, 
-     &                    suctionVside_lower,
-     &                    suctionVside_upper, 
-     &                    suctionVtop, 
-     &                    blowerVelocity, 
-     &                    blowerTemperature, 
-     &                    blowerEV,
-     &                    isetOutletID, 
-     &                    isetInitial_Duct,
-     &                    isetInlet_Duct, 
-     &                    isetSuctionID_Duct,
-     &                    isetBlowerID_Duct,  
-     &                    iDuctgeometryType, 
-     &                    iStraightPrint,
-     &                    isetEV_IC_BC,
-     &                    isetEVramp,
-     &                    isetBlowing_Duct,
-     &                    ifixBlowingVel_Duct, 
-     &                    nBlowingStepsDuct
+        common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial, isetInitial_Duct,
+     &                    isetInlet_Duct, isetSuction_Duct, iDuctgeometryType, 
+     &                    iStraightPrint
+    
+        common /ductvari/  isetBlowing_Duct,ifixBlowingVel_Duct, BlowingVelDuct,
+     &                    BlowingIniMdotDuct,BlowingFnlMdotDuct,nBlowingStepsDuct
         real*8 inletVelX
         common /ctrlvar/  inletVelX,   outPres1, 
      &                    xvel_ini,    yvel_ini,    zvel_ini,
      &                    temp_ini,    pres_ini,    evis_ini
-
-        common /Ductvar/   evis_IC_BC,
-     &                    EVrampXmin, 
-     &                    EVrampXmax,
-     &                    EVrampMin,
-     &                    EVrampMax
 c...........................................................................
 
 c
@@ -185,7 +150,7 @@ c
      &                  idiff,  lhs,    itau,   ipord,  ipred,  lstres,
      &                  iepstm, dtsfct, taucfct, ibksiz, iabc, isurf,
      &                  idflx,  Bo,     EntropyPressure, irampViscOutlet,
-     &                  istretchOutlet, iremoveStabTimeTerm, iLHScond
+     &                  istretchOutlet, iremoveStabTimeTerm
 
 c
         common /inpdat/ epstol(6),  Delt(MAXTS),    CFLfl(MAXTS),
@@ -228,12 +193,7 @@ c
 c
         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
      &                  ioform, iowflux, iofieldv, iotype, ioybar,
-     &                  nstepsincycle, nphasesincycle, 
-     &                  ncycles_startphaseavg, ivort, icomputevort,
-     &                  nsynciofiles, nsynciofieldswriterestart, 
-     &                  iv_rankpercore, iv_corepernode 
-cMR CHANGE END
-
+     &                  nstepsincycle, nphasesincycle, ncycles_startphaseavg
 c
         common /point / mbeg,   mend,   mprec
 c
@@ -293,8 +253,7 @@ c
      &             three  = 3.0000000000000000000000000000000d0,
      &             four   = 4.0000000000000000000000000000000d0,
      &             five   = 5.0000000000000000000000000000000d0,
-     &             pi     = 3.1415926535897932384626433832795d0,
-     &             inv1024sq = 9.5367431640625e-7)
+     &             pi     = 3.1415926535897932384626433832795d0)
 
 c
 c----------------------------------------------------------------------
@@ -426,8 +385,6 @@ c ibound        : boundary element flag
 c idiff         : diffusive flux vector flag
 c                 ( = 0 not used; = 1 global reconstruction )
 c itau          : type of tau to be used
-c iLHScond      : add contributiosn from the heat flux BC to the LHS 
-c                 tangency matrix. 
 c
 c----------------------------------------------------------------------
 c

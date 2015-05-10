@@ -1,5 +1,5 @@
         subroutine SolGMRe (y,         ac,        yold,      acold,
-     &			   x,         iBC,       BC,        EGmass,    
+     &                      x,         iBC,       BC,        EGmass,    
      &                     res,       BDiag,     HBrg,      eBrg,
      &                     yBrg,      Rcos,      Rsin,      iper,
      &                     ilwork,    shp,       shgl,      shpb,
@@ -324,7 +324,7 @@ c
 
         echeck=abs(eBrg(iKs+1))
         if (echeck .le. epsnrm) exit
-        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction',
+        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction', 
      &  (one-echeck/unorm)/(one-etol)*100
 c     
 c.... end of mGMRES loop
@@ -365,7 +365,7 @@ c
 
 
       subroutine SolGMRs(y,         ac,        yold,      acold,
-     &			 x,         iBC,       BC,  
+     &                   x,         iBC,       BC,  
      &                   col,       row,       lhsk,         
      &                   res,       BDiag,     HBrg,      eBrg,
      &                   yBrg,      Rcos,      Rsin,      iper,
@@ -445,6 +445,8 @@ c
 c.... form the LHS matrices, the residual vector, and the block
 c     diagonal preconditioner
 c
+c      if(myrank.eq.master)write(*,*)'Forming LHS matrix and residual...'
+
       call ElmGMRs(y,             ac,            x,
      &             shp,           shgl,          iBC,
      &             BC,            shpb,
@@ -453,8 +455,14 @@ c
      &             ilwork,        lhsK,          col, 
      &             row,           rerr )
 
-	call tnanq(res,5, 'res_egmr')
-	call tnanq(BDiag,25, 'bdg_egmr')
+c      if(myrank.eq.master) write(*,*)'Start solving GMRES...'
+c        if(myrank.eq.master)then
+c            write(*,*) 'solgmr, end elggmrs'
+c            write(*,*) mien(409)%p(:,1)
+c        endif
+
+c      call tnanq(res,5, 'res_egmr')
+c      call tnanq(BDiag,25, 'bdg_egmr')
 c
 c.... **********************>>    EBE - GMRES    <<********************
 c
@@ -478,7 +486,11 @@ c
 c
 c Check the residual for divering trend
 c
-	call rstatCheck(res,ilwork,y,ac)
+
+
+c      call rstatCheck(res,ilwork,y,ac)
+
+
 c
 c.... initialize Dy
 c
@@ -534,7 +546,7 @@ c
 c.... perform the A x product
 c
             call SparseAp (iper,ilwork,iBC, col, row, lhsK,  temp)
-c           call tnanq(temp,5, 'q_spAPrs')
+c	        call tnanq(temp,5, 'q_spAPrs')
 
 c     
 c.... periodic nodes have to assemble results to their partners
@@ -667,6 +679,13 @@ c
 c.... end of GMRES iteration loop
 c     
  1000    continue
+
+c        if(myrank.eq.master)then
+c            write(*,*) 'solgmr, end GMRES loop'
+c            write(*,*) mien(409)%p(:,1)
+c        endif
+
+
 c
 c.... ------------------------->   Solution   <------------------------
 c
@@ -695,8 +714,8 @@ c.... check for convergence
 c     
         echeck=abs(eBrg(iKs+1))
         if (echeck .le. epsnrm) exit
-!        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction',
-!     &  (one-echeck*etol/epsnrm)/(one-etol)*100
+        if(myrank.eq.master) write(*,*)'solver tolerance %satisfaction',
+     &  (one-echeck*etol/epsnrm)/(one-etol)*100
 
 c     
 c.... end of mGMRES loop
@@ -719,15 +738,6 @@ c
 c.... output the statistics
 c
       call rstat (res, ilwork) 
-      
-      if(myrank.eq.master) then
-        if (echeck .le. epsnrm) then
-            write(*,*)
-        else
-            write(*,*)'solver tolerance %satisfaction',
-     &  (one-echeck*etol/epsnrm)/(one-etol)*100
-        endif
-      endif
 c    
 c.... stop the timer
 c     
@@ -838,7 +848,7 @@ c
 c Check the residual for divering trend
 c
 
-        call rstatCheckSclr(rest,ilwork,y,ac)
+c        call rstatCheckSclr(rest,ilwork,y,ac)
 
 c     
 c.... copy rest in uBrgt(1)

@@ -1,4 +1,4 @@
-      PARAMETER (maxtask = 200)
+      PARAMETER (maxtask = 100)
 
       integer INEWCOMM
       integer sevsegtype(maxtask,15)

@@ -79,9 +79,13 @@ c Inlet Temp is 330K, wall temp is 317K
               ry=max(0.0,ry)
               rz=max(0.0,rz)
           
-              xVel = 1.513158*ry*rz
+c              xVel = 1.013158*ry*rz
 c              xVel = 0.1*ry*rz
-              Temp = 317.0+13.0*ry*rz
+c              Temp = 317.0+13.0*ry*rz
+
+              xVel = 1.013158*rz
+              Temp = 317.0+13.0*rz
+ 
 c..........................................             
               BC(nn,2) = Temp   !Temp 
               BC(nn,3) = xVel   ! set and scale x velocity

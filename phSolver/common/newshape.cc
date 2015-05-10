@@ -705,18 +705,18 @@ int HexShapeAndDrv(int p,double par[3],double N[],double dN[][3])
 
 int WedgeShapeAndDrv( int p, double Inputpar[3], double N[], double dN[][3] )
 {
-    int i,j;
-    double FaceBlend, FaceBlendDrv[4];
-    double FaceEnt; //, FaceEntDrv[2][3];
+// int i,j
+//    double FaceBlend, FaceBlendDrv[4];
+//    double FaceEnt; //, FaceEntDrv[2][3];
     double par[4];
     //  int sign;
     //  int temp[4]={0,0,0,0};
-    double EdgeBlend[9], EdgeBlendDrv[9][3];
+//    double EdgeBlend[9], EdgeBlendDrv[9][3];
     //  double arg[3];
     //  double arg2[2];
     //  int ** edge[9];
-    double entfn[9];
-    double endrv[9][3];
+//    double entfn[9];
+//    double endrv[9][3];
     //  int num_e_modes;
     // int n[6][4]={{1,0,0,-1},{0,1,0,-1},{0,0,1,-1},{1,0,0,1},{0,1,0,1},{0,0,1,1}};
   

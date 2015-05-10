@@ -1,6 +1,6 @@
        subroutine findSuctionNorm(x,iBC,ilwork,iper)
 
-       use suctionNGC
+       use suctionDuct
        use pointer_data    
        include "common.h"
        include "mpif.h"
@@ -23,7 +23,7 @@
         allocate(ienb(nshl))
         do i=1,npro  ! loop over boundary elements
           isfID=miBCB(iblk)%p(i,2) ! miBCB(2) is the surfID
-          if(isfID.ne.isetSuction_NGC) cycle
+          if(isfID.ne.isetSuction_Duct) cycle
           ienb(1:nshl)=mienb(iblk)%p(i,1:nshl)
             do j=1,nenbl ! loop over boundary nodes
                nn=ienb(j) !nn is the global index of suction node

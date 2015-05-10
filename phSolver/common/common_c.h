@@ -4,7 +4,6 @@
 //
 // Input variables that have been previously declared in common.h have to be
 // re-declared here, in a consistant structure.   
-
 #include <FCMangle.h>
 
 #define workfc FortranCInterface_GLOBAL_(workfc,WORKFC)
@@ -15,8 +14,6 @@
 #define spongevar FortranCInterface_GLOBAL_(spongevar,SPONGEVAR)
 #define turbvar FortranCInterface_GLOBAL_(turbvar,TURBVAR)
 #define turbvari FortranCInterface_GLOBAL_(turbvari,TURBVARI)
-#define mpistats FortranCInterface_GLOBAL_(mpistats,MPISTATS)
-#define memstats FortranCInterface_GLOBAL_(memstats,MEMSTATS)
 #define spebcvr FortranCInterface_GLOBAL_(spebcvr,SPEBCVR)
 #define aerfrc FortranCInterface_GLOBAL_(aerfrc,AERFRC)
 #define astore FortranCInterface_GLOBAL_(astore,ASTORE)
@@ -24,9 +21,8 @@
 #define nasavari FortranCInterface_GLOBAL_(nasavari,NASAVARI)
 #define nasavar FortranCInterface_GLOBAL_(nasavar,NASAVAR)
 #define ctrlvari FortranCInterface_GLOBAL_(ctrlvari,CTRLVARI)
-#define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
 #define ctrlvar FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
-#define ductvar FortranCInterface_GLOBAL_(ductvar,DUCTVAR)
+#define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
 #define shpdat FortranCInterface_GLOBAL_(shpdat,SHPDAT)
 #define datpnt FortranCInterface_GLOBAL_(datpnt,DATPNT)
 #define elmpar FortranCInterface_GLOBAL_(elmpar,ELMPAR)
@@ -59,14 +55,14 @@
 #define amgvarr FortranCInterface_GLOBAL_(amgvarr,AMGVARR)
 #define amgvari FortranCInterface_GLOBAL_(amgvari,AMGVARI)
 
+
 #define MAXBLK   50000
 #define MAXSURF  1000  
 #define MAXTS   100
-#define MAXTOP   6
+#define MAXTOP   5
 #define MAXQPT   125
-#define MAXSH    32
+#define MAXSH    125
 #define NSD      3
-#define NSDSQ    9
 #define machin   'RS/6000'
 #define machfl   4
 #define zero   0.0000000000000000000000000000000d0
@@ -86,7 +82,7 @@
 #define four   4.0000000000000000000000000000000d0
 #define five   5.0000000000000000000000000000000d0
 #define pi   3.1415926535897932384626433832795d0
-#define inv1024sq 9.5367431640625e-7
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -162,42 +158,6 @@ extern "C" {
   } turbvari ;
 
   extern struct { 
-    int iISend;
-    int iISendScal;
-    int iIRecv;
-    int iIRecvScal;
-    int iWaitAll;
-    int iWaitAllScal;
-    int iAllR;
-    int iAllRScal;
-    int impistat;
-    int impistat2;
-    double rmpitmr;
-    double rISend;
-    double rISendScal;
-    double rIRecv;
-    double rIRecvScal;
-    double rWaitAll;
-    double rWaitAllScal;
-    double rAllR;
-    double rAllRScal;
-    double rCommu;
-    double rCommuScal;
-  } mpistats ;
-
-  extern struct { 
-    double rheap;
-    double rheapavail;
-    double rstack;
-    double rstackavail;
-    double rshared;
-    double rpersist;
-    double rguard;
-    double rmmap;
-  } memstats ;
-
-
-  extern struct { 
     int irscale;
     int intpres;
     double plandist;
@@ -223,7 +183,6 @@ extern "C" {
     int nsrflist[MAXSURF+1];
     int isrfIM;
     double flxIDsclr[MAXSURF][4];
-    int irankfilesforce[MAXSURF+1];
   } aerfrc ;
 
   extern struct { 
@@ -274,32 +233,21 @@ extern "C" {
     int iI2Binlet;
     int isetOutPres;
     int isetInitial;
+    int isetInitial_Duct;
+    int isetInlet_Duct;
+    int isetSuction_Duct;
+    int iDuctgeometryType;
+    int iStraigtPrint;
   } ctrlvari;
 
-	extern struct{
-		double BlowingVelDuct; 
-		double BlowingIniMdotDuct;
-		double BlowingFnlMdotDuct;
-		double suctionVbottom;
-		double suctionVside_lower;
-		double suctionVside_upper;
-		double suctionVtop;
-		double blowerVelocity;
-		double blowerTemperature;
-		double blowerEV;
-		int isetOutletID;
-		int isetInitial_Duct;
-		int isetInlet_Duct;
-		int isetSuctionID_Duct;
-		int isetBlowerID_Duct;
-		int iDuctgeometryType;
-		int iStraigtPrint;
-		int isetEV_IC_BC;
-		int isetEVramp;
-		int isetBlowing_Duct;
-		int ifixBlowingVel_Duct;  
-		int nBlowingStepsDuct;
-	}ductvari;
+   extern struct{
+    int isetBlowing_Duct;
+    int ifixBlowingVel_Duct;  
+    double BlowingVelDuct; 
+    double BlowingIniMdotDuct;
+    double BlowingFnlMdotDuct;
+    int nBlowingStepsDuct;  
+  }ductvari; 
 
   extern struct{
     double inletVelX;
@@ -311,14 +259,6 @@ extern "C" {
     double pres_ini;
     double evis_ini;
   } ctrlvar;
-
-	extern struct{
-		double evis_IC_BC;
-		double EVrampXmin;
-		double EVrampXmax;
-		double EVrampMin;
-		double EVrampMax;
-	} ductvar;
 //////////////////////////////////////////
 
  
@@ -402,7 +342,6 @@ extern "C" {
     int irampViscOutlet;
     int istretchOutlet;
     int iremoveStabTimeTerm;
-	int iLHScond;
   } genpar ;
 
   extern struct { 
@@ -503,14 +442,6 @@ extern "C" {
     int nstepsincycle;
     int nphasesincycle;
     int ncycles_startphaseavg;
-//MR CHANGE
-    int ivort;
-    int icomputevort;
-    int nsynciofiles;
-    int nsynciofieldswriterestart;
-    int iv_rankpercore;
-    int iv_corepernode; 
-//MR CHANGE END
     /*  int iostats; */
 /*      int ipresref; */
   } outpar ;

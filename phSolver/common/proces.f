@@ -42,21 +42,32 @@ c
         real*8 bcinterp(100,ndof+1),interp_mask(ndof)
         logical exlog
 
-        !Duct
-        real*8 c0, c1, c2, c3, x1, x2
-        integer nn
-
 c        if ((irscale .ge. 0) .and. (myrank.eq.master)) then
 c           call setSPEBC(numnp, point2nfath, nsonmax)
 c        endif
 c     
 c.... generate the geometry and boundary conditions data
 c
+c        write(*,*)"Inlet",isetInlet_Duct
+        if(myrank.eq.0)then
+        write(*,*)"blowing:",isetBlowing_Duct,ifixBlowingVel_Duct,
+     &             BlowingVelDuct,BlowingIniMdotDuct,BlowingFnlMdotDuct,
+     &             nBlowingStepsDuct
+        endif
+
         call gendat (y,              ac,             point2x,
      &               iBC,            BC,
      &               point2iper,     point2ilwork,   shp,
      &               shgl,           shpb,           shglb,
      &               point2ifath,    velbar,         point2nsons )
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
+c-----Compute Vorticity and Q criterion -------------
+c       call vortGLB(y, point2x, shp, shgl, point2ilwork)
+c       stop
+c-----------------------------------------------------
+
+
         call setper(nshg)
         call perprep(iBC,point2iper,nshg)
         if (iLES/10 .eq. 1) then
@@ -76,16 +87,27 @@ c
 c
 c.... RANS turbulence model
 c
+
         if (iRANS .lt. 0) then
            call initTurb( point2x )
         endif
+        if(myrank.eq.0) write(*,*) "Finding distance done"
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+
 c
 c.... p vs. Q boundary
 c
-           call initNABI( point2x, shpb )
+        if(myrank.eq.0)write(*,*)"start initNABI"
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        call initNABI( point2x, shpb )
+        if(myrank.eq.0)write(*,*)"finish initNABI"
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+ccccc         
 c     
 c.... check for execution mode
 c
+        if(myrank.eq.0)write(*,*)'iexec=',iexec
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
         if (iexec .eq. 0) then
            lstep = 0
            call restar ('out ',  y  ,ac)
@@ -161,56 +183,12 @@ c
         endif
 c$$$$$$$$$$$$$$$$$$$$
 
-!======================================================================
-!Modifications for Duct. Need to encapsulate in a function call. 
-        !specify an initial eddy viscosity ramp
-        if(isetEVramp .gt. 0) then
-          if(myrank .eq. 0) then
-            write(*,*) "Setting eddy viscosity ramp with:" 
-            write(*,*) "  - ramp X min = ", EVrampXmin
-            write(*,*) "  - ramp X max = ", EVrampXmax
-            write(*,*) "  - EV min = ", EVrampMin
-            write(*,*) "  - EV max = ", EVrampMax
-          endif
-             
-          x1 = EVrampXmin  !stuff in a shorter variable name to
-          x2 = EVrampXmax  !make the formulas cleaner
-          !Newton Divided differences to generate a polynomial of
-          !the form P(x) = c0 + x*(c1 + x*(c2 + (x - (x2 - x1))*c3))
-          !satisfying P(x1) = EVrampMin, P(x2) = EVrampMax,
-          ! P'(x1) = 0, and P'(x2) = 0
-          
-          c0 = EVrampMin
-          c1 = 0            !zero derivative
-          c2 = (EVrampMax - EVrampMin)/(x2 - x1)
-          c3 = 0            !zero derivative
-          c3 = (c3 - c2)/(x2 - x1)
-          c2 = (c2 - c1)/(x2 - x1)
-          c3 = (c3 - c2)/(x2 - x1)
-          
-          do nn = 1,nshg
-            if(y(nn,6) .eq. 0) cycle  !don't change wall boundary conditions, should be iTurbWall == 1
-              
-            if(point2x(nn,1) .gt. EVrampXmax) then !downstream of the ramp
-              y(nn,6) = EVrampMax
-            elseif(point2x(nn,1) .gt. EVrampXmin) then !and x(:,1) <= EVrampXmax
-             
-              !P(x) = c0 + x*(c1 + x*(c2 + (x - (x2 - x1))*c3)) 
-              !     = c0 + x*(c1 + x*(c2 - (x2 - x1)*c3 + x*c3
-              y(nn,6) = c0                 + (point2x(nn,1) - x1)*(
-     &                  c1                 + (point2x(nn,1) - x1)*(
-     &                 (c2 - (x2 - x1)*c3) + (point2x(nn,1) - x1)*c3))
-            else
-              y(nn,6) = EVrampMin
-            endif
-          enddo
-        endif
-!End modifications for Duct
-!======================================================================
 c
 c
 c.... call the semi-discrete predictor multi-corrector iterative driver
 c
+        if(myrank.eq.0)write(*,*)'start itrdrv'
+        call MPI_BARRIER(MPI_COMM_WORLD,ierr)
         call itrdrv (y,              ac,             
      &               uold,           point2x,
      &               iBC,            BC,
@@ -227,24 +205,7 @@ CAD        call timer ('End     ')
 c
 c.... close echo file
 c
-
-!MR CHANGE
-      if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-      if(myrank.eq.0)  then
-          write(*,*) 'process - before closing iecho'
-      endif
-!MR CHANGE END
-
         close (iecho)
-
-!MR CHANGE
-      if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-      if(myrank.eq.0)  then
-          write(*,*) 'process - after closing iecho'
-      endif
-!MR CHANGE END
-
-
 c
 c.... end of the program
 c

@@ -30,9 +30,8 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
-      integer status(MPI_STATUS_SIZE), ierr
+      integer status(MPI_STATUS_SIZE)
       integer stat(MPI_STATUS_SIZE, 2*maxtask), req(2*maxtask)
-      real*8  rDelISend, rDelIRecv, rDelWaitAll
 
       dimension global(nshg,n),
      &          rtemp(maxfront*n,maxtask),
@@ -40,10 +39,6 @@ c
  
       character*3 code
 
-      if(impistat2.eq.1) call MPI_BARRIER (MPI_COMM_WORLD, ierr)
-      if(impistat.gt.0) rDelIRecv = zero
-      if(impistat.gt.0) rDelISend = zero
-      if(impistat.gt.0) rDelWaitAll = zero
 
       if (code .ne. 'in ' .and. code .ne. 'out') 
      &  call error ('commu   ','code    ',0)
@@ -144,39 +139,17 @@ c
 c.... residual communication
 c
           if (code .eq. 'in ') then
-            if(impistat.eq.1) then
-              iISend = iISend+1
-            elseif(impistat.eq.2) then
-               iISendScal = iISendScal+1
-            endif
-            if(impistat.gt.0) rmpitmr = TMRC()
-            call MPI_ISEND(global(isgbeg, 1), 1, sevsegtype(itask,kdof), 
+            call MPI_ISEND(global(isgbeg, 1), 1, sevsegtype(itask,kdof),
      &                     iother, itag, MPI_COMM_WORLD, req(m), ierr)
-            if(impistat.gt.0) rDelISend = TMRC()-rmpitmr
-            if(impistat.eq.1) then 
-              rISend = rISend+rDelISend
-            elseif(impistat.eq.2) then 
-              rISendScal = rISendScal+rDelISend
-            endif
           endif
 c
 c.... solution communication
 c
           if (code .eq. 'out') then
-            if(impistat.eq.1) then
-              iIRecv = iIRecv+1
-            elseif(impistat.eq.2) then
-               iIRecvScal = iIRecvScal+1
-            endif
-            if(impistat.gt.0) rmpitmr = TMRC()
-            call MPI_IRECV(global(isgbeg, 1), 1, sevsegtype(itask,kdof), 
+            call MPI_IRECV(global(isgbeg, 1), 1, sevsegtype(itask,kdof),
      &                     iother, itag, MPI_COMM_WORLD, req(m), ierr)
-            if(impistat.gt.0) rDelIRecv = TMRC()-rmpitmr
-            if(impistat.eq.1) then 
-              rIRecv = rIRecv+rDelIRecv
-            elseif(impistat.eq.2) then 
-              rIRecvScal = rIRecvScal+rDelIRecv
-            endif
+c            call MPI_RECV(global(isgbeg,1), 1, sevsegtype(itask,kdof),
+c     &                    iother, itag, MPI_COMM_WORLD, status, ierr)
           endif
 c
 c.... if iacc == 1, then this task is a recieve.
@@ -197,36 +170,12 @@ c
 c.... recieve all segments for this task in a single step
 c
             idl=idl+1 ! stands for i Do Later, the number to fix later
-            if(impistat.eq.1) then 
-              iIRecv = iIRecv+1
-            elseif(impistat.eq.2) then 
-              iIRecvScal = iIRecvScal+1
-            endif
-            if(impistat.gt.0) rmpitmr = TMRC()
-            call MPI_IRECV(rtemp(1,idl), lfront*n, MPI_DOUBLE_PRECISION, 
+            call MPI_IRECV(rtemp(1,idl), lfront*n, MPI_DOUBLE_PRECISION,
      &                     iother, itag, MPI_COMM_WORLD, req(m), ierr)
-            if(impistat.gt.0) rDelIRecv = TMRC()-rmpitmr
-            if(impistat.eq.1) then
-               rIRecv = rIRecv+rDelIRecv
-            elseif(impistat.eq.2) then 
-               rIRecvScal = rIRecvScal+rDelIRecv
-            endif
           endif
           if (code .eq. 'out') then
-            if(impistat.eq.1) then 
-              iISend = iISend+1
-            elseif(impistat.eq.2) then 
-              iISendScal = iISendScal+1
-            endif
-            if(impistat.gt.0) rmpitmr = TMRC()
-            call MPI_ISEND(global(isgbeg, 1), 1, sevsegtype(itask,kdof), 
+            call MPI_ISEND(global(isgbeg, 1), 1, sevsegtype(itask,kdof),
      &                     iother, itag, MPI_COMM_WORLD, req(m), ierr)
-            if(impistat.gt.0) rDelISend = TMRC()-rmpitmr
-            if(impistat.eq.1) then
-               rISend = rISend+rDelISend
-            elseif(impistat.eq.2) then 
-               rISendScal = rISendScal+rDelISend
-            endif
           endif
         endif
 
@@ -234,21 +183,7 @@ c
 
       enddo   !! end tasks loop
 
-      if(impistat.eq.1) then
-        iWaitAll = iWaitAll+1
-      elseif(impistat.eq.2) then
-         iWaitAllScal = iWaitAllScal+1
-      endif
-      if(impistat.gt.0) rmpitmr = TMRC()
       call MPI_WAITALL(m, req, stat, ierr)
-      if(impistat.gt.0) rDelWaitAll = TMRC()-rmpitmr
-      if(impistat.eq.1) then
-        rWaitAll = rWaitAll+rDelWaitAll
-        rCommu = rCommu+rDelIRecv+rDelISend+rDelWaitAll
-      elseif(impistat.eq.2) then
-        rWaitAllScal = rWaitAllScal+rDelWaitAll
-        rCommuScal = rCommuScal+rDelIRecv+rDelISend+rDelWaitAll
-      endif
 
 c
 c     Stuff added below is a delayed assembly of that which was communicated

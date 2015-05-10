@@ -15,7 +15,6 @@ c
         use readarrays          ! used to acess nBC
         use dtnmod
         use pointer_data
-        use wallData            ! give access to wnorm, findWallNOrm
         include "common.h"
         include "mpif.h"
 
@@ -39,16 +38,6 @@ c
 c  stuff for dynamic model s.w.avg and wall model
 c
         dimension ifath(numnp),    velbar(nfath,nflow), nsons(nfath) 
-
-! Hack to get suction right on part boundaries
-!       dimension BC3(numnp,5)
-
-c... Duct
-        integer iTurbWall(nshg)
-        integer nTopNodes
-        integer TopSurface(nshg)
-
-c...
 
 c.... start the timer
 c
@@ -112,61 +101,6 @@ c
      &               point2ilwork, point2iper)
         deallocate(nBC)
 
-c=========================================================================================
-c Yi Chen 
-c Duct geometry8
-c... updated, truly useful things.........
-
-
-c===== specify outlet pressure
-         if(isetOutletID .gt. 0)then
-           call SetUniOutPres(BC)     ! in BCprofile2.f
-         endif
-
-c==== specify inlet boundary conditions
-c         if(isetInlet_Duct.gt.0)then
-c           call setInlet_Duct(x,BC,iTurbWall) ! in BCprofile2.f
-c         endif
-
-c==== specify blowing conditions 
-         if(isetBlowing_Duct.gt.0)then
-            if (ifixBlowingVel_Duct.eq.0)then
-              call setBlowing_Duct(BC,iTurbWall)
-            else
-              call setBlowing_Duct3(x,BC,iTurbWall) ! in setBlowing_Duct3.f, fixed jet inlet velocity
-            endif
-         endif
-
-c====== specify wall conditions 
-         call findTurbWall(iTurbWall)
-         do nn=1,nshg
-           if(iTurbWall(nn).eq.1)then
-             !Add scalar 1 to the set of essential BCs that are updated.
-             !This should generally be true for the SA and (I think) k-w
-             !turbulence models and provides a good way to catch stupid
-             !mistakes. The other boundary conditions specified here
-             !drove me crazy for several months. - Nicholas Mati
-             iBC(nn) = ior(iBC(nn), int(64))     !add scalar 1 to the update.     
-             BC(nn,7) = 0   ! set varSA = 0
-
-!             iBC(nn)  = 122 ! temp,u,v,w,slcr_1     
-!             BC(nn,2) = 317 ! Wall temp
-!             BC(nn,3) = 0   ! set x velocity
-!             BC(nn,4) = 0   ! set y velocity
-!             BC(nn,5) = 0   ! set zVel=0
-           endif
-         enddo
-
-c==== apply suction patch on sides
-c suction is applied at the end so it will overwrite the velocity at any nodes shared by the no-slip walls
-         call findWallNorm(x,iBC,ilwork,iper)
-         if(isetSuctionID_Duct.gt.0)then
-            call setSuction_Duct3(x, BC, y, ilwork)
-         endif
-
-c==== 
-         call MPI_BARRIER(MPI_COMM_WORLD,ierr)
-c.... Yi Chen
 c==========================================================================================
 c
 c.... ---------------------->  Boundary Elements  <--------------------
@@ -196,7 +130,7 @@ c
                     do j=1,nshapeb
                        do isclr=1,nsclr
                           ignd=mienb(iblk)%p(i,j)
-                             ifeature(ignd) = abs(miBCB(iblk)%p(i,2))  
+                             ifeature(ignd) = abs(miBCB(iblk)%p(i,2))       
                              iBC(ignd)=ior(iBC(ignd),2**13)
                                 ! must mark this as a Neumann BC now
                              miBCB(iblk)%p(i,1)=
@@ -232,8 +166,8 @@ c
 c        call genpzero(iBC,iper)
 c
       if((myrank.eq.master).and.(irscale.ge.0)) then
-         call setSPEBC(numnp,nsd) 
-         call eqn_plane(point2x, iBC)
+         call setSPEBC(numnp,nsd) 	 
+	 call eqn_plane(point2x, iBC)
       endif
 c
 c.... --------------------->  Initial Conditions  <--------------------
@@ -245,13 +179,10 @@ c
      &               ilwork,   ifath,      velbar,  
      &               nsons,    x,
      &               shp,     shgl,    shpb,    shglb) 
-
 c
 c.... close the geometry, boundary condition and material files
 c
-!MR CHANGE
-!        close (igeom)
-!MR CHANGE END
+        close (igeom)
         close (ibndc)
         if (mexist) close (imat)
 c

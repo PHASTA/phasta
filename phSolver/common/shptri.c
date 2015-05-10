@@ -2,7 +2,7 @@
    the shape functions and their derivatives for tets
    */
 
-int TetShapeAndDrv(int p,double par[3],double N[],double dN[][3]);
+int TriShapeAndDrv(int p,double par[3],double N[],double dN[][3]);
 
 #ifdef sun4_5
 shptri_(int *p, double par[], double N[], double dN[][3])

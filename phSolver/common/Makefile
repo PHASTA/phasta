@@ -72,7 +72,10 @@ mods  := spebc.f pointer.f \
         timedata.f \
         turbke.f\
         bctint.f readnblk.f\
-        mod_slpw.f
+        mod_slpw.f mod_BCsfIDmap.f\
+        mod_blowing_NGC.f\
+        mod_suction_NGC.f\
+        cmass.f
 
 # Include standard makefile
 include $(DEVROOT)/Util/buildUtil/make.common

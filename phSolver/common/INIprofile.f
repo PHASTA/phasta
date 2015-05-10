@@ -67,7 +67,6 @@ c... change this file and recompile the code, just like other commercial code wh
 c... supports User Defined Function, you need to recompile and relink the code  
         subroutine setInitial(x,y)
 
-        use turbSA   ! this gives us d2wall(1:nshg) nodal distance to the closest wall
         use BCsfIDmap
         include "common.h"
         include "mpif.h"
@@ -75,19 +74,8 @@ c... supports User Defined Function, you need to recompile and relink the code
 
         real*8 x(nshg,nsd)
         real*8 y(nshg,ndof)         
-        if(isetinitial.eq.1) then
 
 c... user gives the formular of initial conditions from here       
-           y(:,1)= xvel_ini 
-           y(:,4)= pres_ini
-           y(:,2)=yvel_ini
-           y(:,3)=zvel_ini
-           y(:,5)=temp_ini
-           if(nsclr.eq.1)then
-              y(:,6)=evis_ini
-           endif
-!moving previously coded spatially varying pressure to 10 so that 1 is simple
-        elseif (isetInitial.eq.10) then   
         if(ninlet.gt.0)then
            xinlet=x(inlf(1),1)
         else
@@ -118,44 +106,6 @@ c... user gives the formular of initial conditions from here
            if(nsclr.eq.1)then
               y(:,6)=evis_ini
            endif
-        elseif (isetInitial.eq.2) then   
-            !----------------------------------
-            ! set initial condition for blower
-            !----------------------------------
- 
-!            blthickness=1.0e-4
-!            yfloor=-0.0333375 - 1e-7
-!            xthroat=-0.3048 + 1e-5  
-!            xSlit = 0.025            !x-coordinate of the blower slit
-!    
-!            p0 = 121800       !total pressure in blower
-!            T0 = 305          !total temperature
-!                
-!            do nn=1,nshg
-!                xcoor = x(nn,1)
-!
-!                if((xcoor .gt. xthroat) .and. (x(nn,2).lt.yfloor)) then
-!                    y(nn,3:4)=0  !velocity
-!                    y(nn,6)=1e-3 !eddy viscosity
-!               
-!                    if(xcoor .le. xSlit) then  !test whether the point is infront of or behind the slit. If infront, use M = 0.8
-!                        !4th order polynomial best fit for an exit Mach number of 0.8
-!                        MEuler=0.0806961 + xcoor*(2.96302 + xcoor*(72.5101 + xcoor*(13914.6 + xcoor*1.09778e6))) 
-!                    else
-!                        MEuler = 0.8
-!                    endif
-!    
-!                    pEuler = p0/((1 + 0.2*M*M)**3.5)
-!                    TEuler = T0/(1 + 0.2*M*M)           
-!                    uEuler = MEuler*sqrt(1.4*287.06*TEuler)
-!    
-!                    bldamper=min(one, d2wall(nn)/blthickness)
-!                    y(nn,2)=uEuler*bldamper
-!                    y(nn,1)=pEuler
-!                    y(nn,5)=TEuler
-!                endif
-!             enddo
-        endif
 
         return
         end
@@ -300,6 +250,15 @@ c... above Yi Chen's Method
           endif
 
 c... above, used for restart from M2M
+ 
+             qold(nn,1)=95000
+             qold(nn,2)=100
+             qold(nn,3)=-10
+             qold(nn,4)=0
+             qold(nn,5)=320
+             qold(nn,6)=1.825e-5
+
+
 
         enddo ! end of loop over all nshg points 
 c........................... 

@@ -255,32 +255,35 @@ c
      &          bf     (npro),             srcp   (npro),
      &          gp6    (npro),             tmp    (npro),
      &          tmp1   (npro),             fwog   (npro)  
-      real*8 elDwl(npro) ! local quadrature point DES dvar
-      real*8 sclrm(npro) ! modified for non-negativity
-      real*8 saCb1Scale(npro)  !Hack to change the production term and BL thickness
-      real*8 xl_xbar(npro)     !Hack to store mean x location of element. 
+        real*8 elDwl(npro) ! local quadrature point DES dvar
+        real*8 sclrm(npro) ! modified for non-negativity
 c... for levelset 
       real*8  sign_levelset(npro), sclr_ls(npro), mytmp(npro),
      &        xl(npro,nenl,nsd)
     
 c
       if(iRANS.lt.0) then    ! spalart almaras model
+
         sclrm=max(rmu/100.0,Sclr)
         if(iles.lt.0) then
-          do i=1,npro
-            dx=maxval(xl(i,:,1))-minval(xl(i,:,1))
-            dy=maxval(xl(i,:,2))-minval(xl(i,:,2))
-            dz=maxval(xl(i,:,3))-minval(xl(i,:,3))
-            dmax=max(dx,max(dy,dz))
-            dmax=0.65d0*dmax
-            if( iles.eq.-1) then !original DES97
-               dist2w(i)=min(dmax,dist2w(i))
-            elseif(iles.eq.-2) then ! DDES
-               rd=sclrm(i)*saKappaP2Inv/(dist2w(i)**2*gVnrm(i)+1.0d-12)
-               fd=one-tanh((8.0000000000000000d0*rd)**3)
-               dist2w(i)=dist2w(i)-fd*max(zero,dist2w(i)-dmax)
-            endif
-          enddo
+        do i=1,npro
+         dx=maxval(xl(i,:,1))-minval(xl(i,:,1))
+         dy=maxval(xl(i,:,2))-minval(xl(i,:,2))
+         dz=maxval(xl(i,:,3))-minval(xl(i,:,3))
+         dmax=max(dx,max(dy,dz))
+c....    limit edge length for DES based on SA model
+c....    (only useful when DES_SA_hmin is greater than 0.0 as element lengths are positive)
+c I DON'T KNOW WHERE THIS CAME FROM         dmax=max(DES_SA_hmin,dmax)
+          dmax=0.65d0*dmax
+c
+c Next 3 lines are DDES (and gVnrm that came from e3ivarSclr
+c
+c         rd=sclrm(i)*saKappaP2Inv/(dist2w(i)**2*gVnrm(i))
+c         fd=one-tanh((8.0000000000000000d0*rd)**3)
+c         dist2w(i)=dist2w(i)-fd*max(zero,dist2w(i)-dmax)
+c DES97         
+          dist2w(i)=min(dmax,dist2w(i))
+        enddo
         endif
 
         elDwl(:)=elDwl(:)+dist2w(:)
@@ -321,32 +324,8 @@ c        srcrat=saCb1*(one-ft2)*Stilde*sclrm
 c     &      -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w)**2
 c        srcrat=srcrat/sclrm
 
-!----------------------------------------------------------------------------
-!HACK: lower the EV production rate within a region to decrease BL thickness. 
-! Appear NM was not finished yet        if(scrScaleEnable) then  
-        if(one.eq.zero) then  
-          do i = 1,nenl !average the x-locations
-            xl_xbar(:) = xl_xbar(:) + xl(:,i,1)
-          enddo
-          xl_xbar = xl_xbar/nenl
-          
-          saCb1Scale = one
-          where(xl_xbar < saCb1alterXmin .and. xl_xbar > saCb1alterXmax)
-            saCb1Scale(:) = seCb1alter
-          endwhere
-          
-          srcrat = saCb1Scale*saCb1*(one-ft2)*Stilde
-     &         -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
-        else
-          srcrat=saCb1*(one-ft2)*Stilde
-     &         -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
-        endif 
-
-!Original:
-!        srcrat=saCb1*(one-ft2)*Stilde
-!     &       -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
-!End Hack
-!----------------------------------------------------------------------------
+        srcrat=saCb1*(one-ft2)*Stilde
+     &       -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w/dist2w)
 
 c
 c        term1=saCb1*(one-ft2)*Stilde*sclrm

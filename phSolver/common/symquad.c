@@ -22,7 +22,6 @@ symquad(int *n1, double pt[][4], double wt[], int *err)
 
 /*$Id$*/
 #include <stdio.h>
-
 #define QpNon -1.000000000000000
 #define Qp21  -0.577350269189626
 #define Qp22   0.577350269189626

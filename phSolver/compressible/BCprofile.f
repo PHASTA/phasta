@@ -91,7 +91,7 @@ c
 
         subroutine BCprofileScale(vbc_prof,BC,yold)
         use rampBC
-        use timedata
+	use timedata
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
@@ -101,8 +101,8 @@ c
 c
 c in some way find mdot for this way
 c
-        call rampedMdot(mdotNow)
-c       call flowControl(mdotNow)
+ 	call rampedMdot(mdotNow)
+c	call flowControl(mdotNow)
 
 c
 c compute the pressure from the current solution at the peak of profile

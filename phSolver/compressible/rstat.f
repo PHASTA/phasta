@@ -53,10 +53,10 @@ c
          spmasss=flxID(2,isrfIM)
          spmasstot(:)=flxID(2,:)
       endif
-! 	if(myrank.eq.0) then	
-!     write(44,1000)lstep+1,(spmasstot(j),j=1,5)
-!     call flush(44)
-!	endif	
+	if(myrank.eq.0) then	
+      write(44,1000)lstep+1,(spmasstot(j),j=1,5)
+      call flush(44)
+	endif	
       ftot(1)=sum(Ftots(1,0:MAXSURF))
       ftot(2)=sum(Ftots(2,0:MAXSURF))
       ftot(3)=sum(Ftots(3,0:MAXSURF))
@@ -139,9 +139,7 @@ c
 c.... output the result
 c
         if (myrank .eq. master) then
-          !modified to not advance so that solver tolerance satisfaction failure
-          ! can be appended. The line wrap occurs in solgmr
-          write(*, 2000, advance="no")       lstep+1, cputme, totres, jtotrs, nrsmax, 
+          print 2000,        lstep+1, cputme, totres, jtotrs, nrsmax,
      &                     jresmx, lGMRES,  iKs, ntotGM
           write (ihist,2000) lstep+1, cputme, totres, jtotrs, nrsmax,
      &                     jresmx, lGMRES,  iKs, ntotGM

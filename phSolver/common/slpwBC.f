@@ -32,7 +32,10 @@ ccc case1: one slipwall and no user-specified velocity BC
         enddo
         wn1(:)=wlnorm(:,islpw)
         ii=nmax(wn1(1),wn1(2),wn1(3))
-        if(ii.eq.1)then  ! u has the largest constrain, u should be constrained
+        if(ii.eq.1)then  
+C
+C... u has the largest constrain, u should be constrained
+C
          iBC  = iBC+8       
          BC(3)= 0
          BC(4)= wn1(2)/wn1(1)
@@ -76,7 +79,9 @@ C
 
         kk=nmax(ck1,ck2,ck3)
 
-        if(kk.eq.1)then  ! u has the largest freedom, v and w should be constrained
+        if(kk.eq.1)then  
+C
+C... u has the largest freedom, v and w should be constrained
 C
           iBC=iBC + 48
           det=c5*c10-c9*c6
@@ -239,7 +244,7 @@ ccc case8: two slipwall and three user-specified velocity BC
         c10=wn2(3)
         c11=0
 
-        ck1=c5*c10 - c9*c6     ! ck is the cross product of wn1 and wn2
+        ck1=c5*c10 - c9*c6
         ck2=c6*c8  - c4*c10
         ck3=c4*c9  - c8*c5
 
@@ -297,11 +302,6 @@ C-----------------------------------------------------------
          det3x3=a1*a5*a9+a4*a8*a3+a7*a6*a2-a7*a5*a3-a8*a6*a1-a9*a4*a2
        return
        end 
-
-
-
-
-
 
 
 

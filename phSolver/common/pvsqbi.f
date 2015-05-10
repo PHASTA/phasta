@@ -27,7 +27,7 @@ c-----------------------------------------------------------------------
       use     pointer_data
       use     pvsQbi
       include "common.h"
-      
+      include "mpif.h" 
       real*8   x(numnp,nsd)
 c
 c use is like

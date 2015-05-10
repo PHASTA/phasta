@@ -1,6 +1,6 @@
         subroutine AsBMFG (y,       x,       shpb,    shglb,
      &                     ienb,    materb,  iBCB,    BCB,
-     &                     res,     rmes,    EGmass)
+     &                     res,     rmes)
 c
 c----------------------------------------------------------------------
 c
@@ -21,8 +21,7 @@ c
 c
         dimension ycl(npro,nshl,ndofl),  xlb(npro,nenl,nsd),
      &            rl(npro,nshl,nflow),
-     &            rml(npro,nshl,nflow),
-     &            EGmass(npro, nshl, nshl) 
+     &            rml(npro,nshl,nflow)
 c        
         dimension sgn(npro,nshl)
 c
@@ -40,26 +39,31 @@ c
         call localx(x,      xlb,    ienb,   nsd,    'gather  ')
 c
 
-        !get the boundary element residuals
-
+c.... get the boundary element residuals
+c
         rl  = zero
         rml = zero
 c
 !  pass the memory location of ycl to both yl and ycl in e3b.  This may
- !  seem dangerous since yl in e3b is :,nflow and ycl is :,ndof but they
- !  do not write to yl (out of bounds at least), only use the data there 
- !  so both will access data
- !  properly from this location.
+!  seem dangerous since yl in e3b is :,nflow and ycl is :,ndof but they
+!  do not write to yl (out of bounds at least), only use the data there 
+!  so both will access data
+!  properly from this location.
 c
         call e3b  (ycl,     ycl,     iBCB,    BCB,     shpb,    shglb,
-     &             xlb,     rl,      rml,     sgn,     EGmass)
-
-        !assemble the residual and the modified residual
+     &             xlb,     rl,      rml,     sgn)
+c
+c.... assemble the residual and the modified residual
+c
         call local(res,    rl,     ienb,   nflow,  'scatter ')
+
+
+c
         if (Navier .eq. 1 .and. ires.ne.1 )
-     &    call local(rmes,   rml,    ienb,   nflow,  'scatter ')
-        
-        !end
+     &  call local(rmes,   rml,    ienb,   nflow,  'scatter ')
+c
+c.... end
+c
         return
         end
 c

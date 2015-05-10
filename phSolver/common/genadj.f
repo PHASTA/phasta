@@ -6,7 +6,7 @@ c
 c     
       integer rowp(nshg*nnz),         colm(nshg+1)
       integer adjcnt(nshg),    row_fill_list(nshg,15*nnz), mloc(1)
-c                                          change ^ if overflow
+c                                          change ^ if overflow (was 15)
 c                                   also change overflow check in asadj TWICE
       integer tmprdim(1), nnonzero
       real*8, allocatable, dimension(:) :: tmpr
