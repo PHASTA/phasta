@@ -133,33 +133,28 @@ function check_field_geombc() {
         fi
 
         # NSpre and others produces a field named "number of shapefunctions soved on processor"
-        # Phasta now tries to read "number of shape functions@partID" in readnblk.f so reflect that change here
-        # The converter will be able to still find "number of shapefunctions soved on processor" in the old geombc.dat
-	# when looking for "number of shape functions". But phasta-SyncIO needs "number of shape functions"
-        teststring="number of shapefunctions soved on processor"
-        if [ "${field_fun:0:${#teststring}}" == "$teststring" ]; then #we compare the first letters of the string
+        # Phasta-SyncIO requires now a field named "number of shape functions@partID" read from readnblk.f. 
+	# Therefore, rename this field accordingly here
+	# Beware: in some version of NSpre, the historic spelling mistake "soved" has been replaced by "solved"
+        teststring1="number of shapefunctions soved on processor"
+        teststring2="number of shapefunctions solved on processor"
+        if [ "${field_fun:0:${#teststring1}}" == "$teststring1" ] || [ "${field_fun:0:${#teststring2}}" == "$teststring2" ]; then
           echo "geombc, number of shape functions, integer, header, 1;" >> $file_integer_field_geombc_fun
-	  echo "WARNING: 'number of shapefunctions soved on processor' is renamed 'number of shape functions' for readnblk.f"
-        fi
-	# This is in case the name in NSpre or phParAdapt fixes the name of the field 'number of shapefunctions soved on processor'
-        teststring="number of shape functions"
-        if [ "${field_fun:0:${#teststring}}" == "$teststring" ]; then #we compare the first letters of the string
-	  echo "WARNING: Has 'number of shapefunctions soved on processor' be renamed in 'number of shape functions' in gembc.dat.## ?"
-	  echo "Make sure phasta-SyncIO will be able to read it, as the '?' is not effective any more with the new SyncIO format (names are unique because of partID!)"
-          echo "geombc, "$field_fun", integer, block, 1;" >> $file_integer_field_geombc_fun
+	  echo "INFO: 'number of shapefunctions soved on processor' is renamed 'number of shape functions' for readnblk.f"
         fi
 
 	# Trying to keep the order identical. 
 	# For phParAdapt, after 'number of nodes in the mesh' (already treated above) comes usually 'connectivity interior'.
-        # But there is no such field generated with NSpre so let us use "number of shapefunctions soved on processor" which is common to both.
-        # Moreover, in readnblk.f, the connectivity is read just after "number of shapefunctions soved on processor" so makes sense.
+        # But there is no such field generated with NSpre so we use instead "number of shapefunctions soved on processor" which is common to both.
+        # Moreover, in readnblk.f, the connectivity is read just after "number of shapefunctions soved on processor" so this ordering is coherent.
 	# NOTE that we also add a new field called 'total number of interior tpblocks'. This field will be saved in the new syncIO geombc files.
         #teststring="number of nodes in the mesh"
-        teststring="number of shapefunctions soved on processor"
-        if [ "${field_fun:0:${#teststring}}" == "$teststring" ]; then #we compare the first letters of the string
+        teststring1="number of shapefunctions soved on processor"
+        teststring2="number of shapefunctions solved on processor"
+        if [ "${field_fun:0:${#teststring1}}" == "$teststring1" ] || [ "${field_fun:0:${#teststring2}}" == "$teststring2" ]; then
 	  
 	  echo "geombc, total number of interior tpblocks, integer, header, 1;" >> $file_integer_field_geombc_fun
-	  echo "WARNING: a new field called 'total number of interior tpblocks' will be added in the new geombc files"
+	  echo "INFO: a new field called 'total number of interior tpblocks' will be added in the new geombc files"
 
 	  while read line
 	  do 
@@ -175,7 +170,7 @@ function check_field_geombc() {
         if [ "${field_fun:0:${#teststring}}" == "$teststring" ]; then #we compare the first letters of the string
 
 	  echo "geombc, total number of boundary tpblocks, integer, header, 1;" >> $file_integer_field_geombc_fun
-	  echo "WARNING: a new field called 'total number of boundary tpblocks' will be added in the new geombc files"
+	  echo "INFO: a new field called 'total number of boundary tpblocks' will be added in the new geombc files"
 
 	  while read line
 	  do 
@@ -309,6 +304,22 @@ do
         check_field_geombc "$file_double_field_geombc" "$file_integer_field_geombc" "$field" "$list_interior_tpblocks" "$list_boundary_tpblocks"
 done <  $file_field_geombc
 
+### Double check that the topologies have been correctly found 
+interior_tpblocks2=`grep 'connectivity interior' $file_integer_field_geombc | wc -l`
+if [ "x$interior_tpblocks" != "x$interior_tpblocks2" ]; then
+	echo ""
+	echo "ERROR: Missing connectivity interior, probably due to a spelling issue ($interior_tpblocks2 != $interior_tpblocks)"
+        echo "ERROR: Check that \"number of shapefunctions soved on processor\" or \"number of shapefunctions solved on processor\""
+	echo "ERROR: is present in your geombc files"
+	echo ""
+fi
+
+boundary_tpblocks2=`grep 'connectivity boundary' $file_integer_field_geombc | wc -l`
+if [ "x$boundary_tpblocks" != "x$boundary_tpblocks2" ]; then
+	echo ""
+	echo "ERROR: Missing connectivity boundary ($boundary_tpblocks2 != $boundary_tpblocks)"
+	echo ""
+fi
 
 ### Grep all the fields from restart.##.1 (posix file)
 file_grep_restart=grep_restart_posix.dat
