@@ -7,7 +7,7 @@ typedef double DARR4[4];
 
 int hexIntPnt(int,DARR4**,double **);
 
-symhex(int *n1, double pt[][4], double wt[], int *err)
+void symhex(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR4 *lpt;

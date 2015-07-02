@@ -5,7 +5,7 @@ typedef double DARR3[3];
 
 int triIntPntPyr(int, DARR3**,double**);
 
-symtripyr(int *n1, double pt[][4], double wt[], int *err)
+void symtripyr(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR3 *lpt;
