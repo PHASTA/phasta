@@ -37,3 +37,5 @@ if(PHASTA_BUILD_PHSHAPE)
 	target_link_libraries(phastaIC.exe phshape)
 endif(PHASTA_BUILD_PHSHAPE)
 target_link_libraries(phastaIC.exe ${ACUSOLVE_LIB} incompressible)
+
+add_subdirectory(test)

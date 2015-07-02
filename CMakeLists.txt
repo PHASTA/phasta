@@ -5,6 +5,16 @@ enable_language(Fortran)
 enable_language(C)
 enable_language(CXX)
 
+enable_testing()
+include(CTest)
+option(IS_TESTING "Build for Ctest" OFF)
+set(MPIRUN "mpirun"
+  CACHE string
+  "the mpirun or srun executable")
+set(MPIRUN_PROCFLAG "-np"
+  CACHE string
+  "the command line flag to give process count to MPIRUN")
+
 list(APPEND CMAKE_MODULE_PATH ${PHASTA_SOURCE_DIR}/CMakeFiles)
 
 #Handle Fortran name mangling
