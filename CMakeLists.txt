@@ -77,12 +77,6 @@ if(PHASTA_BUILD_PHASTAIO)
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/phastaIO")
 endif(PHASTA_BUILD_PHASTAIO)
 
-OPTION(PHASTA_BUILD_METIS "Build phMetis" ON)
-if(PHASTA_BUILD_METIS)
-	add_subdirectory(phMetis)
-	add_dependencies(phMetis common) #only for XLF?
-endif(PHASTA_BUILD_METIS)
-
 OPTION(PHASTA_BUILD_SHAPEFUNCTION "Build shapeFunction" ON)
 if(PHASTA_BUILD_SHAPEFUNCTION)
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/shapeFunction/src")

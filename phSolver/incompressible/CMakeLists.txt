@@ -29,7 +29,7 @@ if(PHASTA_USE_MPI)
 endif(PHASTA_USE_MPI)
 
 target_link_libraries(phastaIC.exe ${ACUSOLVE_LIB})
-target_link_libraries(phastaIC.exe common incompressible phMetis common phMetis phastaIO)
+target_link_libraries(phastaIC.exe common incompressible common phastaIO)
 if(PHASTA_BUILD_SHAPEFUNCTION)
 	target_link_libraries(phastaIC.exe shapeFunction)
 endif(PHASTA_BUILD_SHAPEFUNCTION)
