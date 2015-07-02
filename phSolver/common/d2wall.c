@@ -2,6 +2,7 @@
 #include <FCMangle.h>
 #include <new_interface.h>
 #include <stdio.h>
+#include <string.h> //memset
 #include "common_c.h"
 #include "phastaIO.h"
 #include "setsyncioparam.h"
@@ -138,8 +139,8 @@ read_d2wall(  int* pid,
 
     int descriptor;
     char filename[255],path[255],fieldtag_s[255];
-    bzero((void*)filename,255);
-    bzero((void*)fieldtag_s,255);
+    memset((void*)filename,0,255);
+    memset((void*)fieldtag_s,0,255);
     *foundd2wall = 0;
     ////////////////////////////////////////////////////
     // First we try to read dwal from the restart files.
@@ -199,8 +200,8 @@ read_d2wall(  int* pid,
 
       if (numd2wallfiles == outpar.nsynciofiles ) {
         // Read the d2wall field from the d2wall files
-        bzero((void*)filename,255);
-        bzero((void*)fieldtag_s,255);
+        memset((void*)filename,0,255);
+        memset((void*)fieldtag_s,0,255);
 
         sprintf(filename,"d2wall.%d",((int)(irank/(nprocs/nfiles))+1));
         queryphmpiio(filename, &nfields, &nppf);
