@@ -13,7 +13,7 @@
 
 #if !(defined IOSTREAMH)
 #include <iostream>
-#include <strstream>
+#include <sstream>
 using namespace std;
 #endif
 
@@ -102,7 +102,7 @@ phasta( int argc,
         if( gdb_child == 0 ) {
      
             cout << "Debugger Process initiating" << endl;
-            strstream exec_string;
+            stringstream exec_string;
          
 #if ( defined decalp )
             exec_string <<"xterm -e idb " 
@@ -120,7 +120,8 @@ phasta( int argc,
             exec_string <<"xterm -e dbx " 
                         << " -p "<< parent_pid <<" "<< argv[0] << endl;
 #endif
-            system( exec_string.str() );
+            string s = exec_string.str();
+            system( s.c_str() );
             exit(0);
         }
         catchDebugger();
