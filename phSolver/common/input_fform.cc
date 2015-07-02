@@ -135,7 +135,6 @@ int input_fform(char inpfname[])
     if((string)inp.GetValue("Equation of State") == "Incompressible") matdat.matflg[0][0] =-1 ;
     if((string)inp.GetValue("Equation of State") == "Compressible") matdat.matflg[0][0] =0;
     inpdat.Delt[0] = inp.GetValue("Time Step Size");
-    inpdat.timestart = inp.GetValue("Beginning Time");
     inpdat.nstep[0] = inp.GetValue("Number of Timesteps");
     if((string)inp.GetValue("Viscous Control")=="Viscous") conpar.navier=1 ; else conpar.navier=0;
    
