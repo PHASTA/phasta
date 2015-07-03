@@ -41,6 +41,7 @@ double E_blendOnRegion(int eindex[], int etype, double *L);
 int R_faceBlendTetDrv(int *index, double *L, double drv[]);
 int F_modeShapeTriDrv(int p, int i, double *L, double mdrv[2]);
 int R_modeShapeTetDrv(int p, int i, double *L, double mdrv[3]);
+int E_modeShapeDrv(int p, double *L, double drv[2]);
 
 double E_modeShape(int p, double *L);
 double F_modeShapeTri(int p, int i, double *L);
