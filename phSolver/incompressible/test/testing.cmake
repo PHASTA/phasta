@@ -1,8 +1,3 @@
-set(CASES "/path/to/test/cases/"
-  CACHE string
-  "path to the test cases")
-
-
 set(CDIR ${CASES}/crossflow)
 add_test(copyInpCfg 
   cp ${CMAKE_SOURCE_DIR}/phSolver/common/input.config ${CDIR})

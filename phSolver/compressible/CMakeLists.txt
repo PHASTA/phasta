@@ -20,3 +20,5 @@ if(PHASTA_BUILD_PHSHAPE)
 	target_link_libraries(phastaC.exe phshape)
 endif(PHASTA_BUILD_PHSHAPE)
 target_link_libraries(phastaC.exe compressible)
+
+add_subdirectory(test)
