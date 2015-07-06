@@ -7,7 +7,6 @@ enable_language(CXX)
 
 enable_testing()
 include(CTest)
-option(IS_TESTING "Build for Ctest" OFF)
 set(MPIRUN "mpirun"
   CACHE string
   "the mpirun or srun executable")
