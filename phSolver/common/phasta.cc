@@ -78,8 +78,10 @@ phasta( int argc,
     char inpfilename[100];
     char* pauseDebugger = getenv("catchDebugger");
     //cout << "pauseDebugger" << pauseDebugger << endl;
-
-    MPI_Init(&argc,&argv);
+    int initialized;
+    MPI_Initialized(&initialized);
+    if( !initialized )
+      MPI_Init(&argc,&argv);
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
 
