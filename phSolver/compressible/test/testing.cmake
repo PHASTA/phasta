@@ -1,11 +1,11 @@
 set(CDIR ${CASES}/compressible)
 add_test(copyInpCfg 
-  cp ${CMAKE_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
+  cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
 add_test(resetNumStart 
   cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
 add_test(
   NAME compressible
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${CMAKE_BINARY_DIR}/bin/phastaC.exe
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${PHASTA_BINARY_DIR}/bin/phastaC.exe
   WORKING_DIRECTORY ${CASES}/compressible
 )
 add_test(compareCompressible
