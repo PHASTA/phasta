@@ -69,11 +69,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        write(temp1,
-     &   "('(''total number of boundary tpblocks@'',i',i1,',A1)')") itmp
-        write (fname2,temp1) (myrank+1),'?'
-        call readheader(igeom,fname2 // char(0) ,itpblktot,ione,
-     &  'integer' // char(0),iotype) 
+        call readheader(igeom,'total number of boundary tpblocks' // char(0),
+     &   itpblktot,ione,'integer' // char(0),iotype)
 
 !        write (*,*) 'Rank: ',myrank,' boundary itpblktot intermediate:',
 !     &               itpblktot
@@ -91,14 +88,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
             intfromfile(:)=-1
             iblk = iblk+1
-            write (temp1,"('connectivity boundary',i1)") iblk
-            temp1 = trim(temp1)
-            write (temp3,"('(''@'',i',i1,',A1)')") itmp
-            write (fname2, temp3) (myrank+1), '?'
-            fname2 = trim(temp1)//trim(fname2)
-            !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
-            call readheader(igeom,fname2 // char(0),intfromfile,
-     &      ieight,'integer' // char(0),iotype)
+            call readheader(igeom,'connectivity boundary1' // char(0),
+     &       intfromfile,ieight,'integer' // char(0),iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
           itpblktot = iblk-1   
@@ -122,26 +113,18 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            writeLock=0;
 !MR CHANGE END
 
-           fname1='connectivity boundary?'
 
 !           print *, "Loop ",iblk, myrank, itpblk, trim(fnamer)
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-           write (temp1,"('connectivity boundary',i1)") iblk
-           temp1 = trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
-           fname2 = trim(fname2)
 !           write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call readheader(igeom,fname2 // char(0),intfromfile,ieight,
-     &                     'integer' // char(0),iotype)
+           call readheader(igeom,'connectivity boundary1' // char(0),
+     &      intfromfile,ieight,'integer' // char(0),iotype)
            neltp =intfromfile(1)
            nenl  =intfromfile(2)
            ipordl=intfromfile(3)
@@ -171,8 +154,8 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 !           print *, "neltp is ", neltp
 
-           call readdatablock(igeom,fname2 // char(0),ientp,iientpsiz,
-     &                     'integer' // char(0),iotype)
+           call readdatablock(igeom,'connectivity boundary1' // char(0),
+     &      ientp,iientpsiz,'integer' // char(0),iotype)
 
 !MR CHANGE
 !           write (temp1,"('connectivityBoundaryDatablock_',i1,'_',i1)")
@@ -197,24 +180,15 @@ c
 !           print *,"connectivity [] is ", trim(fname2),ientp(0,0)
 
 
-           fname1='nbc codes?'
-
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-           write (temp1,"('nbc codes',i1)") iblk
-           temp1=trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
-!           write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
            
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           call readheader(igeom,fname2 // char(0) ,intfromfile,
+           call readheader(igeom,'nbc codes1' // char(0) ,intfromfile,
      &      ieight,'integer' // char(0),iotype)
            iiBCBtpsiz=neltp*ndiBCB
-           call readdatablock(igeom,fname2 // char(0) ,iBCBtp,
+           call readdatablock(igeom,'nbc codes1' // char(0) ,iBCBtp,
      &      iiBCBtpsiz,'integer' // char(0),iotype)
 
 !MR CHANGE
@@ -237,24 +211,17 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c     
 c.... read the boundary condition data
 c     
-           fname1='nbc values?'
            
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-           write (temp1,"('nbc values',i1)") iblk
-           temp1=trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           call readheader(igeom,fname2 // char(0) ,intfromfile,
+           call readheader(igeom,'nbc values1' // char(0) ,intfromfile,
      &      ieight,'integer' // char(0) ,iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
-           call readdatablock(igeom,fname2 // char(0),BCBtp,iBCBtpsiz,
-     &                     'double' // char(0) ,iotype)
+           call readdatablock(igeom,'nbc values1' // char(0),
+     &      BCBtp,iBCBtpsiz,'double' // char(0) ,iotype)
 
 !MR CHANGE
 !           write (temp1,"('nbcValuesDatablock_',i1,'_',i1)")
