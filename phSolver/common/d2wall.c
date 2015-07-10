@@ -130,7 +130,6 @@ read_d2wall(  int* pid,
     irank = *pid; // workfc.myrank;
     nprocs = workfc.numpe;
     int nppf = numparts/nfiles;
-    int GPID;
 
     // Calculate number of parts each proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
@@ -138,9 +137,8 @@ read_d2wall(  int* pid,
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     int descriptor;
-    char filename[255],path[255],fieldtag_s[255];
+    char filename[255],path[255];
     memset((void*)filename,0,255);
-    memset((void*)fieldtag_s,0,255);
     *foundd2wall = 0;
     ////////////////////////////////////////////////////
     // First we try to read dwal from the restart files.
@@ -157,17 +155,8 @@ read_d2wall(  int* pid,
 
     int i;
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-    // GPID : global part id, corresponds to rank ...
-      // e.g : (in this example)
-      // proc 0 : 1--4
-      // proc 1 : 5--8 ...
-      GPID = startpart + i;
-
-      // Write solution field ...
-      sprintf(fieldtag_s,"dwal@%d",GPID);
-
       nitems = 2;
-      readheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, "double", phasta_iotype);
+      readheader( &f_descriptor, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
       //iarray[ 0 ] = (*numnp); What we should get from readheader
       //iarray[ 1 ] = 1;
 
@@ -177,7 +166,7 @@ read_d2wall(  int* pid,
         }
         *foundd2wall = 1;
         isize = (*numnp);
-        readdatablock( &f_descriptor, fieldtag_s, (void*)(array1), &isize, "double", phasta_iotype );
+        readdatablock( &f_descriptor, "dwal", (void*)(array1), &isize, "double", phasta_iotype );
       }
       else { //d2wall fields was not found in the restart file
         *foundd2wall = 0;
@@ -201,7 +190,6 @@ read_d2wall(  int* pid,
       if (numd2wallfiles == outpar.nsynciofiles ) {
         // Read the d2wall field from the d2wall files
         memset((void*)filename,0,255);
-        memset((void*)fieldtag_s,0,255);
 
         sprintf(filename,"d2wall.%d",((int)(irank/(nprocs/nfiles))+1));
         queryphmpiio(filename, &nfields, &nppf);
@@ -214,17 +202,8 @@ read_d2wall(  int* pid,
 
         int i;
         for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-          // GPID : global part id, corresponds to rank ...
-          // e.g : (in this example)
-          // proc 0 : 1--4
-          // proc 1 : 5--8 ...
-          GPID = startpart + i;
-
-          // Write solution field ...
-          sprintf(fieldtag_s,"d2wall@%d",GPID);
-
           nitems = 2;
-          readheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, "double", phasta_iotype);
+          readheader( &f_descriptor, "d2wall", (void*)iarray, &nitems, "double", phasta_iotype);
           //iarray[ 0 ] = (*numnp); What we should get from readheader
           //iarray[ 1 ] = 1;
 
@@ -234,7 +213,7 @@ read_d2wall(  int* pid,
             }
             *foundd2wall = 1;
             isize = (*numnp);
-            readdatablock( &f_descriptor, fieldtag_s, (void*)(array1), &isize, "double", phasta_iotype );
+            readdatablock( &f_descriptor, "d2wall", (void*)(array1), &isize, "double", phasta_iotype );
           }
           else {
             *foundd2wall = 0;
