@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <sstream>
 #include "phastaIO.h"
 #include "mpi.h"
 #include "phiotmrc.h"
@@ -1347,6 +1348,12 @@ void closefile( int* fileDescriptor,
 	printPerf("closefile_", timer_start, timer_end, 0, 0, "");
 }
 
+int commRank() {
+  int r;
+  MPI_Comm_rank(MPI_COMM_WORLD, &r);
+  return r;
+}
+
 void readheader( int* fileDescriptor,
                   const  char keyphrase[],
                   void* valueArray,
@@ -1354,9 +1361,12 @@ void readheader( int* fileDescriptor,
                   const char  datatype[],
                   const char  iotype[] )
 {
+        std::stringstream ss;
+        ss << keyphrase << "@" << commRank()+1 << "?";
+        std::string s = ss.str();
+        keyphrase = s.c_str();
 	double timer_start, timer_end;
-	//MPI_Comm_rank(MPI_COMM_WORLD, &irank); //This should not be required if irank is indeed a global variable. irank should be initialized by either query and/or init
-	//if(irank == 0) printf("entering readheader() - %s\n", keyphrase);
+
 	startTimer(&timer_start);
 
 	int i = *fileDescriptor;
