@@ -154,26 +154,26 @@ c      fnamer="/home/nliu/develop/test-case/512-procs_case/geombc-dat"
       call readheader(igeom,'number of modes' // char(0),nshg,ione,
      & 'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of interior elements' // char(0),numel,ione,
-     & 'integer' // char(0), iotype)
+      call readheader(igeom,'number of interior elements' // char(0),
+     &  numel,ione,'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of boundary elements' // char(0),numelb,ione,
-     & 'integer' // char(0),iotype)
+      call readheader(igeom,'number of boundary elements' // char(0),
+     & numelb,ione,'integer' // char(0),iotype)
 
-      call readheader(igeom,'maximum number of element nodes' // char(0),nen,ione,
-     &'integer' // char(0),iotype)
+      call readheader(igeom,'maximum number of element nodes' // char(0),
+     & nen,ione,'integer' // char(0),iotype)
 
-      call readheader(igeom,'number of interior tpblocks' // char(0),nelblk,ione,
-     & 'integer' // char(0) ,iotype)
+      call readheader(igeom,'number of interior tpblocks' // char(0),
+     & nelblk,ione,'integer' // char(0) ,iotype)
 
-      call readheader(igeom,'number of boundary tpblocks' // char(0),nelblb,ione,
-     & 'integer' // char(0), iotype)
+      call readheader(igeom,'number of boundary tpblocks' // char(0),
+     & nelblb,ione,'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of nodes with Dirichlet BCs' // char(0),numpbc,ione,
-     & 'integer' // char(0),iotype)
+      call readheader(igeom,'number of nodes with Dirichlet BCs' // char(0),
+     & numpbc,ione,'integer' // char(0),iotype)
 
-      call readheader(igeom,'number of shape functions' // char(0),ntopsh,ione,
-     & 'integer' // char(0),iotype)
+      call readheader(igeom,'number of shape functions' // char(0),
+     & ntopsh,ione,'integer' // char(0),iotype)
 
 c      call closefile( igeom, "read" )
 c      call finalizephmpiio( igeom )
