@@ -248,19 +248,15 @@ cc still read in new
       if(numpe > 1) then
 
 cc MR CHANGE
-         write (temp1,"('(''size of ilwork array@'',i',i1,',A1)')") itmp
-         write (fname2,temp1) (myrank+1),'?'
-         call readheader(igeom,fname2 // char(0),nlwork,ione,
-     &   'integer' // char(0) ,iotype)
+         call readheader(igeom,'size of ilwork array' // char(0),
+     &    nlwork,ione,'integer' // char(0) ,iotype)
 
-         write (temp1,"('(''ilwork@'',i',i1,',A1)')") itmp
-         write (fname2,temp1) (myrank+1),'?'
-         call readheader(igeom,fname2 //char(0) ,nlwork,ione,
+         call readheader(igeom,'ilwork' //char(0) ,nlwork,ione,
      &   'integer' // char(0) , iotype)
 
          allocate( point2ilwork(nlwork) )
          allocate( ilworkread(nlwork) )
-         call readdatablock(igeom,fname2 // char(0),ilworkread,
+         call readdatablock(igeom,'ilwork' // char(0),ilworkread,
      &                      nlwork,'integer' // char(0) , iotype)
 
 c      call closefile( igeom, "read" )
@@ -291,8 +287,6 @@ cc MR CHANGE
 cccccccccccccccccccccccccccccccccccccccccc
 
       itwo=2
-      write (temp1,"('(''co-ordinates@'',i',i1,',A1)')") itmp
-      write (fname2,temp1) (myrank+1),'?'
 
 c      print *, "fname2 is", fname2
 
@@ -301,14 +295,14 @@ c      call initphmpiio(nfields,nppf,nfiles,igeom,'read')
 c      call openfile( fnamer, 'read', igeom )
 CC MR CHANGE
 
-      call readheader(igeom,fname2 // char(0),intfromfile,itwo,
+      call readheader(igeom,'co-ordinates' // char(0),intfromfile,itwo,
      & 'double' // char(0), iotype)
       numnp=intfromfile(1)
 c      print *, "read out @@@@@@ is ", numnp
       allocate( point2x(numnp,nsd) )
       allocate( xread(numnp,nsd) )
       ixsiz=numnp*nsd
-      call readdatablock(igeom,fname2 // char(0),xread,ixsiz,
+      call readdatablock(igeom,'co-ordinates' // char(0),xread,ixsiz,
      & 'double' // char(0), iotype)
       point2x = xread
 
@@ -365,9 +359,7 @@ cc MR CHANGE
 cc MR CHANGE
 
       ione=1
-      write (temp1,"('(''bc mapping array@'',i',i1,',A1)')") itmp
-      write (fname2,temp1) (myrank+1),'?'
-      call readheader(igeom,fname2 // char(0),nshg,ione,
+      call readheader(igeom,'bc mapping array' // char(0),nshg,ione,
      & 'integer' // char(0),iotype)
 
 c      fname1='bc mapping array?'
@@ -379,8 +371,8 @@ c     &     ione,'integer', iotype)
       allocate( nBCread(nshg) )
 
 c      call readdatablock(igeomBAK,fname1,nBCread,nshg,'integer',iotype)
-      call readdatablock(igeom,fname2 // char(0),nBCread,nshg,
-     & 'integer' // char(0),iotype)
+      call readdatablock(igeom,'bc mapping array' // char(0),
+     & nBCread,nshg,'integer' // char(0),iotype)
 
       nBC=nBCread
 
@@ -388,9 +380,7 @@ c
 c.... read the temporary iBC array
 c
       ione=1
-      write (temp1,"('(''bc codes array@'',i',i1,',A1)')") itmp
-      write (fname2,temp1) (myrank+1),'?'
-      call readheader(igeom,fname2 // char(0) ,numpbc,ione,
+      call readheader(igeom,'bc codes array' // char(0) ,numpbc,ione,
      & 'integer' // char(0),iotype)
 
 c      ione = 1
@@ -421,8 +411,8 @@ c     &     ione, 'integer', iotype)
       endif
 c         call readdatablock(igeomBAK,fname1,iBCtmpread,numpbc,
 c     &                      'integer',iotype)
-      call readdatablock(igeom,fname2 // char(0),iBCtmpread,numpbc,
-     &  'integer' // char(0),iotype)
+      call readdatablock(igeom,'bc codes array' // char(0),
+     & iBCtmpread,numpbc,'integer' // char(0),iotype)
 
       if ( numpbc > 0 ) then
          iBCtmp=iBCtmpread
@@ -437,16 +427,13 @@ c.... read boundary condition data
 c
 
       ione=1
-      write (temp1,"('(''boundary condition array@'',i',i1,',A1)')")
-     &     itmp
-      write (fname2,temp1) (myrank+1),'?'
 
 c      ione=1
 c      fname1='boundary condition array?'
 c      call readheader(igeomBAK,fname1,intfromfile,
 c     &     ione, 'double', iotype)
-      call readheader(igeom,fname2 // char(0),intfromfile,
-     &     ione, 'double' // char(0), iotype)
+      call readheader(igeom,'boundary condition array' // char(0),
+     & intfromfile,ione, 'double' // char(0), iotype)
 c here intfromfile(1) contains (ndof+7)*numpbc
 !MR CHANGE
 !       if ( numpbc > 0 ) then
@@ -485,8 +472,8 @@ c here intfromfile(1) contains (ndof+7)*numpbc
 c         call readdatablock(igeomBAK,fname1,BCinpread,iBCinpsiz,
 c     &                      'double',iotype)
 
-      call readdatablock(igeom,fname2 // char(0),BCinpread,iBCinpsiz,
-     &                      'double' // char(0) ,iotype)
+      call readdatablock(igeom,'boundary condition array' // char(0),
+     & BCinpread,iBCinpsiz,'double' // char(0) ,iotype)
 
       if ( numpbc > 0 ) then
          BCinp(:,1:(ndof+7))=BCinpread(:,1:(ndof+7))
@@ -501,20 +488,17 @@ c.... read periodic boundary conditions
 c
 
       ione=1
-      write (temp1,"('(''periodic masters array@'',i',i1,',A1)')") itmp
-      write (fname2,temp1) (myrank+1),'?'
-
 c      fname1='periodic masters array?'
 c      call readheader(igeomBAK,fname1,nshg,
 c     &     ione, 'integer', iotype)
-      call readheader(igeom,fname2 // char(0) ,nshg,
-     &     ione, 'integer' // char(0), iotype)
+      call readheader(igeom,'periodic masters array' // char(0) ,nshg,
+     & ione,'integer' // char(0), iotype)
       allocate( point2iper(nshg) )
       allocate( iperread(nshg) )
 c      call readdatablock(igeomBAK,fname1,iperread,nshg,
 c     &                      'integer',iotype)
-      call readdatablock(igeom,fname2 // char(0),iperread,nshg,
-     &                      'integer' // char(0),iotype)
+      call readdatablock(igeom,'periodic masters array' // char(0),
+     & iperread,nshg,'integer' // char(0),iotype)
       point2iper=iperread
 
 
@@ -578,44 +562,38 @@ c         fname1='keyword sonfath?'
 !             fname1='number of father-nodes?'
 !             call readheader(igeomBAK,fname1,nfath,ione,'integer', iotype)
 
-            write (temp1,"('(''number of father-nodes@'',i',i1,',A1)')")
-     &             itmp
-            write (fname2,temp1) (myrank+1),'?'
-            call readheader(igeom,fname2 // char(0),nfath,ione,
-     &      'integer' // char(0), iotype)
+            call readheader(igeom,'number of father-nodes' // char(0),
+     &       nfath,ione,'integer' // char(0), iotype)
 
 c
 c     fname1='keyword nsons?'
 !             fname1='number of son-nodes for each father?'
 !             call readheader(igeomBAK,fname1,nfath,ione,'integer', iotype)
 
-            write (temp1,
-     & "('(''number of son-nodes for each father@'',i',i1,',A1)')") itmp
-            write (fname2,temp1) (myrank+1),'?'
-            call readheader(igeom,fname2 // char(0),nfath,ione,
-     &      'integer' // char(0), iotype)
+            call readheader(igeom,
+     &       'number of son-nodes for each father' // char(0),
+     &       nfath,ione,'integer' // char(0), iotype)
 
             allocate (point2nsons(nfath))
 
 !             call readdatablock(igeomBAK,fname1,point2nsons,nfath,
 !      &                      'integer',iotype)
-            call readdatablock(igeom,fname2 // char(0),point2nsons,
-     &                      nfath,'integer' // char(0), iotype)
+            call readdatablock(igeom,
+     &       'number of son-nodes for each father' // char(0),
+     &       point2nsons,nfath,'integer' // char(0), iotype)
 
 c
 !             fname1='keyword ifath?'
 !             call readheader(igeomBAK,fname1,nshg,ione,'integer', iotype)
 
-            write (temp1,"('(''keyword ifath@'',i',i1,',A1)')") itmp
-            write (fname2,temp1) (myrank+1),'?'
-            call readheader(igeom,fname2 // char(0),nshg,ione,
+            call readheader(igeom,'keyword ifath' // char(0),nshg,ione,
      &      'integer' // char(0), iotype)
 
             allocate (point2ifath(nshg))
 
 !             call readdatablock(igeomBAK,fname1,point2ifath,nshg,
 !      &                      'integer',iotype)
-            call readdatablock(igeom,fname2 // char(0),point2ifath,
+            call readdatablock(igeom,'keyword ifath' // char(0),point2ifath,
      &                      nshg,'integer' // char(0) , iotype)
      
 c     
@@ -692,16 +670,12 @@ cc      fnamer="./4-procs_case/restart-file"
 c      call creadlist(irstin,ithree,nshg2,ndof2,lstep)
 
       itmp = int(log10(float(myrank+1)))+1
-      write (temp1,"('(''solution@'',i',i1,',A1)')") itmp
-      write (fname1,temp1) (myrank+1),'?'
-      fname1 = trim(fname1)
 
 c      print *, "Solution is : ", fname1
 
       intfromfile=0
-      call readheader(descriptor,fname1 // char(0) ,intfromfile,
-     & ithree,'integer' // char(0),  
-     &                                                         iotype)
+      call readheader(descriptor,'solution' // char(0) ,intfromfile,
+     & ithree,'integer' // char(0), iotype)
 c
 c.... read the values of primitive variables into q
 c
@@ -750,14 +724,9 @@ c
 
 c      itmp=1
 c      if (myrank .gt. 0) itmp = int(log10(float(myrank)))+1
-      write (temp1,"('(''time derivative of solution@'',i',i1,',A1)')")
-     &       itmp
-      write (fname1,temp1) (myrank+1),'?'
-      fname1 = trim(fname1)
       intfromfile=0
-      call readheader(descriptor,fname1 // char(0) ,intfromfile,
-     & ithree,'integer' // char(0),
-     &                iotype)
+      call readheader(descriptor,'time derivative of solution' // char(0),
+     & intfromfile,ithree,'integer' // char(0),iotype)
       allocate( acold(nshg,ndof) )
       if(intfromfile(1).ne.0) then
          nshg2=intfromfile(1)
@@ -774,7 +743,8 @@ c
          allocate( acread(nshg,ndof2) )
          acread=zero
          iacsiz=nshg*ndof2
-         call readdatablock(descriptor,fname1 // char(0),acread,
+         call readdatablock(descriptor,
+     &    'time derivative of solution' // char(0),acread,
      &    iacsiz, 'double' // char(0),iotype)
          acold(:,1:ndof)=acread(:,1:ndof)
          deallocate(acread)
@@ -874,13 +844,9 @@ c      call creadlist(irstin,ithree,nshg2,ndisp,lstep)
 !          call readheader(irstin,fname1,intfromfile,
 !      &        ithree,'integer', iotype)
 
-          write (temp1,"('(''displacement@'',i',i1,',A1)')")
-     &           itmp
-          write (fname1,temp1) (myrank+1),'?'
-          fname1 = trim(fname1)
           intfromfile=0
-          call readheader(descriptor,fname1 // char(0),intfromfile,
-     &     ithree,'integer' // char(0),iotype)
+          call readheader(descriptor,'displacement' // char(0),
+     &     intfromfile,ithree,'integer' // char(0),iotype)
 
          nshg2=intfromfile(1)
          ndisp=intfromfile(2)
