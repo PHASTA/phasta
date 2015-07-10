@@ -1548,6 +1548,10 @@ void readdatablock( int*  fileDescriptor,
                      const char  datatype[],
                      const char  iotype[] )
 {
+        std::stringstream ss;
+        ss << keyphrase << "@" << commRank()+1 << "?";
+        std::string s = ss.str();
+        keyphrase = s.c_str();
 
 	//if(irank == 0) printf("entering readdatablock()\n");
 	unsigned long long data_size = 0;
