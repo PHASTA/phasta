@@ -3,6 +3,7 @@
 #include <new_interface.h>
 #include <stdio.h>
 #include <string.h> //memset
+#include <assert.h>
 #include "common_c.h"
 #include "phastaIO.h"
 #include "setsyncioparam.h"
@@ -133,6 +134,7 @@ read_d2wall(  int* pid,
 
     // Calculate number of parts each proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
+    assert(nppp==1);
     int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
