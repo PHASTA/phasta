@@ -137,7 +137,6 @@ c      fnamer="/home/nliu/develop/test-case/512-procs_case/geombc-dat"
       ione=1
       ieleven=11
       itmp = int(log10(float(myrank+1)))+1
-      write (*,*) 'CAKE ', itmp
 
       call queryphmpiio(fnamer, nfields, nppf);
       if (myrank == 0) then
