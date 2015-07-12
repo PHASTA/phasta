@@ -169,7 +169,7 @@ read_d2wall(  int* pid,
         }
         *foundd2wall = 1;
         isize = (*numnp);
-        readdatablock( &f_descriptor, "dwal", (void*)(array1), &isize, "double", phasta_iotype );
+        phio_readdatablock( &f_descriptor, "dwal", (void*)(array1), &isize, "double", phasta_iotype );
       }
       else { //d2wall fields was not found in the restart file
         *foundd2wall = 0;
@@ -216,7 +216,7 @@ read_d2wall(  int* pid,
             }
             *foundd2wall = 1;
             isize = (*numnp);
-            readdatablock( &f_descriptor, "d2wall", (void*)(array1), &isize, "double", phasta_iotype );
+            phio_readdatablock( &f_descriptor, "d2wall", (void*)(array1), &isize, "double", phasta_iotype );
           }
           else {
             *foundd2wall = 0;

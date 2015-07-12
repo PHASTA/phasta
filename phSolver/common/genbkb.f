@@ -154,7 +154,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 !           print *, "neltp is ", neltp
 
-           call readdatablock(igeom,'connectivity boundary1' // char(0),
+           call phio_readdatablock(igeom,'connectivity boundary1' // char(0),
      &      ientp,iientpsiz,'integer' // char(0),iotype)
 
 !MR CHANGE
@@ -188,7 +188,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            call phio_readheader(igeom,'nbc codes1' // char(0) ,intfromfile,
      &      ieight,'integer' // char(0),iotype)
            iiBCBtpsiz=neltp*ndiBCB
-           call readdatablock(igeom,'nbc codes1' // char(0) ,iBCBtp,
+           call phio_readdatablock(igeom,'nbc codes1' // char(0) ,iBCBtp,
      &      iiBCBtpsiz,'integer' // char(0),iotype)
 
 !MR CHANGE
@@ -220,7 +220,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &      ieight,'integer' // char(0) ,iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
-           call readdatablock(igeom,'nbc values1' // char(0),
+           call phio_readdatablock(igeom,'nbc values1' // char(0),
      &      BCBtp,iBCBtpsiz,'double' // char(0) ,iotype)
 
 !MR CHANGE

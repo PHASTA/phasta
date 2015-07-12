@@ -256,7 +256,7 @@ cc MR CHANGE
 
          allocate( point2ilwork(nlwork) )
          allocate( ilworkread(nlwork) )
-         call readdatablock(igeom,'ilwork' // char(0),ilworkread,
+         call phio_readdatablock(igeom,'ilwork' // char(0),ilworkread,
      &                      nlwork,'integer' // char(0) , iotype)
 
 c      call closefile( igeom, "read" )
@@ -302,7 +302,7 @@ c      print *, "read out @@@@@@ is ", numnp
       allocate( point2x(numnp,nsd) )
       allocate( xread(numnp,nsd) )
       ixsiz=numnp*nsd
-      call readdatablock(igeom,'co-ordinates' // char(0),xread,ixsiz,
+      call phio_readdatablock(igeom,'co-ordinates' // char(0),xread,ixsiz,
      & 'double' // char(0), iotype)
       point2x = xread
 
@@ -371,7 +371,7 @@ c     &     ione,'integer', iotype)
       allocate( nBCread(nshg) )
 
 c      call readdatablock(igeomBAK,fname1,nBCread,nshg,'integer',iotype)
-      call readdatablock(igeom,'bc mapping array' // char(0),
+      call phio_readdatablock(igeom,'bc mapping array' // char(0),
      & nBCread,nshg,'integer' // char(0),iotype)
 
       nBC=nBCread
@@ -411,7 +411,7 @@ c     &     ione, 'integer', iotype)
       endif
 c         call readdatablock(igeomBAK,fname1,iBCtmpread,numpbc,
 c     &                      'integer',iotype)
-      call readdatablock(igeom,'bc codes array' // char(0),
+      call phio_readdatablock(igeom,'bc codes array' // char(0),
      & iBCtmpread,numpbc,'integer' // char(0),iotype)
 
       if ( numpbc > 0 ) then
@@ -472,7 +472,7 @@ c here intfromfile(1) contains (ndof+7)*numpbc
 c         call readdatablock(igeomBAK,fname1,BCinpread,iBCinpsiz,
 c     &                      'double',iotype)
 
-      call readdatablock(igeom,'boundary condition array' // char(0),
+      call phio_readdatablock(igeom,'boundary condition array' // char(0),
      & BCinpread,iBCinpsiz,'double' // char(0) ,iotype)
 
       if ( numpbc > 0 ) then
@@ -497,7 +497,7 @@ c     &     ione, 'integer', iotype)
       allocate( iperread(nshg) )
 c      call readdatablock(igeomBAK,fname1,iperread,nshg,
 c     &                      'integer',iotype)
-      call readdatablock(igeom,'periodic masters array' // char(0),
+      call phio_readdatablock(igeom,'periodic masters array' // char(0),
      & iperread,nshg,'integer' // char(0),iotype)
       point2iper=iperread
 
@@ -578,7 +578,7 @@ c     fname1='keyword nsons?'
 
 !             call readdatablock(igeomBAK,fname1,point2nsons,nfath,
 !      &                      'integer',iotype)
-            call readdatablock(igeom,
+            call phio_readdatablock(igeom,
      &       'number of son-nodes for each father' // char(0),
      &       point2nsons,nfath,'integer' // char(0), iotype)
 
@@ -593,7 +593,7 @@ c
 
 !             call readdatablock(igeomBAK,fname1,point2ifath,nshg,
 !      &                      'integer',iotype)
-            call readdatablock(igeom,'keyword ifath' // char(0),point2ifath,
+            call phio_readdatablock(igeom,'keyword ifath' // char(0),point2ifath,
      &                      nshg,'integer' // char(0) , iotype)
      
 c     
@@ -697,7 +697,7 @@ c
      &        call error ('restar  ', 'nshg   ', nshg)
          allocate( qread(nshg,ndof2) )
          iqsiz=nshg*ndof2
-         call readdatablock(descriptor,fname1 // char(0),qread,iqsiz,
+         call phio_readdatablock(descriptor,'solution' // char(0),qread,iqsiz,
      &                         'double' // char(0),iotype)
          qold(:,1:ndof)=qread(:,1:ndof)
          deallocate(qread)
@@ -743,7 +743,7 @@ c
          allocate( acread(nshg,ndof2) )
          acread=zero
          iacsiz=nshg*ndof2
-         call readdatablock(descriptor,
+         call phio_readdatablock(descriptor,
      &    'time derivative of solution' // char(0),acread,
      &    iacsiz, 'double' // char(0),iotype)
          acold(:,1:ndof)=acread(:,1:ndof)
@@ -869,7 +869,7 @@ c
 
 !          call readdatablock(irstin,fname1,uread,iusiz,
 !      &        'double',iotype)
-         call readdatablock(descriptor,'displacement' // char(0),
+         call phio_readdatablock(descriptor,'displacement' // char(0),
      &          uread,iusiz, 'double' // char(0),iotype)
 
          uold(:,1:nsd)=uread(:,1:nsd)
