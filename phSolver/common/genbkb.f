@@ -69,7 +69,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        call readheader(igeom,'total number of boundary tpblocks' // char(0),
+        call phio_readheader(igeom,'total number of boundary tpblocks' // char(0),
      &   itpblktot,ione,'integer' // char(0),iotype)
 
 !        write (*,*) 'Rank: ',myrank,' boundary itpblktot intermediate:',
@@ -88,7 +88,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
             intfromfile(:)=-1
             iblk = iblk+1
-            call readheader(igeom,'connectivity boundary1' // char(0),
+            call phio_readheader(igeom,'connectivity boundary1' // char(0),
      &       intfromfile,ieight,'integer' // char(0),iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
@@ -123,7 +123,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call readheader(igeom,'connectivity boundary1' // char(0),
+           call phio_readheader(igeom,'connectivity boundary1' // char(0),
      &      intfromfile,ieight,'integer' // char(0),iotype)
            neltp =intfromfile(1)
            nenl  =intfromfile(2)
@@ -185,7 +185,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           call readheader(igeom,'nbc codes1' // char(0) ,intfromfile,
+           call phio_readheader(igeom,'nbc codes1' // char(0) ,intfromfile,
      &      ieight,'integer' // char(0),iotype)
            iiBCBtpsiz=neltp*ndiBCB
            call readdatablock(igeom,'nbc codes1' // char(0) ,iBCBtp,
@@ -216,7 +216,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           call readheader(igeom,'nbc values1' // char(0) ,intfromfile,
+           call phio_readheader(igeom,'nbc values1' // char(0) ,intfromfile,
      &      ieight,'integer' // char(0) ,iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB

@@ -65,7 +65,7 @@ c
      &   "('(''total number of interior tpblocks@'',i',i1,',A1)')") itmp
 
         write (fname2,temp1) (myrank+1),'?'
-        call readheader(igeom,fname2 // char(0) ,itpblktot,ione,
+        call phio_readheader(igeom,fname2 // char(0) ,itpblktot,ione,
      &  'integer' // char(0),iotype) 
 
 !        write (*,*) 'Rank: ',myrank,' interior itpblktot intermediate:',
@@ -91,7 +91,7 @@ c
             fname2 = trim(temp1)//trim(fname2)
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
-            call readheader(igeom,fname2 // char(0),intfromfile,
+            call phio_readheader(igeom,fname2 // char(0),intfromfile,
      &       iseven,'integer' // char(0),iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
@@ -137,7 +137,7 @@ c           fname1='connectivity interior?'
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call readheader(igeom,fname2 // char(0) ,intfromfile,
+           call phio_readheader(igeom,fname2 // char(0) ,intfromfile,
      &     iseven,"integer" // char(0), iotype)
            neltp  =intfromfile(1)
            nenl   =intfromfile(2)

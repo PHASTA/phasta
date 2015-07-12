@@ -6,6 +6,7 @@
 #include <assert.h>
 #include "common_c.h"
 #include "phastaIO.h"
+#include "phIO.h"
 #include "setsyncioparam.h"
 
 /*
@@ -158,7 +159,7 @@ read_d2wall(  int* pid,
     int i;
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
       nitems = 2;
-      readheader( &f_descriptor, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
+      phio_readheader( &f_descriptor, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
       //iarray[ 0 ] = (*numnp); What we should get from readheader
       //iarray[ 1 ] = 1;
 
@@ -205,7 +206,7 @@ read_d2wall(  int* pid,
         int i;
         for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
           nitems = 2;
-          readheader( &f_descriptor, "d2wall", (void*)iarray, &nitems, "double", phasta_iotype);
+          phio_readheader( &f_descriptor, "d2wall", (void*)iarray, &nitems, "double", phasta_iotype);
           //iarray[ 0 ] = (*numnp); What we should get from readheader
           //iarray[ 1 ] = 1;
 

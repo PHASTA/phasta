@@ -1361,11 +1361,7 @@ void readheader( int* fileDescriptor,
                   const char  datatype[],
                   const char  iotype[] )
 {
-        std::stringstream ss;
-        ss << keyphrase << "@" << commRank()+1 << "?";
-        std::string s = ss.str();
-        keyphrase = s.c_str();
-	double timer_start, timer_end;
+     	double timer_start, timer_end;
 
 	startTimer(&timer_start);
 

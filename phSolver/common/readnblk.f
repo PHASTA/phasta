@@ -147,31 +147,32 @@ c      fnamer="/home/nliu/develop/test-case/512-procs_case/geombc-dat"
      & 'read' // char(0))
       call openfile( fnamer, 'read' // char(0), igeom )
 
-      call readheader(igeom,'number of nodes' // char(0),numnp,ione,
+      call phio_readheader(igeom,'number of nodes' // char(0),numnp,ione,
      & 'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of modes' // char(0),nshg,ione,
+      call phio_readheader(igeom,'number of modes' // char(0),nshg,ione,
      & 'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of interior elements' // char(0),
+      call phio_readheader(igeom,'number of interior elements' // char(0),
      &  numel,ione,'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of boundary elements' // char(0),
+      call phio_readheader(igeom,'number of boundary elements' // char(0),
      & numelb,ione,'integer' // char(0),iotype)
 
-      call readheader(igeom,'maximum number of element nodes' // char(0),
+      call phio_readheader(igeom,'maximum number of element nodes' // char(0),
      & nen,ione,'integer' // char(0),iotype)
 
-      call readheader(igeom,'number of interior tpblocks' // char(0),
+      call phio_readheader(igeom,'number of interior tpblocks' // char(0),
      & nelblk,ione,'integer' // char(0) ,iotype)
 
-      call readheader(igeom,'number of boundary tpblocks' // char(0),
+      call phio_readheader(igeom,'number of boundary tpblocks' // char(0),
      & nelblb,ione,'integer' // char(0), iotype)
 
-      call readheader(igeom,'number of nodes with Dirichlet BCs' // char(0),
+      call phio_readheader(igeom,
+     & 'number of nodes with Dirichlet BCs' // char(0),
      & numpbc,ione,'integer' // char(0),iotype)
 
-      call readheader(igeom,'number of shape functions' // char(0),
+      call phio_readheader(igeom,'number of shape functions' // char(0),
      & ntopsh,ione,'integer' // char(0),iotype)
 
 c      call closefile( igeom, "read" )
@@ -247,10 +248,10 @@ cc still read in new
       if(numpe > 1) then
 
 cc MR CHANGE
-         call readheader(igeom,'size of ilwork array' // char(0),
+         call phio_readheader(igeom,'size of ilwork array' // char(0),
      &    nlwork,ione,'integer' // char(0) ,iotype)
 
-         call readheader(igeom,'ilwork' //char(0) ,nlwork,ione,
+         call phio_readheader(igeom,'ilwork' //char(0) ,nlwork,ione,
      &   'integer' // char(0) , iotype)
 
          allocate( point2ilwork(nlwork) )
@@ -294,7 +295,7 @@ c      call initphmpiio(nfields,nppf,nfiles,igeom,'read')
 c      call openfile( fnamer, 'read', igeom )
 CC MR CHANGE
 
-      call readheader(igeom,'co-ordinates' // char(0),intfromfile,itwo,
+      call phio_readheader(igeom,'co-ordinates' // char(0),intfromfile,itwo,
      & 'double' // char(0), iotype)
       numnp=intfromfile(1)
 c      print *, "read out @@@@@@ is ", numnp
@@ -358,7 +359,7 @@ cc MR CHANGE
 cc MR CHANGE
 
       ione=1
-      call readheader(igeom,'bc mapping array' // char(0),nshg,ione,
+      call phio_readheader(igeom,'bc mapping array' // char(0),nshg,ione,
      & 'integer' // char(0),iotype)
 
 c      fname1='bc mapping array?'
@@ -379,7 +380,7 @@ c
 c.... read the temporary iBC array
 c
       ione=1
-      call readheader(igeom,'bc codes array' // char(0) ,numpbc,ione,
+      call phio_readheader(igeom,'bc codes array' // char(0) ,numpbc,ione,
      & 'integer' // char(0),iotype)
 
 c      ione = 1
@@ -431,7 +432,7 @@ c      ione=1
 c      fname1='boundary condition array?'
 c      call readheader(igeomBAK,fname1,intfromfile,
 c     &     ione, 'double', iotype)
-      call readheader(igeom,'boundary condition array' // char(0),
+      call phio_readheader(igeom,'boundary condition array' // char(0),
      & intfromfile,ione, 'double' // char(0), iotype)
 c here intfromfile(1) contains (ndof+7)*numpbc
 !MR CHANGE
@@ -490,7 +491,7 @@ c
 c      fname1='periodic masters array?'
 c      call readheader(igeomBAK,fname1,nshg,
 c     &     ione, 'integer', iotype)
-      call readheader(igeom,'periodic masters array' // char(0) ,nshg,
+      call phio_readheader(igeom,'periodic masters array' // char(0) ,nshg,
      & ione,'integer' // char(0), iotype)
       allocate( point2iper(nshg) )
       allocate( iperread(nshg) )
@@ -561,7 +562,7 @@ c         fname1='keyword sonfath?'
 !             fname1='number of father-nodes?'
 !             call readheader(igeomBAK,fname1,nfath,ione,'integer', iotype)
 
-            call readheader(igeom,'number of father-nodes' // char(0),
+            call phio_readheader(igeom,'number of father-nodes' // char(0),
      &       nfath,ione,'integer' // char(0), iotype)
 
 c
@@ -569,7 +570,7 @@ c     fname1='keyword nsons?'
 !             fname1='number of son-nodes for each father?'
 !             call readheader(igeomBAK,fname1,nfath,ione,'integer', iotype)
 
-            call readheader(igeom,
+            call phio_readheader(igeom,
      &       'number of son-nodes for each father' // char(0),
      &       nfath,ione,'integer' // char(0), iotype)
 
@@ -585,7 +586,7 @@ c
 !             fname1='keyword ifath?'
 !             call readheader(igeomBAK,fname1,nshg,ione,'integer', iotype)
 
-            call readheader(igeom,'keyword ifath' // char(0),nshg,ione,
+            call phio_readheader(igeom,'keyword ifath' // char(0),nshg,ione,
      &      'integer' // char(0), iotype)
 
             allocate (point2ifath(nshg))
@@ -673,7 +674,7 @@ c      call creadlist(irstin,ithree,nshg2,ndof2,lstep)
 c      print *, "Solution is : ", fname1
 
       intfromfile=0
-      call readheader(descriptor,'solution' // char(0) ,intfromfile,
+      call phio_readheader(descriptor,'solution' // char(0) ,intfromfile,
      & ithree,'integer' // char(0), iotype)
 c
 c.... read the values of primitive variables into q
@@ -724,7 +725,7 @@ c
 c      itmp=1
 c      if (myrank .gt. 0) itmp = int(log10(float(myrank)))+1
       intfromfile=0
-      call readheader(descriptor,'time derivative of solution' // char(0),
+      call phio_readheader(descriptor,'time derivative of solution' // char(0),
      & intfromfile,ithree,'integer' // char(0),iotype)
       allocate( acold(nshg,ndof) )
       if(intfromfile(1).ne.0) then
@@ -844,7 +845,7 @@ c      call creadlist(irstin,ithree,nshg2,ndisp,lstep)
 !      &        ithree,'integer', iotype)
 
           intfromfile=0
-          call readheader(descriptor,'displacement' // char(0),
+          call phio_readheader(descriptor,'displacement' // char(0),
      &     intfromfile,ithree,'integer' // char(0),iotype)
 
          nshg2=intfromfile(1)
