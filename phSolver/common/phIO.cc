@@ -2,6 +2,7 @@
 #include "phComm.h"
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include <phastaIO.h>
 #include <sstream>
 #include <string>
@@ -50,12 +51,17 @@ void phio_openfile(
     const char filename[],
     const char mode[],
     int* numFiles,
+    int* numFields,
+    int* numPPF,
     int* fileDescriptor) {
   std::string syncName = appendColor(filename, *numFiles);
-  fprintf(stderr, "filename %s syncName %s\n", filename, syncName.c_str());
-  int nfields, nppf;
-  queryphmpiio(syncName.c_str(), &nfields, &nppf);
-  fprintf(stderr, "nfields %d nppf %d\n", nfields, nppf);
+  int nfields = *numFields;
+  int nppf = *numPPF;
+  if( std::string(mode) == "read" )
+    queryphmpiio(syncName.c_str(), &nfields, &nppf);
+  //TODO - define a good upper bound
+  assert(nfields > 0 && nfields < 1024);
+  assert(nppf > 0 && nppf < 1024);
   initphmpiio(&nfields, &nppf, numFiles, fileDescriptor, mode); 
   openfile(syncName.c_str(), mode, fileDescriptor);
 }

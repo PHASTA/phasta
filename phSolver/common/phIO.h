@@ -28,6 +28,8 @@ extern "C" {
   void phio_openfile(const char filename[],
     const char mode[],
     int* numFiles,
+    int* numFields,
+    int* numPPF,
     int* fileDescriptor);
   void phio_restartname(int* step, char* filename);
 #ifdef __cplusplus

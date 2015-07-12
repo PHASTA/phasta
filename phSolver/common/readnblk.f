@@ -56,6 +56,7 @@ ccccccccccccccccccccccccccccccccccccccccc New PhastaIO Definition Part ccccccccc
       integer :: descriptor, descriptorG, GPID, color, nfiles, nfields
       integer ::  numparts, nppf
       integer :: ierr_io, numprocs, itmp, itmp2
+      integer :: ignored
       character*255 fname2, temp2
       character*64 temp1
 
@@ -129,7 +130,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       itmp = int(log10(float(myrank+1)))+1
 
       call phio_openfile('geombc-dat.' // char(0), 'read' // char(0),
-     & nfiles, igeom);
+     & nfiles, ignored, ignored, igeom);
 
       call phio_readheader(igeom,'number of nodes' // char(0),numnp,ione,
      & 'integer' // char(0), iotype)
@@ -633,7 +634,8 @@ cc      fnamer = "/users/nliu/PIG4/4-procs_case/restart-file"
 cc      fnamer="./4-procs_case/restart-file"
 
       call phio_restartname(irstart, fnamer)
-      call phio_openfile(fnamer, 'read' // char(0), nfiles, descriptor)
+      call phio_openfile(fnamer, 'read' // char(0), nfiles, ignored,
+     & ignored, descriptor)
 
       ithree=3
 c      call creadlist(irstin,ithree,nshg2,ndof2,lstep)

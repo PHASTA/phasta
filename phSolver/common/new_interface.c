@@ -14,6 +14,7 @@
 #include "rdtsc.h"
 #include <FCMangle.h>
 #include "new_interface.h"
+#include "phIO.h"
 
 //MR CHANGE
 #include "common_c.h"
@@ -386,39 +387,8 @@ Write_Restart(  int* pid,
     bzero((void*)filename,255);
     bzero((void*)fieldtag_s,255);
 
-    sprintf(filename,"restart-dat.%d.%d",*stepno,((int)(irank/(nprocs/nfiles))+1));
-
-//    unsigned long long timer_start;
-//    unsigned long long timer_end;
-//    double time_span;
-
-//MR CHANGE
-//  Measure the time - Start the timer
-//    MPI_Barrier(MPI_COMM_WORLD);
-//    timer_start = rdtsc();
-//MR CHANGE END
-
-    initphmpiio(&nfields, &nppf, &nfiles, &f_descriptor, "write");
-
-//MR CHANGE
-//  Measure the time - End of timer
-//    timer_end = rdtsc();
-//    time_span=(double)((timer_end-timer_start)/cpu_speed);
-    if (*pid==0) {
-//      printf("\n*****************************\n");
-//      printf("Time: 'initphmpiio' of %s with %d fields and %d files is:    %f s\n",filename,nfields,nfiles,time_span);
-      printf("Filename is %s \n",filename);
-    }
-//MR CHANGE END
-
-
-//MR CHANGE
-//  Measure the time - Start the timer
-//    MPI_Barrier(MPI_COMM_WORLD);
-//    timer_start = rdtsc();
-//MR CHANGE END
-
-    openfile(filename, "write", &f_descriptor);
+    phio_restartname(stepno, filename);
+    phio_openfile(filename, "write", &nfiles, &nfields, &nppf, &f_descriptor);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -1213,7 +1183,7 @@ Write_PhAvg2( int* pid,
     // assuming restart.sn.(pid+1)
 //     sprintf(rfile,"restart.%d.%d",*stepno,*pid+1);
 
-    int addtagsize; // phase number is added to the name of the field
+    int addtagsize=0; // phase number is added to the name of the field
     if(*iphase<10)
       addtagsize=1;
     else if(*iphase<100)
@@ -1508,15 +1478,7 @@ Write_d2wall(   int* pid,
     bzero((void*)filename,255);
     bzero((void*)fieldtag_s,255);
 
-    sprintf(filename,"d2wall.%d",((int)(irank/(nprocs/nfiles))+1));
-
-    if (irank==0) {
-      printf("Filename is %s \n",filename);
-    }
-
-    initphmpiio(&nfields, &nppf, &nfiles, &f_descriptor, "write");
-
-    openfile(filename, "write", &f_descriptor);
+    phio_openfile("d2wall.", "write", &nfiles, &nfields, &nppf, &f_descriptor);
 
     field_flag=0;
 
