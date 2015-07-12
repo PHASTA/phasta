@@ -868,8 +868,8 @@ c
 
 !          call readdatablock(irstin,fname1,uread,iusiz,
 !      &        'double',iotype)
-         call readdatablock(descriptor,fname1 // char(0) ,uread,iusiz,
-     &                   'double' // char(0),iotype)
+         call readdatablock(descriptor,'displacement' // char(0),
+     &          uread,iusiz, 'double' // char(0),iotype)
 
          uold(:,1:nsd)=uread(:,1:nsd)
        else
