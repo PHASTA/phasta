@@ -147,14 +147,8 @@ read_d2wall(  int* pid,
     // First we try to read dwal from the restart files.
     ////////////////////////////////////////////////////
 
-    sprintf(filename,"restart-dat.%d.%d", timdat.lstep, ((int)(irank/(nprocs/nfiles))+1));
-    queryphmpiio(filename, &nfields, &nppf);
-    initphmpiio(&nfields, &nppf, &nfiles, &f_descriptor, "read");
-
-    if (irank==0) {
-      printf("Filename is %s \n",filename);
-    }
-    openfile(filename, "read", &f_descriptor);
+    phio_restartname(&(timdat.lstep), filename);
+    phio_openfile(filename, "read", &nfiles, &f_descriptor);
 
     int i;
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
@@ -192,16 +186,7 @@ read_d2wall(  int* pid,
 
       if (numd2wallfiles == outpar.nsynciofiles ) {
         // Read the d2wall field from the d2wall files
-        memset((void*)filename,0,255);
-
-        sprintf(filename,"d2wall.%d",((int)(irank/(nprocs/nfiles))+1));
-        queryphmpiio(filename, &nfields, &nppf);
-        initphmpiio(&nfields, &nppf, &nfiles, &f_descriptor, "read");
-
-        if (irank==0) {
-          printf("Filename is %s \n",filename);
-        }
-        openfile(filename, "read", &f_descriptor);
+        phio_openfile("d2wall.", "read", &nfiles, &f_descriptor);
 
         int i;
         for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
