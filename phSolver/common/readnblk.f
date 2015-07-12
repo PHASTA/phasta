@@ -123,29 +123,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 !      nppf = numparts/nfiles
 !MR CHANGE END
 
-c      fnamer="/home/nliu/develop/PIG4/512-procs_case/geombc-dat"
-      
-      color = int(myrank/(numparts/nfiles)) !Should call the color routine in SyncIO here
-      itmp2 = int(log10(float(color+1)))+1
-      write (temp2,"('(''geombc-dat.'',i',i1,')')") itmp2
-      write (fnamer,temp2) (color+1)
-      fnamer = trim(fnamer) // char(0)
-
-c      fnamer="/home/nliu/develop/test-case/512-procs_case/geombc-dat"
-
       itwo=2
       ione=1
       ieleven=11
       itmp = int(log10(float(myrank+1)))+1
 
-      call queryphmpiio(fnamer, nfields, nppf);
-      if (myrank == 0) then
-        write(*,*) 'Number of fields in geombc-dat: ',nfields
-        write(*,*) 'Number of parts per file geombc-dat: ',nppf
-      endif
-      call initphmpiio( nfields, nppf, nfiles, igeom,
-     & 'read' // char(0))
-      call openfile( fnamer, 'read' // char(0), igeom )
+      call phio_openfile('geombc-dat.' // char(0), 'read' // char(0),
+     & nfiles, igeom);
 
       call phio_readheader(igeom,'number of nodes' // char(0),numnp,ione,
      & 'integer' // char(0), iotype)
@@ -648,23 +632,8 @@ c      nppf = numparts/nfiles
 cc      fnamer = "/users/nliu/PIG4/4-procs_case/restart-file"
 cc      fnamer="./4-procs_case/restart-file"
 
-      itmp=1
-      if (irstart .gt. 0) itmp = int(log10(float(irstart+1)))+1
-
-      write (fmt1,"('(''restart-dat.'',i',i1,',1x)')") itmp
-
-      write (fnamer,fmt1) irstart
-      fnamer = trim(fnamer) // cname2(color+1)
-
-      call queryphmpiio(fnamer // char(0), nfields, nppf);
-      if (myrank == 0) then
-        write(*,*) 'Number of fields in restart-dat: ',nfields
-        write(*,*) 'Number of parts per file restart-dat: ',nppf
-      endif
-      call initphmpiio(nfields,nppf,nfiles,descriptor,
-     & 'read' // char(0))
-      call openfile( fnamer // char(0) , 
-     & 'read' // char(0), descriptor )
+      call phio_restartname(irstart, fnamer)
+      call phio_openfile(fnamer, 'read' // char(0), nfiles, descriptor)
 
       ithree=3
 c      call creadlist(irstin,ithree,nshg2,ndof2,lstep)
