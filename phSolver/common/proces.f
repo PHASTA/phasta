@@ -200,7 +200,10 @@ c.... end of the program
 c
 CAD        write(6,*) 'Life: ', second(0) - ttim(100)
         deallocate(point2iper)
-        if(numpe.gt.1) deallocate(point2ilwork)
+        if(numpe.gt.1) then
+          call Dctypes(point2ilwork(1))
+          deallocate(point2ilwork)
+        endif
         deallocate(point2x)
 
         if((irscale.ge.0).or. ((iLES .lt. 20) .and. (iLES.gt.0))
