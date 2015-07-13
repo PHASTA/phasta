@@ -10,3 +10,10 @@ add_test(
 )
 add_test(compareIncompressible
   diff ${CDIR}/restart-dat.4.1.ref ${CDIR}/4-procs_case/restart-dat.4.1)
+add_test(
+  NAME incompressibleRestart
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
+  WORKING_DIRECTORY ${CASES}/incompressible
+)
+add_test(compareIncompressibleRestart
+  diff ${CDIR}/restart-dat.8.1.ref ${CDIR}/4-procs_case/restart-dat.8.1)
