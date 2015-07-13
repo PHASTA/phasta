@@ -47,22 +47,31 @@ void phio_readdatablock(
       valueArray, nItems, datatype, iotype);
 }
 
-void phio_openfile(
+void phio_openfile_read(
     const char filename[],
-    const char mode[],
+    int* numFiles,
+    int* fileDescriptor) {
+  std::string syncName = appendColor(filename, *numFiles);
+  int nfields=0;
+  int nppf=0;
+  queryphmpiio(syncName.c_str(), &nfields, &nppf);
+  const char* mode = "read";
+  initphmpiio(&nfields, &nppf, numFiles, fileDescriptor, mode); 
+  openfile(syncName.c_str(), mode, fileDescriptor);
+}
+
+void phio_openfile_write(
+    const char filename[],
     int* numFiles,
     int* numFields,
     int* numPPF,
     int* fileDescriptor) {
   std::string syncName = appendColor(filename, *numFiles);
-  int nfields = *numFields;
-  int nppf = *numPPF;
-  if( std::string(mode) == "read" )
-    queryphmpiio(syncName.c_str(), &nfields, &nppf);
   //TODO - define a good upper bound
-  assert(nfields > 0 && nfields < 1024);
-  assert(nppf > 0 && nppf < 1024);
-  initphmpiio(&nfields, &nppf, numFiles, fileDescriptor, mode); 
+  assert(*numFields > 0 && *numFields < 1024);
+  assert(*numPPF > 0 && *numPPF < 1024);
+  const char* mode = "write";
+  initphmpiio(numFields, numPPF, numFiles, fileDescriptor, mode); 
   openfile(syncName.c_str(), mode, fileDescriptor);
 }
 

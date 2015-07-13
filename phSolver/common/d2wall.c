@@ -148,8 +148,7 @@ read_d2wall(  int* pid,
     ////////////////////////////////////////////////////
 
     phio_restartname(&(timdat.lstep), filename);
-    int ignored = 0;
-    phio_openfile(filename, "read", &nfiles, &ignored, &ignored, &f_descriptor);
+    phio_openfile_read(filename, &nfiles, &f_descriptor);
 
     int i;
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
@@ -187,9 +186,7 @@ read_d2wall(  int* pid,
 
       if (numd2wallfiles == outpar.nsynciofiles ) {
         // Read the d2wall field from the d2wall files
-        int ignored = 0;
-        phio_openfile("d2wall.", "read", &nfiles,
-            &ignored, &ignored, &f_descriptor);
+        phio_openfile_read("d2wall.", &nfiles, &f_descriptor);
 
         int i;
         for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor

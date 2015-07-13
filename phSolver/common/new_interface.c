@@ -388,7 +388,7 @@ Write_Restart(  int* pid,
     bzero((void*)fieldtag_s,255);
 
     phio_restartname(stepno, filename);
-    phio_openfile(filename, "write", &nfiles, &nfields, &nppf, &f_descriptor);
+    phio_openfile_write(filename, &nfiles, &nfields, &nppf, &f_descriptor);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -1478,7 +1478,7 @@ Write_d2wall(   int* pid,
     bzero((void*)filename,255);
     bzero((void*)fieldtag_s,255);
 
-    phio_openfile("d2wall.", "write", &nfiles, &nfields, &nppf, &f_descriptor);
+    phio_openfile_write("d2wall.", &nfiles, &nfields, &nppf, &f_descriptor);
 
     field_flag=0;
 
