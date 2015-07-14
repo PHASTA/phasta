@@ -13,6 +13,7 @@
 //mr change end
 #include "common_c.h"
 #include "phastaIO.h"
+#include "phIO.h"
 #include "new_interface.h"
 #include <FCMangle.h>
 
@@ -367,13 +368,9 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    sprintf( filename,"restart-dat.%d.%d",*lstep,((int)(*myrank/(numParts/nfiles))+1));
-    queryphmpiio(filename, &nfields, &nppf);
-    initphmpiio(&nfields, &nppf, &nfiles,&fileHandle,"read");
-//MR CHANGE END
-
-    openfile( filename, "read", &fileHandle );
-
+    sprintf(filename,"restart-dat.");
+    phio_restartname(lstep, filename);
+    phio_openfile_read(filename, &nfiles, &fileHandle);
 
 //        if ( fileHandle == 0 ) return;
     if ( fileHandle < 0 ) return; // See phastaIO.cc for error fileHandle
@@ -383,8 +380,9 @@ readlesrestart( Integer* lesId,
     sprintf(fieldname,"projection vectors@%d",startpart);
 //     readheader_( &fileHandle, "projection vectors", (void*)iarray,
 //                  &itwo, "integer", phasta_iotype );
-    readheader( &fileHandle, fieldname, (void*)iarray,
-                &itwo, "integer", phasta_iotype );
+    phio_readheader(&fileHandle, "projection vectors", (void*)iarray,
+                &itwo, "integer", phasta_iotype);
+
 //       }
 //MR CHANGE END
 
@@ -432,8 +430,7 @@ readlesrestart( Integer* lesId,
 
 //MR CHANGE END
 
-
-    readheader( &fileHandle, fieldname, (void*)iarray,
+    phio_readheader( &fileHandle, "pressure projection vectors", (void*)iarray,
                  &itwo, "integer", phasta_iotype );
 
     lnshg = iarray[ 0 ] ;
