@@ -448,7 +448,8 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writedatablock( &f_descriptor, fieldtag_s, (void*)(array1), &isize, "double", phasta_iotype );
+        phio_writedatablock(&f_descriptor, "solution", (void*)(array1),
+            &isize, "double", phasta_iotype );
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -523,7 +524,8 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writedatablock( &f_descriptor, fieldtag_s, (void*)(array2), &isize, "double", phasta_iotype );
+        phio_writedatablock( &f_descriptor, "time derivative of solution",
+            (void*)(array2), &isize, "double", phasta_iotype );
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -718,7 +720,8 @@ Write_Error(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writedatablock( &f_descriptor, fieldtag, (void*)array1, &isize, "double", phasta_iotype );
+        phio_writedatablock( &f_descriptor, "errors", (void*)array1, &isize,
+            "double", phasta_iotype );
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -952,7 +955,8 @@ Write_Field(  int *pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writedatablock( &f_descriptor, fieldtag_s, array, &isize, datatype, phasta_iotype );
+        phio_writedatablock( &f_descriptor, fieldlabel, array, &isize,
+            datatype, phasta_iotype );
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -1227,7 +1231,8 @@ Write_PhAvg2( int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writedatablock( &f_descriptor, fieldtag_s, array, &isize, "double", phasta_iotype );
+        phio_writedatablock( &f_descriptor, fieldlabel, array, &isize,
+            "double", phasta_iotype );
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -1386,9 +1391,8 @@ Write_d2wall(   int* pid,
         //nitems = (*nshg)*(*numVars);
         //nitems = (*numnp);
 
-        writedatablock( &f_descriptor, fieldtag_s, (void*)(array1), &isize, "double", phasta_iotype );
-
-
+        phio_writedatablock( &f_descriptor, "d2wall", (void*)(array1), &isize,
+            "double", phasta_iotype );
     }
     field_flag++;
 
