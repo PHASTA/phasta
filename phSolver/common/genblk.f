@@ -61,12 +61,9 @@ c
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        write(temp1,
-     &   "('(''total number of interior tpblocks@'',i',i1,',A1)')") itmp
-
-        write (fname2,temp1) (myrank+1),'?'
-        call phio_readheader(igeom,fname2 // char(0) ,itpblktot,ione,
-     &  'integer' // char(0),iotype) 
+        call phio_readheader(igeom,
+     &   'total number of interior tpblocks' // char(0),
+     &   itpblktot,ione,'integer' // char(0),iotype) 
 
 !        write (*,*) 'Rank: ',myrank,' interior itpblktot intermediate:',
 !     &               itpblktot
@@ -84,11 +81,7 @@ c
 
             intfromfile(:)=-1
             iblk = iblk+1
-            write (temp1,"('connectivity interior',i1)") iblk
-            temp1 = trim(temp1)
-            write (temp3,"('(''@'',i',i1,',A1)')") itmp
-            write (fname2, temp3) (myrank+1), '?'
-            fname2 = trim(temp1)//trim(fname2)
+            write (fname2,"('connectivity interior',i1)") iblk
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
             call phio_readheader(igeom,fname2 // char(0),intfromfile,
@@ -125,11 +118,7 @@ c     &          neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst)
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           write (temp1,"('connectivity interior',i1)") iblk
-           temp1=trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
+           write (fname2,"('connectivity interior',i1)") iblk
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
@@ -154,7 +143,7 @@ c           read(igeomBAK) ientp
               writeLock=1;
            endif
 
-           call readdatablock(igeom,fname2 // char(0),ientp,iientpsiz,
+           call phio_readdatablock(igeom,fname2 // char(0),ientp,iientpsiz,
      &                     "integer" // char(0), iotype)
 
 !            call closefile( igeom, "read" // char(0) )
