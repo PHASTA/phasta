@@ -8,18 +8,25 @@
 #include <string>
 
 namespace {
+  void appendRank(std::stringstream& ss, const char* phrase) {
+    ss << phrase << "@" << phcomm_rank()+1;
+  }
   std::string appendSync(const char* phrase) {
     std::stringstream ss;
-    ss << phrase << "@" << phcomm_rank()+1 << "?";
-    std::string s = ss.str();
-    return s;
+    appendRank(ss,phrase);
+    ss << "?";
+    return ss.str();
+  }
+  std::string appendSyncWrite(const char* phrase) {
+    std::stringstream ss;
+    appendRank(ss,phrase);
+    return ss.str();
   }
   std::string appendColor(const char* phrase, int numFiles) {
     const int color = computeColor(phcomm_rank(), phcomm_size(), numFiles);
     std::stringstream ss;
     ss << phrase << color+1;
-    std::string s = ss.str();
-    return s;
+    return ss.str();
   }
 }
 
@@ -34,6 +41,20 @@ void phio_readheader(
   readheader(fileDescriptor, syncPhrase.c_str(),
       valueArray, nItems, datatype, iotype);
 }
+
+void phio_writeheader(
+      const int* fileDescriptor,
+      const char keyphrase[],
+      const void* valueArray,
+      const int* nItems,
+      const int* ndataItems,
+      const char datatype[],
+      const char iotype[] ) {
+  std::string syncPhrase = appendSyncWrite(keyphrase);
+  writeheader(fileDescriptor, syncPhrase.c_str(),
+      valueArray, nItems, ndataItems, datatype, iotype);
+}
+
 
 void phio_readdatablock(
     int*  fileDescriptor,

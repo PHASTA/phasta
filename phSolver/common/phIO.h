@@ -4,6 +4,7 @@
 #include <FCMangle.h>
 
 #define phio_readheader FortranCInterface_GLOBAL_(phio_readheader, PHIO_READHEADER)
+#define phio_writeheader FortranCInterface_GLOBAL_(phio_writeheader, PHIO_WRITEHEADER)
 #define phio_readdatablock FortranCInterface_GLOBAL_(phio_readdatablock, PHIO_READDATABLOCK)
 #define phio_openfile_read FortranCInterface_GLOBAL_(phio_openfile_read, PHIO_OPENFILE_READ)
 #define phio_openfile_write FortranCInterface_GLOBAL_(phio_openfile_write, PHIO_OPENFILE_WRITE)
@@ -21,6 +22,14 @@ extern "C" {
       int*  nItems,
       const char  datatype[],
       const char  iotype[] );
+  void phio_writeheader( 
+      const int* fileDescriptor,
+      const char keyphrase[],
+      const void* valueArray,
+      const int* nItems,
+      const int* ndataItems,
+      const char datatype[],
+      const char iotype[] );
   void phio_readdatablock(
       int* fileDescriptor,
       const  char keyphrase[],
