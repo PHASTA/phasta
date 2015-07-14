@@ -387,7 +387,7 @@ readlesrestart( Integer* lesId,
 //MR CHANGE END
 
     if ( iarray[0] != *nshg ) {
-        closefile( &fileHandle, "read" );
+        phio_closefile_read(&fileHandle);
         if(workfc.myrank==workfc.master)
           printf("projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -437,7 +437,7 @@ readlesrestart( Integer* lesId,
     nPresPrjs = iarray[ 1 ] ;
 
     if ( lnshg != *nshg )  {
-        closefile( &fileHandle, "read" );
+        phio_closefile_read(&fileHandle);
         if(workfc.myrank==workfc.master)
           printf("pressure projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -462,12 +462,7 @@ readlesrestart( Integer* lesId,
 
     free( projVec );
 
-    closefile( &fileHandle, "read" );
-
-//MR CHANGE
-    finalizephmpiio(&fileHandle);
-//MR CHANGE END
-
+    phio_closefile_read(&fileHandle);
 }
 
 void  myflessolve( Integer* lesId,
