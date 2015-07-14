@@ -426,7 +426,8 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writeheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, &isize, "double", phasta_iotype);
+        phio_writeheader( &f_descriptor, "solution", (void*)iarray, &nitems,
+            &isize, "double", phasta_iotype);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -501,7 +502,8 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writeheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, &isize, "double", phasta_iotype);
+        phio_writeheader( &f_descriptor, "time derivative of solution",
+            (void*)iarray, &nitems, &isize, "double", phasta_iotype);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -697,7 +699,8 @@ Write_Error(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writeheader( &f_descriptor, fieldtag, (void*)iarray, &nitems, &isize, "double", phasta_iotype);
+        phio_writeheader( &f_descriptor, "errors", (void*)iarray, &nitems,
+            &isize, "double", phasta_iotype);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -928,7 +931,8 @@ Write_Field(  int *pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writeheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, &isize, datatype, phasta_iotype);
+        phio_writeheader( &f_descriptor, fieldlabel, (void*)iarray, &nitems,
+            &isize, datatype, phasta_iotype);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -1202,7 +1206,8 @@ Write_PhAvg2( int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        writeheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, &isize, "double", phasta_iotype);
+        phio_writeheader( &f_descriptor, fieldlabel, (void*)iarray, &nitems,
+            &isize, "double", phasta_iotype);
 
 //MR CHANGE
 //  Measure the time - End of timer
@@ -1375,7 +1380,8 @@ Write_d2wall(   int* pid,
         iarray[ 0 ] = (*numnp);
         iarray[ 1 ] = 1; //numVars = 1
 
-        writeheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, &isize, "double", phasta_iotype);
+        phio_writeheader( &f_descriptor, "d2wall", (void*)iarray, &nitems,
+            &isize, "double", phasta_iotype);
 
         //nitems = (*nshg)*(*numVars);
         //nitems = (*numnp);
