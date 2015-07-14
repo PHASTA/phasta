@@ -81,3 +81,15 @@ void phio_restartname(int* step, char* filename) {
   std::string s = ss.str();
   strcpy(filename, s.c_str()); 
 }
+
+void phio_closefile_read(int* fileDescriptor) {
+  const char* mode = "read";
+  closefile(fileDescriptor, mode);
+  finalizephmpiio(fileDescriptor);
+}
+
+void phio_closefile_write(int* fileDescriptor) {
+  const char* mode = "write";
+  closefile(fileDescriptor, mode);
+  finalizephmpiio(fileDescriptor);
+}

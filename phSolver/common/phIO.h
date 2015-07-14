@@ -8,6 +8,8 @@
 #define phio_openfile_read FortranCInterface_GLOBAL_(phio_openfile_read, PHIO_OPENFILE_READ)
 #define phio_openfile_write FortranCInterface_GLOBAL_(phio_openfile_write, PHIO_OPENFILE_WRITE)
 #define phio_restartname FortranCInterface_GLOBAL_(phio_restartname, PHIO_RESTARTNAME)
+#define phio_closefile_read FortranCInterface_GLOBAL_(phio_closefile_read, PHIO_CLOSEFILE_READ)
+#define phio_closefile_write FortranCInterface_GLOBAL_(phio_closefile_write, PHIO_CLOSEFILE_WRITE)
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +39,8 @@ extern "C" {
       int* numPPF,
       int* fileDescriptor);
   void phio_restartname(int* step, char* filename);
+  void phio_closefile_read(int* fileDescriptor);
+  void phio_closefile_write(int* fileDescriptor);
 #ifdef __cplusplus
 }
 #endif
