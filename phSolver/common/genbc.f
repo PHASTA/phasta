@@ -534,6 +534,7 @@ c
       end type llnod
       type (llnod), pointer :: sidlist ! points to first elt of linked list
       type (llnod), pointer :: sidelt  ! points to generic elt of linked list
+      type (llnod), pointer :: nextelt ! points to generic elt of linked list
       integer, allocatable :: sidmapl(:) ! list of surfID's on-proc
       integer, allocatable :: temp(:)    ! temp space
 c      integer iBCB(numelb,ndiBCB) ! column 1: naturalBC switches
@@ -545,6 +546,7 @@ c link list while we determine the total number of distinct ID's
                          ! linked list and point sidlist to it
       nsidl=0            ! initialize # of sids on this processor
       nsidg=0
+      nullify(sidlist % next)    ! next does not exist yet
       do iblk=1, nelblb  ! loop over boundary element blocks
          npro = lcblkb(1,iblk+1)-lcblkb(1,iblk)
          do i = 1, npro         ! loop over boundary elements (belts)
@@ -553,6 +555,7 @@ c link list while we determine the total number of distinct ID's
                if(nsidl.eq.0) then     !   if this is the first sid we've seen
                   nsidl=1              !       increment our count and
                   sidlist % value = iBCB2    ! record its value
+                  nullify(sidlist % next)    ! next does not exist yet
                else                    !   if this isn't the first sid
                   newflag = 1          !     assume this is a new sid
                   sidelt => sidlist    !     starting with the first sid
@@ -569,6 +572,7 @@ c link list while we determine the total number of distinct ID's
                      allocate (sidelt % next)!   tack a new element to the end
                      sidelt => sidelt % next!    point to the new element
                      sidelt % value = iBCB2    ! record the new sid
+                     nullify(sidelt % next)    ! next does not exist yet
                   endif ! (really is a new sid)
                endif ! (first sid)
             endif ! (belt has a sid)
@@ -583,8 +587,19 @@ c Copy the data from the linked list to a more easily-used array form
             if(j.ne.nsidl) sidelt => sidelt%next
          enddo
       else
-	allocate( sidmapl(1)) ! some compilers/MPI don't like to send unallocated arrays
+         allocate( sidmapl(1)) ! some compilers/MPI don't like to send unallocated arrays
       endif
+!     Deallocate the link list 
+!     http://stackoverflow.com/questions/9184675/how-does-fortran-deallocate-linked-lists
+      sidelt => sidlist
+      nextelt => sidelt % next
+      do 
+        deallocate(sidelt)
+        if( .not. associated(nextelt) ) exit
+        sidelt => nextelt
+        nextelt => sidelt % next
+      enddo
+
 c Gather the number of surface ID's on each processor
       if (numpe.gt.1) then      ! multiple processors
 c write the number of surfID's on the jth processor to slot j of nsid
@@ -672,6 +687,7 @@ c global data is local data in single processor case
             nsidg=nsidl
             allocate( sidmapg(nsidg) )
             sidmapg=sidmapl
+            deallocate(sidmapl)
          endif                  ! if-else multiple processor
 c     
       endif                     ! if at least one surfid
