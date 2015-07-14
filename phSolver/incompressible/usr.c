@@ -360,7 +360,6 @@ readlesrestart( Integer* lesId,
 //MR CHANGE END
 
 //    int nppf = numParts/nfiles;
-    char fieldname[255];
 
 //      MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     // Calculate number of parts each proc deal with and where it start and end ...
@@ -372,19 +371,9 @@ readlesrestart( Integer* lesId,
     phio_restartname(lstep, filename);
     phio_openfile_read(filename, &nfiles, &fileHandle);
 
-//        if ( fileHandle == 0 ) return;
     if ( fileHandle < 0 ) return; // See phastaIO.cc for error fileHandle
-//     for (  i = 0; i < nppp; i++  ) // If one day several parts per file
-//     {
-    bzero((void*)fieldname,255);
-    sprintf(fieldname,"projection vectors@%d",startpart);
-//     readheader_( &fileHandle, "projection vectors", (void*)iarray,
-//                  &itwo, "integer", phasta_iotype );
     phio_readheader(&fileHandle, "projection vectors", (void*)iarray,
                 &itwo, "integer", phasta_iotype);
-
-//       }
-//MR CHANGE END
 
     if ( iarray[0] != *nshg ) {
         phio_closefile_read(&fileHandle);
@@ -399,12 +388,8 @@ readlesrestart( Integer* lesId,
     size = (*nshg)*nPrjs;
     projVec = (double*)malloc( size * sizeof( double ));
 
-//MR CHANGE
-//     readdatablock_( &fileHandle, "projection vectors", (void*)projVec,
-//                         &size, "double", phasta_iotype );
-    readdatablock( &fileHandle, fieldname, (void*)projVec,
+    phio_readdatablock( &fileHandle, "projection vectors", (void*)projVec,
                     &size, "double", phasta_iotype );
-//MR CHANGE END
 
     lesSetPar( lesArray[ *lesId ], LES_ACT_PRJS, (Real) nPrjs );
     PrjSrcId = (Integer) lesGetPar( lesArray[ *lesId ], LES_PRJ_VEC_ID );
@@ -423,13 +408,6 @@ readlesrestart( Integer* lesId,
 
     iarray[0] = -1; iarray[1] = -1; iarray[2] = -1;
 
-//MR CHANGE
-
-    bzero((void*)fieldname,255);
-    sprintf(fieldname,"pressure projection vectors@%d",startpart);
-
-//MR CHANGE END
-
     phio_readheader( &fileHandle, "pressure projection vectors", (void*)iarray,
                  &itwo, "integer", phasta_iotype );
 
@@ -446,7 +424,7 @@ readlesrestart( Integer* lesId,
     size = (*nshg)*nPresPrjs;
     projVec = (double*)malloc( size * sizeof( double ));
 
-    readdatablock( &fileHandle, fieldname, (void*)projVec,
+    phio_readdatablock( &fileHandle, "pressure projection vectors", (void*)projVec,
                     &size, "double", phasta_iotype );
 
     lesSetPar( lesArray[ *lesId ], LES_ACT_PRES_PRJS, (Real) nPresPrjs );
