@@ -602,10 +602,7 @@ c
          allocate (point2ifath(1))
       endif
 
-! !MR CHANGE
-      call closefile( igeom, "read" // char(0) )
-      call finalizephmpiio( igeom )
-! !MR CHANGE END
+      call phio_closefile_read(igeom);
 
 ! !MR CHANGE
 !       write(*,*) 'HELLO 13 from ', myrank
@@ -853,8 +850,7 @@ c
 !MR CHANGE
 !      call closefile( irstin, "read" )
 
-      call closefile( descriptor, "read" // char(0) )
-      call finalizephmpiio( descriptor )
+      call phio_closefile_read(descriptor)
 
 !MR CHANGE
 !      call closefile( igeomBAK,  "read" )

@@ -172,8 +172,7 @@ read_d2wall(  int* pid,
         }
       }
     }
-    closefile(&f_descriptor, "read");
-    finalizephmpiio(&f_descriptor);
+    phio_closefile_read(&f_descriptor);
 
     ////////////////////////////////////////////////////
     // We try to read dwal from the d2wall files if not found in the restart files
@@ -210,8 +209,7 @@ read_d2wall(  int* pid,
             }
           }
 
-          closefile(&f_descriptor, "read");
-          finalizephmpiio(&f_descriptor);
+          phio_closefile_read(&f_descriptor);
       }
       else if (numd2wallfiles != 0) {
         // The number of d2wall file should be either 0 or outpar.nsynciofiles

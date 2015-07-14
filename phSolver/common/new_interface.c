@@ -561,8 +561,6 @@ Write_Restart(  int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      closefile(&f_descriptor, "write");
-
 //MR CHANGE
 //    Measure the time - End of timer
 //      MPI_Barrier(MPI_COMM_WORLD);
@@ -580,7 +578,7 @@ Write_Restart(  int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      finalizephmpiio(&f_descriptor);
+      phio_closefile_write(&f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -764,8 +762,6 @@ Write_Error(  int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      closefile(&f_descriptor, "write");
-
 //MR CHANGE
 //    Measure the time - End of timer
 //      MPI_Barrier(MPI_COMM_WORLD);
@@ -783,7 +779,7 @@ Write_Error(  int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      finalizephmpiio(&f_descriptor);
+      phio_closefile_write(&f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -1032,8 +1028,6 @@ Write_Field(  int *pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      closefile(&f_descriptor, "write");
-
 //MR CHANGE
 //    Measure the time - End of timer
 //      MPI_Barrier(MPI_COMM_WORLD);
@@ -1051,7 +1045,7 @@ Write_Field(  int *pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      finalizephmpiio(&f_descriptor);
+      phio_closefile_write(&f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -1396,8 +1390,6 @@ Write_PhAvg2( int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      closefile(&f_descriptor, "write");
-
 //MR CHANGE
 //    Measure the time - End of timer
 //      MPI_Barrier(MPI_COMM_WORLD);
@@ -1415,7 +1407,7 @@ Write_PhAvg2( int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      finalizephmpiio(&f_descriptor);
+      phio_closefile_write(&f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -1510,11 +1502,7 @@ Write_d2wall(   int* pid,
     field_flag++;
 
     if (field_flag==nfields){
-
-      closefile(&f_descriptor, "write");
-
-      finalizephmpiio(&f_descriptor);
-
+      phio_closefile_write(&f_descriptor);
       if (irank==0) {
         printf("\n");
       }
