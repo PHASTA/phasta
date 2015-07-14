@@ -383,9 +383,8 @@ Write_Restart(  int* pid,
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     int descriptor;
-    char filename[255],path[255],fieldtag_s[255];
+    char filename[255],path[255];
     bzero((void*)filename,255);
-    bzero((void*)fieldtag_s,255);
 
     phio_restartname(stepno, filename);
     phio_openfile_write(filename, &nfiles, &nfields, &nppf, &f_descriptor);
@@ -412,8 +411,6 @@ Write_Restart(  int* pid,
         GPID = startpart + i;
 
         // Write solution field ...
-        sprintf(fieldtag_s,"solution@%d",GPID);
-
         isize = (*nshg)*(*numVars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
@@ -489,8 +486,6 @@ Write_Restart(  int* pid,
         GPID = startpart + i;
 
         // Write solution field ...
-        sprintf(fieldtag_s,"time derivative of solution@%d",GPID);
-
         isize = (*nshg)*(*numVars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
@@ -676,17 +671,14 @@ Write_Error(  int* pid,
 
     field_flag++;
 
-    char fieldtag[255];
-
     int i;
     for ( i = 0; i < nppp; i++  ) {
         GPID = startpart + i;
-        sprintf(fieldtag,"errors@%d",GPID);
 
         if(*pid==0) {
 //          printf("\n*****************************\n");
           printf("\n");
-          printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldtag);
+          printf("The %d/%d th field to be written is 'errors'\n",field_flag,nfields);
         }
 
         isize = (*nshg)*(*numVars);
@@ -794,7 +786,7 @@ Write_Error(  int* pid,
 //      time_span=(double)((timer_end-timer_start)/cpu_speed);
       if (*pid==0) {
 //        printf("Time: 'finalizephmpiio' is:    %f s\n",time_span);
-        printf("Last field %d '%s' finished! \n",nfields, fieldtag);
+        printf("Last field %d 'errors' finished! \n",nfields);
         printf("\n");
 //        printf("*****************************\n");
       }
@@ -897,9 +889,8 @@ Write_Field(  int *pid,
     int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
-    char filename[255],path[255],fieldtag_s[255];
+    char filename[255],path[255];
     bzero((void*)filename,255);
-    bzero((void*)fieldtag_s,255);
 
     strncpy(fieldlabel, fieldtag, *tagsize);
 
@@ -920,8 +911,6 @@ Write_Field(  int *pid,
         GPID = startpart + i;
 
         // Write solution field ...
-        sprintf(fieldtag_s,"%s@%d",fieldlabel,GPID);
-
         isize = (*nshg)*(*numvars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
@@ -1172,9 +1161,8 @@ Write_PhAvg2( int* pid,
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     //int descriptor;
-    char filename[255],path[255],fieldtag_s[255];
+    char filename[255],path[255];
     bzero((void*)filename,255);
-    bzero((void*)fieldtag_s,255);
 
 //     char * namer;
 //     namer = strtok(fieldlabel," ");
@@ -1194,8 +1182,6 @@ Write_PhAvg2( int* pid,
         GPID = startpart + i;
 
         // Write solution field ...
-        sprintf(fieldtag_s,"%s@%d",fieldlabel,GPID);
-
         //printf("This is %d and fieldtag_s is %s \n",myrank,fieldtag_s);
 
         isize = (*nshg)*(*numvars);
@@ -1361,9 +1347,8 @@ Write_d2wall(   int* pid,
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     int descriptor;
-    char filename[255],path[255],fieldtag_s[255];
+    char filename[255],path[255];
     bzero((void*)filename,255);
-    bzero((void*)fieldtag_s,255);
 
     phio_openfile_write("d2wall.", &nfiles, &nfields, &nppf, &f_descriptor);
 
@@ -1378,8 +1363,6 @@ Write_d2wall(   int* pid,
         GPID = startpart + i;
 
         // Write solution field ...
-        sprintf(fieldtag_s,"d2wall@%d",GPID);
-
         isize = (*numnp);
         nitems = 2;
         iarray[ 0 ] = (*numnp);
