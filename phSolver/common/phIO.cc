@@ -68,6 +68,18 @@ void phio_readdatablock(
       valueArray, nItems, datatype, iotype);
 }
 
+void phio_writedatablock(
+    const int* fileDescriptor,
+    const char keyphrase[],
+    const void* valueArray,
+    const int* nItems,
+    const char datatype[],
+    const char iotype[]) {
+  std::string syncPhrase = appendSyncWrite(keyphrase);
+  writedatablock(fileDescriptor, syncPhrase.c_str(),
+      valueArray, nItems, datatype, iotype);
+}
+
 void phio_openfile_read(
     const char filename[],
     int* numFiles,
