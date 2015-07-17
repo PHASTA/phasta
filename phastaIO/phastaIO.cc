@@ -1412,12 +1412,13 @@ void readheader( int* fileDescriptor,
 		unsigned int skip_size;
 		int* valueListInt;
 		valueListInt = static_cast <int*>(valueArray);
-		char* token;
+		char* token = NULL;
 		bool FOUND = false ;
 		isBinary( iotype );
 
 		MPI_Status read_offset_status;
 		char read_out_tag[MAX_FIELDS_NAME_LENGTH];
+                memset(read_out_tag, '\0', MAX_FIELDS_NAME_LENGTH);
 		char readouttag[MAX_FIELDS_NUMBER][MAX_FIELDS_NAME_LENGTH];
 		int j;
 
