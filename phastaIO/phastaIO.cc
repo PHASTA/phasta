@@ -1718,7 +1718,11 @@ void writeheader(  const int* fileDescriptor,
 			return;
 		}
 
-		LastHeaderKey[ filePtr ] = const_cast< char* >( keyphrase );
+                if( LastHeaderKey.count(filePtr) )
+                  free(LastHeaderKey[filePtr]);
+                const int l = strlen(keyphrase)+1;
+                LastHeaderKey[filePtr] = (char*) malloc(l*sizeof(char));
+                strcpy(LastHeaderKey[filePtr], keyphrase);
 		DataSize = *ndataItems;
 		fileObject = fileArray[ filePtr ] ;
 		size_t type_size = typeSize( datatype );
