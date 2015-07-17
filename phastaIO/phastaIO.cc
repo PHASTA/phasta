@@ -84,7 +84,8 @@ using namespace std;
 
 namespace{
 
-	map< int , char* > LastHeaderKey;
+        typedef map<int, char*> mic;
+	mic LastHeaderKey;
 	vector< FILE* > fileArray;
 	vector< bool > byte_order;
 	vector< int > header_type;
@@ -1215,6 +1216,8 @@ void closefile( int* fileDescriptor,
 
 		fclose( fileArray[ *fileDescriptor - 1 ] );
 		free (imode);
+                for (mic::iterator it=LastHeaderKey.begin(); it!=LastHeaderKey.end(); ++it)
+                  free(it->second);
 	}
 	else {
 		char* imode = StringStripper( mode );
@@ -1377,7 +1380,11 @@ void readheader( int* fileDescriptor,
 			return;
 		}
 
-		LastHeaderKey[ filePtr ] = const_cast< char* >( keyphrase );
+                if( LastHeaderKey.count(filePtr) )
+                  free(LastHeaderKey[filePtr]);
+                const int l = strlen(keyphrase)+1;
+                LastHeaderKey[filePtr] = (char*) malloc(l*sizeof(char));
+                strcpy(LastHeaderKey[filePtr], keyphrase);
 		LastHeaderNotFound = false;
 
 		fileObject = fileArray[ filePtr ] ;
