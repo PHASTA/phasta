@@ -1,4 +1,10 @@
-add_executable(phIOreadheader phIOreadheader.cc)
+macro(setup_exe exename srcname)
+  add_executable(${exename} ${srcname})
+  target_link_libraries(${exename} common phastaIO)
+endmacro(setup_exe)
+
 include_directories("${PHASTA_BINARY_DIR}")
-target_link_libraries(phIOreadheader common phastaIO)
+
+setup_exe(phIOreadheader phIOreadheader.cc)
+setup_exe(phIOreaddatablock phIOreaddatablock.cc)
 include(testing.cmake)
