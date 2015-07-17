@@ -2,7 +2,7 @@ set(CDIR ${CASES}/incompressible)
 add_test(copyInpCfg
   cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
 add_test(linkProcsDir
-  ln -s ${CDIR}/4-procs_case-SyncIO-2 ${CDIR}/4-procs_case)
+  ln -f -s ${CDIR}/4-procs_case-SyncIO-2 ${CDIR}/4-procs_case)
 add_test(resetNumStart
   cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
 add_test(
