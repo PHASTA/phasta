@@ -25,8 +25,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+  typedef struct phio_file* phio_fp;
   void phio_readheader(
-      int* fileDescriptor,
+      phio_fp fileDescriptor,
       const  char keyphrase[],
       void* valueArray,
       int*  nItems,
@@ -41,7 +42,7 @@ extern "C" {
       const char datatype[],
       const char iotype[] );
   void phio_readdatablock(
-      int* fileDescriptor,
+      phio_fp fileDescriptor,
       const  char keyphrase[],
       void* valueArray,
       int*  nItems,
@@ -57,7 +58,7 @@ extern "C" {
   void phio_openfile_read(
       const char filename[],
       int* numFiles,
-      int* fileDescriptor);
+      phio_fp* fileDescriptor);
   void phio_openfile_write(
       const char filename[],
       int* numFiles,
@@ -65,7 +66,7 @@ extern "C" {
       int* numPPF,
       int* fileDescriptor);
   void phio_restartname(int* step, char* filename);
-  void phio_closefile_read(int* fileDescriptor);
+  void phio_closefile_read(phio_fp fileDescriptor);
   void phio_closefile_write(int* fileDescriptor);
 #ifdef __cplusplus
 }
