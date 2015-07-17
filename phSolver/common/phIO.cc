@@ -18,13 +18,15 @@ void phio_readheader(
       nItems, datatype, iotype);
 }
 void phio_writeheader( 
-    const int* fileDescriptor,
+    phio_fp f,
     const char keyphrase[],
     const void* valueArray,
     const int* nItems,
     const int* ndataItems,
     const char datatype[],
     const char iotype[] ) {
+  f->ops->writedatablock(f->file, keyphrase, valueArray,
+      nItems, datatype, iotype);
 }
 void phio_readdatablock(
     phio_fp f,
@@ -54,7 +56,7 @@ void phio_openfile_read(
   if( fn.find(syncSuffix) != std::string::npos ) 
     sync_openfile_read(filename, numFiles, fileDescriptor);
   else if( fn.find(posixSuffix) != std::string::npos ) 
-    posix_openfile_read(filename, numFiles, fileDescriptor);
+    posix_openfile_read(filename, fileDescriptor);
   else {
     fprintf(stderr,
         "type of file %s is unknown... exiting\n", filename);
@@ -66,13 +68,26 @@ void phio_openfile_write(
     int* numFiles,
     int* numFields,
     int* numPPF,
-    int* fileDescriptor) {
+    phio_fp* fileDescriptor) {
+  std::string fn(filename);
+  std::string syncSuffix("-dat");
+  std::string posixSuffix(".dat");
+  if( fn.find(syncSuffix) != std::string::npos ) 
+    sync_openfile_write(filename, numFiles, numFields, numPPF, fileDescriptor);
+  else if( fn.find(posixSuffix) != std::string::npos ) 
+    posix_openfile_write(filename, fileDescriptor);
+  else {
+    fprintf(stderr,
+        "type of file %s is unknown... exiting\n", filename);
+    exit(1);
+  }
 }
 void phio_restartname(int* step, char* filename) {
 }
 void phio_closefile_read(phio_fp f) {
   f->ops->closefile_read(f);
 }
-void phio_closefile_write(int* fileDescriptor) {
+void phio_closefile_write(phio_fp f) {
+  f->ops->closefile_write(f);
 }
 

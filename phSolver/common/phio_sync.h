@@ -39,8 +39,8 @@ void sync_openfile_write(
     int* numFiles,
     int* numFields,
     int* numPPF,
-    int* fileDescriptor);
+    phio_fp* fileDescriptor);
 void sync_restartname(int* step, char* filename);
 void sync_closefile_read(phio_fp fileDescriptor);
-void sync_closefile_write(int* fileDescriptor);
+void sync_closefile_write(phio_fp fileDescriptor);
 #endif

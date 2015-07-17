@@ -31,10 +31,16 @@ namespace {
     ss << phrase << color+1;
     return ss.str();
   }
+  void close(phio_fp f, const char* mode) {
+    closefile(f->file, mode);
+    finalizephmpiio(f->file);
+    free(f->file);
+    free(f);
+  }
 }
 
 static struct phio_ops sync_ops = {
-  &sync_readheader,
+  sync_readheader,
   sync_writeheader,
   sync_readdatablock,
   sync_writedatablock,
@@ -115,14 +121,18 @@ void sync_openfile_write(
     int* numFiles,
     int* numFields,
     int* numPPF,
-    int* fileDescriptor) {
+    phio_fp* fileDescriptor) {
+  *fileDescriptor =
+    (struct phio_file*) malloc(sizeof(struct phio_file));
+  (*fileDescriptor)->ops = &sync_ops; 
+  (*fileDescriptor)->file = (int*) malloc(sizeof(int*));
   std::string syncName = appendColor(filename, *numFiles);
   //TODO - define a good upper bound
   assert(*numFields > 0 && *numFields < 1024);
   assert(*numPPF > 0 && *numPPF < 1024);
   const char* mode = "write";
-  initphmpiio(numFields, numPPF, numFiles, fileDescriptor, mode); 
-  openfile(syncName.c_str(), mode, fileDescriptor);
+  initphmpiio(numFields, numPPF, numFiles, (*fileDescriptor)->file, mode); 
+  openfile(syncName.c_str(), mode, (*fileDescriptor)->file);
 }
 
 void sync_restartname(int* step, char* filename) {
@@ -133,15 +143,9 @@ void sync_restartname(int* step, char* filename) {
 }
 
 void sync_closefile_read(phio_fp f) {
-  const char* mode = "read";
-  closefile(f->file, mode);
-  finalizephmpiio(f->file);
-  free(f->file);
-  free(f);
+  close(f, "read");
 }
 
-void sync_closefile_write(int* fileDescriptor) {
-  const char* mode = "write";
-  closefile(fileDescriptor, mode);
-  finalizephmpiio(fileDescriptor);
+void sync_closefile_write(phio_fp f) {
+  close(f, "write");
 }

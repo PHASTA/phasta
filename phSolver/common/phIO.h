@@ -34,7 +34,7 @@ extern "C" {
       const char  datatype[],
       const char  iotype[] );
   void phio_writeheader( 
-      const int* fileDescriptor,
+      phio_fp fileDescriptor,
       const char keyphrase[],
       const void* valueArray,
       const int* nItems,
@@ -64,10 +64,10 @@ extern "C" {
       int* numFiles,
       int* numFields,
       int* numPPF,
-      int* fileDescriptor);
+      phio_fp* fileDescriptor);
   void phio_restartname(int* step, char* filename);
   void phio_closefile_read(phio_fp fileDescriptor);
-  void phio_closefile_write(int* fileDescriptor);
+  void phio_closefile_write(phio_fp fileDescriptor);
 #ifdef __cplusplus
 }
 #endif

@@ -21,6 +21,11 @@ namespace {
     ss << phrase << phcomm_rank()+1;
     return ss.str();
   }
+  void close(phio_fp f, const char* mode) {
+    closefile(f->file, mode);
+    free(f->file);
+    free(f);
+  }
 }
 
 static phio_ops posix_ops = {
@@ -53,9 +58,8 @@ void posix_writeheader(
       const int* ndataItems,
       const char datatype[],
       const char iotype[] ) {
-  std::string posixPhrase = appendPosix(keyphrase);
-  writeheader(fileDescriptor, posixPhrase.c_str(),
-      valueArray, nItems, ndataItems, datatype, iotype);
+  writeheader(fileDescriptor, keyphrase, valueArray,
+      nItems, ndataItems, datatype, iotype);
 }
 
 
@@ -78,14 +82,12 @@ void posix_writedatablock(
     const int* nItems,
     const char datatype[],
     const char iotype[]) {
-  std::string posixPhrase = appendPosix(keyphrase);
-  writedatablock(fileDescriptor, posixPhrase.c_str(),
-      valueArray, nItems, datatype, iotype);
+  writedatablock(fileDescriptor, keyphrase, valueArray,
+      nItems, datatype, iotype);
 }
 
 void posix_openfile_read(
     const char filename[],
-    int* numFiles,
     phio_fp* fileDescriptor) {
   *fileDescriptor =
     (struct phio_file*) malloc(sizeof(struct phio_file));
@@ -98,16 +100,14 @@ void posix_openfile_read(
 
 void posix_openfile_write(
     const char filename[],
-    int* numFiles,
-    int* numFields,
-    int* numPPF,
-    int* fileDescriptor) {
-  //TODO - define a good upper bound
-  assert(*numFields > 0 && *numFields < 1024);
-  assert(*numPPF > 0 && *numPPF < 1024);
+    phio_fp* fileDescriptor) {
+  *fileDescriptor =
+    (struct phio_file*) malloc(sizeof(struct phio_file));
+  (*fileDescriptor)->ops = &posix_ops; 
+  (*fileDescriptor)->file = (int*) malloc(sizeof(int*));
   const char* mode = "write";
   std::string posixName = appendRank(filename);
-  openfile(posixName.c_str(), mode, fileDescriptor);
+  openfile(posixName.c_str(), mode, (*fileDescriptor)->file);
 }
 
 void posix_restartname(int* step, char* filename) {
@@ -118,13 +118,9 @@ void posix_restartname(int* step, char* filename) {
 }
 
 void posix_closefile_read(phio_fp f) {
-  const char* mode = "read";
-  closefile(f->file, mode);
-  free(f->file);
-  free(f);
+  close(f, "read");
 }
 
-void posix_closefile_write(int* fileDescriptor) {
-  const char* mode = "write";
-  closefile(fileDescriptor, mode);
+void posix_closefile_write(phio_fp f) {
+  close(f, "write");
 }

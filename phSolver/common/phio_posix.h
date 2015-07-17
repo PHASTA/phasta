@@ -32,15 +32,11 @@ void posix_writedatablock(
     const char iotype[]);
 void posix_openfile_read(
     const char filename[],
-    int* numFiles,
     phio_fp* fileDescriptor);
 void posix_openfile_write(
     const char filename[],
-    int* numFiles,
-    int* numFields,
-    int* numPPF,
-    int* fileDescriptor);
+    phio_fp* fileDescriptor);
 void posix_restartname(int* step, char* filename);
 void posix_closefile_read(phio_fp fileDescriptor);
-void posix_closefile_write(int* fileDescriptor);
+void posix_closefile_write(phio_fp fileDescriptor);
 #endif

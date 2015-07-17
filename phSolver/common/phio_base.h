@@ -38,7 +38,7 @@ struct phio_ops {
       const char iotype[]);
   void (*restartname)(int* step, char* filename);
   void (*closefile_read)(phio_fp fileDescriptor);
-  void (*closefile_write)(int* fileDescriptor);
+  void (*closefile_write)(phio_fp fileDescriptor);
 };
 
 #endif
