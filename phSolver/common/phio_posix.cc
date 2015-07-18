@@ -58,7 +58,8 @@ void posix_writeheader(
       const int* ndataItems,
       const char datatype[],
       const char iotype[] ) {
-  writeheader(fileDescriptor, keyphrase, valueArray,
+  std::string posixPhrase = appendPosix(keyphrase);
+  writeheader(fileDescriptor, posixPhrase.c_str(), valueArray,
       nItems, ndataItems, datatype, iotype);
 }
 
@@ -82,7 +83,8 @@ void posix_writedatablock(
     const int* nItems,
     const char datatype[],
     const char iotype[]) {
-  writedatablock(fileDescriptor, keyphrase, valueArray,
+  std::string posixPhrase = appendPosix(keyphrase);
+  writedatablock(fileDescriptor, posixPhrase.c_str(), valueArray,
       nItems, datatype, iotype);
 }
 
