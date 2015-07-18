@@ -811,6 +811,12 @@ void finalizephmpiio( int *fileDescriptor )
 	free ( PhastaIOActiveFiles[i]->read_double_chunk );
 	free ( PhastaIOActiveFiles[i]->read_int_chunk );
 
+        if( PhastaIOActiveFiles[i]->nFiles > 1 && s_assign_local_comm ) { // the comm was split
+          if (PhastaIOActiveFiles[i]->myrank == 0) printf("Freeing subcommunicator\n");
+          s_assign_local_comm = 0;
+          MPI_Comm_free(&(PhastaIOActiveFiles[i]->local_comm));
+        }
+
 	free( PhastaIOActiveFiles[i]);
 
 	endTimer(&timer_end);
