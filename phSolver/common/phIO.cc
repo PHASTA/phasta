@@ -25,8 +25,8 @@ void phio_writeheader(
     const int* ndataItems,
     const char datatype[],
     const char iotype[] ) {
-  f->ops->writedatablock(f->file, keyphrase, valueArray,
-      nItems, datatype, iotype);
+  f->ops->writeheader(f->file, keyphrase, valueArray,
+      nItems, ndataItems, datatype, iotype);
 }
 void phio_readdatablock(
     phio_fp f,
@@ -39,12 +39,14 @@ void phio_readdatablock(
       nItems, datatype, iotype);
 }
 void phio_writedatablock(
-    const int* fileDescriptor,
+    phio_fp f,
     const char keyphrase[],
     const void* valueArray,
     const int* nItems,
     const char datatype[],
     const char iotype[]) {
+  f->ops->writedatablock(f->file, keyphrase, valueArray,
+      nItems, datatype, iotype);
 }
 void phio_openfile_read(
     const char filename[],

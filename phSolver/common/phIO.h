@@ -49,7 +49,7 @@ extern "C" {
       const char  datatype[],
       const char  iotype[] );
   void phio_writedatablock(
-      const int* fileDescriptor,
+      phio_fp fileDescriptor,
       const char keyphrase[],
       const void* valueArray,
       const int* nItems,
