@@ -1216,9 +1216,7 @@ void closefile( int* fileDescriptor,
 
 		fclose( fileArray[ *fileDescriptor - 1 ] );
 		free (imode);
-                for (mic::iterator it=LastHeaderKey.begin(); it!=LastHeaderKey.end(); ++it)
-                  free(it->second);
-	}
+     	}
 	else {
 		char* imode = StringStripper( mode );
 
@@ -1598,6 +1596,9 @@ void readdatablock( int*  fileDescriptor,
 		int nUnits = *nItems;
 		isBinary( iotype );
 
+                free(LastHeaderKey[filePtr]);
+                LastHeaderKey.erase(filePtr);
+
 		if ( binary_format ) {
 			fread( valueArray, type_size, nUnits, fileObject );
 			fread( &junk, sizeof(char), 1 , fileObject );
@@ -1936,6 +1937,9 @@ void writedatablock( const int* fileDescriptor,
 		FILE* fileObject =  fileArray[ filePtr ] ;
 		size_t type_size=typeSize( datatype );
 		isBinary( iotype );
+
+                free(LastHeaderKey[filePtr]);
+                LastHeaderKey.erase(filePtr);
 
 		if ( header_type[filePtr] != (int)type_size ) {
 			fprintf(stderr,"header and datablock differ on typeof data in the block for\n");
