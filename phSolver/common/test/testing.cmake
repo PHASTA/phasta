@@ -9,7 +9,7 @@ add_test(
   WORKING_DIRECTORY ${CASES}/incompressible
 )
 add_test(
-  NAME writeheader
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOwriteheader 2
+  NAME write
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOwrite 2
   WORKING_DIRECTORY ${CASES}
 )
