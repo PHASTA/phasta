@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
     phio_openfile_read(filename[i], &(nfiles[i]), &file);
     phio_readheader(file, phrase, &(numFish[i]), &one, type, iotype);
     phio_readdatablock(file, phrase, &(fishWeight[i]), &one, type, iotype);
-    phio_closefile_write(file);
+    phio_closefile_read(file);
   }
   int match = (numFish[0] == numFish[1]) && (fishWeight[0] == fishWeight[1]);
   if(!rank && match)
