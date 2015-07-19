@@ -13,3 +13,8 @@ add_test(
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOwrite 2
   WORKING_DIRECTORY ${CASES}
 )
+add_test(
+  NAME writeFtn
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 valgrind --log-file=vg.%p ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn
+  WORKING_DIRECTORY ${CASES}/incompressible/4-procs_case-SyncIO-2
+)
