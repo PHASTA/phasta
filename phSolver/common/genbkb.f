@@ -69,8 +69,9 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        call phio_readheader(igeom,'total number of boundary tpblocks' // char(0),
-     &   itpblktot,ione,'integer' // char(0),iotype)
+        call phio_readheader(igeom,
+     &   'total number of boundary tpblocks' // char(0), itpblktot,ione,
+     &  'integer' // char(0),iotype)
 
 !        write (*,*) 'Rank: ',myrank,' boundary itpblktot intermediate:',
 !     &               itpblktot
