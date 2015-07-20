@@ -1,4 +1,6 @@
       module phio
+      use :: iso_c_binding
+      type(c_ptr) :: fhandle
       interface 
         subroutine phio_openfile_read(fname, nfiles, handle) 
      &   bind(C, NAME='phio_openfile_read')
