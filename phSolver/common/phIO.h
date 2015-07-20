@@ -7,8 +7,8 @@
 //  FortranCInterface_GLOBAL_(phio_readheader, PHIO_READHEADER)
 #define phio_writeheader \
   FortranCInterface_GLOBAL_(phio_writeheader, PHIO_WRITEHEADER)
-#define phio_readdatablock \
-  FortranCInterface_GLOBAL_(phio_readdatablock, PHIO_READDATABLOCK)
+//#define phio_readdatablock \
+//  FortranCInterface_GLOBAL_(phio_readdatablock, PHIO_READDATABLOCK)
 #define phio_writedatablock \
   FortranCInterface_GLOBAL_(phio_writedatablock, PHIO_WRITEDATABLOCK)
 //#define phio_openfile_read \

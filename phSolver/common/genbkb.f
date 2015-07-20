@@ -39,8 +39,9 @@ cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
         character*64 temp1, temp3
 
         type(c_ptr) :: handle
-        character(len=30) :: dataInt
+        character(len=30) :: dataInt, dataDbl
         dataInt = c_char_'integer'//c_null_char
+        dataDbl = c_char_'double'//c_null_char
 
         nfiles = nsynciofiles
         nfields = nsynciofieldsreadgeombc
@@ -163,8 +164,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 !           print *, "neltp is ", neltp
 
-           call phio_readdatablock(igeom,'connectivity boundary1' // char(0),
-     &      ientp,iientpsiz,'integer' // char(0),iotype)
+           call phio_readdatablock(handle,
+     &      c_char_'connectivity boundary1' // char(0),
+     &      c_loc(ientp),iientpsiz,dataInt,iotype)
 
 !MR CHANGE
 !           write (temp1,"('connectivityBoundaryDatablock_',i1,'_',i1)")
@@ -198,8 +200,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &      c_char_'nbc codes1' // char(0),
      &      c_loc(intfromfile), ieight, dataInt, iotype)
            iiBCBtpsiz=neltp*ndiBCB
-           call phio_readdatablock(igeom,'nbc codes1' // char(0) ,iBCBtp,
-     &      iiBCBtpsiz,'integer' // char(0),iotype)
+           call phio_readdatablock(handle,
+     &      c_char_'nbc codes1' // char(0),
+     &      c_loc(iBCBtp),iiBCBtpsiz,dataInt,iotype)
 
 !MR CHANGE
 !           print *, "ndiBCB is ",ndiBCB
@@ -231,8 +234,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &      c_loc(intfromfile), ieight, dataInt, iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
-           call phio_readdatablock(igeom,'nbc values1' // char(0),
-     &      BCBtp,iBCBtpsiz,'double' // char(0) ,iotype)
+           call phio_readdatablock(handle,
+     &      c_char_'nbc values1' // char(0),
+     &      c_loc(BCBtp),iBCBtpsiz,dataDbl,iotype)
 
 !MR CHANGE
 !           write (temp1,"('nbcValuesDatablock_',i1,'_',i1)")

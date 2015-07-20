@@ -149,8 +149,8 @@ c           read(igeomBAK) ientp
               writeLock=1;
            endif
 
-           call phio_readdatablock(igeom,fname2 // char(0),ientp,iientpsiz,
-     &                     "integer" // char(0), iotype)
+           call phio_readdatablock(handle,fname2 // char(0),
+     &      c_loc(ientp), iientpsiz, dataInt, iotype)
 
 !            call closefile( igeom, "read" // char(0) )
 !            call finalizephmpiio( igeom )

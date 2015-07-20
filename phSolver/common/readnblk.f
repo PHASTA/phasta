@@ -254,8 +254,8 @@ cc MR CHANGE
 
          allocate( point2ilwork(nlwork) )
          allocate( ilworkread(nlwork) )
-         call phio_readdatablock(igeom,'ilwork' // char(0),ilworkread,
-     &                      nlwork,'integer' // char(0) , iotype)
+         call phio_readdatablock(handle, c_char_'ilwork' // char(0),
+     &      c_loc(ilworkread), nlwork, dataInt , iotype)
 
 c      call closefile( igeom, "read" )
 c      call finalizephmpiio( igeom )
@@ -301,8 +301,9 @@ c      print *, "read out @@@@@@ is ", numnp
       allocate( point2x(numnp,nsd) )
       allocate( xread(numnp,nsd) )
       ixsiz=numnp*nsd
-      call phio_readdatablock(igeom,'co-ordinates' // char(0),xread,ixsiz,
-     & 'double' // char(0), iotype)
+      call phio_readdatablock(handle,
+     & c_char_'co-ordinates' // char(0),
+     & c_loc(xread),ixsiz, dataDbl, iotype)
       point2x = xread
 
 !      call closefile( igeom, "read" )
@@ -371,8 +372,9 @@ c     &     ione,'integer', iotype)
       allocate( nBCread(nshg) )
 
 c      call readdatablock(igeomBAK,fname1,nBCread,nshg,'integer',iotype)
-      call phio_readdatablock(igeom,'bc mapping array' // char(0),
-     & nBCread,nshg,'integer' // char(0),iotype)
+      call phio_readdatablock(handle,
+     & c_char_'bc mapping array' // char(0),
+     & c_loc(nBCread), nshg, dataInt, iotype)
 
       nBC=nBCread
 
@@ -412,8 +414,9 @@ c     &     ione, 'integer', iotype)
       endif
 c         call readdatablock(igeomBAK,fname1,iBCtmpread,numpbc,
 c     &                      'integer',iotype)
-      call phio_readdatablock(igeom,'bc codes array' // char(0),
-     & iBCtmpread,numpbc,'integer' // char(0),iotype)
+      call phio_readdatablock(handle,
+     & c_char_'bc codes array' // char(0),
+     & c_loc(iBCtmpread), numpbc, dataInt, iotype)
 
       if ( numpbc > 0 ) then
          iBCtmp=iBCtmpread
@@ -474,8 +477,9 @@ c here intfromfile(1) contains (ndof+7)*numpbc
 c         call readdatablock(igeomBAK,fname1,BCinpread,iBCinpsiz,
 c     &                      'double',iotype)
 
-      call phio_readdatablock(igeom,'boundary condition array' // char(0),
-     & BCinpread,iBCinpsiz,'double' // char(0) ,iotype)
+      call phio_readdatablock(handle,
+     & c_char_'boundary condition array' // char(0),
+     & c_loc(BCinpread), iBCinpsiz, dataDbl, iotype)
 
       if ( numpbc > 0 ) then
          BCinp(:,1:(ndof+7))=BCinpread(:,1:(ndof+7))
@@ -500,8 +504,9 @@ c     &     ione, 'integer', iotype)
       allocate( iperread(nshg) )
 c      call readdatablock(igeomBAK,fname1,iperread,nshg,
 c     &                      'integer',iotype)
-      call phio_readdatablock(igeom,'periodic masters array' // char(0),
-     & iperread,nshg,'integer' // char(0),iotype)
+      call phio_readdatablock(handle,
+     & c_char_'periodic masters array' // char(0),
+     & c_loc(iperread), nshg, dataInt, iotype)
       point2iper=iperread
 
 
@@ -582,9 +587,9 @@ c     fname1='keyword nsons?'
 
 !             call readdatablock(igeomBAK,fname1,point2nsons,nfath,
 !      &                      'integer',iotype)
-            call phio_readdatablock(igeom,
-     &       'number of son-nodes for each father' // char(0),
-     &       point2nsons,nfath,'integer' // char(0), iotype)
+            call phio_readdatablock(handle,
+     &       c_char_'number of son-nodes for each father' // char(0),
+     &       c_loc(point2nsons),nfath, dataInt, iotype)
 
 c
 !             fname1='keyword ifath?'
@@ -598,8 +603,9 @@ c
 
 !             call readdatablock(igeomBAK,fname1,point2ifath,nshg,
 !      &                      'integer',iotype)
-            call phio_readdatablock(igeom,'keyword ifath' // char(0),point2ifath,
-     &                      nshg,'integer' // char(0) , iotype)
+            call phio_readdatablock(handle,
+     &       c_char_'keyword ifath' // char(0),
+     &       c_loc(point2ifath), nshg, dataInt, iotype)
      
 c     
             nsonmax=maxval(point2nsons)
@@ -685,8 +691,9 @@ c
      &        call error ('restar  ', 'nshg   ', nshg)
          allocate( qread(nshg,ndof2) )
          iqsiz=nshg*ndof2
-         call phio_readdatablock(descriptor,'solution' // char(0),qread,iqsiz,
-     &                         'double' // char(0),iotype)
+         call phio_readdatablock(handle,
+     &    c_char_'solution' // char(0),
+     &    c_loc(qread),iqsiz, dataDbl,iotype)
          qold(:,1:ndof)=qread(:,1:ndof)
          deallocate(qread)
       else
@@ -732,9 +739,9 @@ c
          allocate( acread(nshg,ndof2) )
          acread=zero
          iacsiz=nshg*ndof2
-         call phio_readdatablock(descriptor,
-     &    'time derivative of solution' // char(0),acread,
-     &    iacsiz, 'double' // char(0),iotype)
+         call phio_readdatablock(handle,
+     &    c_char_'time derivative of solution' // char(0),
+     &    c_loc(acread), iacsiz, dataDbl,iotype)
          acold(:,1:ndof)=acread(:,1:ndof)
          deallocate(acread)
       else
@@ -859,8 +866,9 @@ c
 
 !          call readdatablock(irstin,fname1,uread,iusiz,
 !      &        'double',iotype)
-         call phio_readdatablock(descriptor,'displacement' // char(0),
-     &          uread,iusiz, 'double' // char(0),iotype)
+         call phio_readdatablock(handle,
+     &    c_char_'displacement' // char(0),
+     &    c_loc(uread), iusiz, dataDbl, iotype)
 
          uold(:,1:nsd)=uread(:,1:nsd)
        else

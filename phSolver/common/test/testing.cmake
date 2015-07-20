@@ -14,12 +14,12 @@ add_test(
   WORKING_DIRECTORY ${CASES}
 )
 add_test(
-  NAME readheaderFtn
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOreadheaderFtn
+  NAME readFtn
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOreadFtn
   WORKING_DIRECTORY ${CASES}/incompressible/
 )
 add_test(
-  NAME readheaderFtnVG
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 valgrind --log-file=vg.%p --leak-check=yes ${PHASTA_BINARY_DIR}/bin/phIOreadheaderFtn
+  NAME readFtnVG
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 valgrind --log-file=vg.%p --leak-check=yes ${PHASTA_BINARY_DIR}/bin/phIOreadFtn
   WORKING_DIRECTORY ${CASES}/incompressible/
 )
