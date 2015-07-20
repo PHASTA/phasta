@@ -15,6 +15,11 @@ add_test(
 )
 add_test(
   NAME writeFtn
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 valgrind --log-file=vg.%p ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn
+  WORKING_DIRECTORY ${CASES}/incompressible/4-procs_case-SyncIO-2
+)
+add_test(
+  NAME writeFtnVG
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 valgrind --log-file=vg.%p --leak-check=yes ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn
   WORKING_DIRECTORY ${CASES}/incompressible/4-procs_case-SyncIO-2
 )
