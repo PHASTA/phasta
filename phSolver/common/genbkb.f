@@ -10,6 +10,8 @@ c----------------------------------------------------------------------
 c
         use dtnmod
         use pointer_data
+        use phio
+        use iso_c_binding
 c
         include "common.h"
 !MR CHANGE
@@ -35,6 +37,10 @@ cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
 
         character*255 fnamer, fname2, temp2
         character*64 temp1, temp3
+
+        type(c_ptr) :: handle
+        character(len=30) :: dataInt
+        dataInt = c_char_'integer'//c_null_char
 
         nfiles = nsynciofiles
         nfields = nsynciofieldsreadgeombc
@@ -69,9 +75,9 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        call phio_readheader(igeom,
-     &   'total number of boundary tpblocks' // char(0), itpblktot,ione,
-     &  'integer' // char(0),iotype)
+        call phio_readheader(handle,
+     &   c_char_'total number of boundary tpblocks' // char(0),
+     &   c_loc(itpblktot), ione, dataInt, iotype)
 
 !        write (*,*) 'Rank: ',myrank,' boundary itpblktot intermediate:',
 !     &               itpblktot
@@ -89,8 +95,9 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
             intfromfile(:)=-1
             iblk = iblk+1
-            call phio_readheader(igeom,'connectivity boundary1' // char(0),
-     &       intfromfile,ieight,'integer' // char(0),iotype)
+            call phio_readheader(handle,
+     &       c_char_'connectivity boundary1' // char(0),
+     &       c_loc(intfromfile), ieight, dataInt, iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
           itpblktot = iblk-1   
@@ -124,8 +131,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call phio_readheader(igeom,'connectivity boundary1' // char(0),
-     &      intfromfile,ieight,'integer' // char(0),iotype)
+           call phio_readheader(handle,
+     &      c_char_'connectivity boundary1' // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            neltp =intfromfile(1)
            nenl  =intfromfile(2)
            ipordl=intfromfile(3)
@@ -186,8 +194,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           call phio_readheader(igeom,'nbc codes1' // char(0) ,intfromfile,
-     &      ieight,'integer' // char(0),iotype)
+           call phio_readheader(handle,
+     &      c_char_'nbc codes1' // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            iiBCBtpsiz=neltp*ndiBCB
            call phio_readdatablock(igeom,'nbc codes1' // char(0) ,iBCBtp,
      &      iiBCBtpsiz,'integer' // char(0),iotype)
@@ -217,8 +226,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           call phio_readheader(igeom,'nbc values1' // char(0) ,intfromfile,
-     &      ieight,'integer' // char(0) ,iotype)
+           call phio_readheader(handle,
+     &      c_char_'nbc values1' // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
            call phio_readdatablock(igeom,'nbc values1' // char(0),

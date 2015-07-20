@@ -9,6 +9,8 @@ c Zdenek Johan, Fall 1991.
 c----------------------------------------------------------------------
 c
         use pointer_data
+        use phio
+        use iso_c_binding
 c
         include "common.h"
 !MR CHANGE
@@ -30,6 +32,10 @@ cccccccccccccc New Phasta IO starts here ccccccccccccccccccccccccc
 !MR CHANGE END
         character*255 fnamer, fname2, temp2
         character*64 temp1, temp3
+ 
+        character(len=30) :: dataInt
+        type(c_ptr) :: handle
+
 !THIS NEEDS TO BE CLEANED - MR
         nfiles = nsynciofiles
 !        nfields = nsynciofieldsreadgeombc
@@ -61,9 +67,9 @@ c
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        call phio_readheader(igeom,
-     &   'total number of interior tpblocks' // char(0),
-     &   itpblktot,ione,'integer' // char(0),iotype) 
+        call phio_readheader(handle,
+     &   c_char_'total number of interior tpblocks' // char(0),
+     &   c_loc(itpblktot), ione, dataInt, iotype) 
 
 !        write (*,*) 'Rank: ',myrank,' interior itpblktot intermediate:',
 !     &               itpblktot
@@ -84,8 +90,8 @@ c
             write (fname2,"('connectivity interior',i1)") iblk
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
-            call phio_readheader(igeom,fname2 // char(0),intfromfile,
-     &       iseven,'integer' // char(0),iotype)
+            call phio_readheader(handle, fname2 // char(0), 
+     &       c_loc(intfromfile), iseven, dataInt, iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
           itpblktot = iblk-1   
@@ -126,8 +132,8 @@ c           fname1='connectivity interior?'
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call phio_readheader(igeom,fname2 // char(0) ,intfromfile,
-     &     iseven,"integer" // char(0), iotype)
+           call phio_readheader(handle, fname2 // char(0),
+     &      c_loc(intfromfile), iseven, dataInt, iotype)
            neltp  =intfromfile(1)
            nenl   =intfromfile(2)
            ipordl =intfromfile(3)
