@@ -37,7 +37,6 @@
       do i=1,2
         call chdir(dir(i))
         call MPI_Barrier(MPI_COMM_WORLD, ierror)
-        nfiles = 2
         call phio_openfile_read(fname(i), nfiles(i), handle)
         call phio_readheader(handle, phrase, c_loc(numpts), 
      &      two, dataDbl, iotype)
