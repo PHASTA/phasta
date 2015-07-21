@@ -139,7 +139,7 @@ read_d2wall(  int* pid,
     int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
-    int descriptor;
+    phio_fp handle;
     char filename[255],path[255];
     memset((void*)filename,0,255);
     *foundd2wall = 0;
@@ -148,12 +148,12 @@ read_d2wall(  int* pid,
     ////////////////////////////////////////////////////
 
     sprintf(filename,"restart-dat.%d.", timdat.lstep);
-    phio_openfile_read(filename, &nfiles, &f_descriptor);
+    phio_openfile_read(filename, &nfiles, &handle);
 
     int i;
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
       nitems = 2;
-      phio_readheader( &f_descriptor, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
+      phio_readheader(handle, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
       //iarray[ 0 ] = (*numnp); What we should get from readheader
       //iarray[ 1 ] = 1;
 
@@ -163,7 +163,7 @@ read_d2wall(  int* pid,
         }
         *foundd2wall = 1;
         isize = (*numnp);
-        phio_readdatablock( &f_descriptor, "dwal", (void*)(array1), &isize, "double", phasta_iotype );
+        phio_readdatablock(handle, "dwal", (void*)(array1), &isize, "double", phasta_iotype );
       }
       else { //d2wall fields was not found in the restart file
         *foundd2wall = 0;
@@ -172,54 +172,8 @@ read_d2wall(  int* pid,
         }
       }
     }
-    phio_closefile_read(&f_descriptor);
+    phio_closefile_read(handle);
 
-    ////////////////////////////////////////////////////
-    // We try to read dwal from the d2wall files if not found in the restart files
-    ////////////////////////////////////////////////////
-
-    int numd2wallfiles;
-    if (*foundd2wall == 0) {
-
-      detectd2wallfiles(&numd2wallfiles);
-
-      if (numd2wallfiles == outpar.nsynciofiles ) {
-        // Read the d2wall field from the d2wall files
-        phio_openfile_read("d2wall.", &nfiles, &f_descriptor);
-
-        int i;
-        for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-          nitems = 2;
-          phio_readheader( &f_descriptor, "d2wall", (void*)iarray, &nitems, "double", phasta_iotype);
-          //iarray[ 0 ] = (*numnp); What we should get from readheader
-          //iarray[ 1 ] = 1;
-
-          if (iarray[0] == (*numnp)) {
-            if (irank==0) {
-              printf("d2wall field found in %s\n",filename);
-            }
-            *foundd2wall = 1;
-            isize = (*numnp);
-            phio_readdatablock( &f_descriptor, "d2wall", (void*)(array1), &isize, "double", phasta_iotype );
-          }
-          else {
-            *foundd2wall = 0;
-              printf("WARNING - numnp not coherent in d2wall files: %d - %d\n",iarray[0],*numnp);
-              printf("WARNING - Recomputing the d2wall field for safety\n");
-            }
-          }
-
-          phio_closefile_read(&f_descriptor);
-      }
-      else if (numd2wallfiles != 0) {
-        // The number of d2wall file should be either 0 or outpar.nsynciofiles
-        if (irank==0) {
-          printf("WARNING - Number of d2wall files not coherent: %d - %d\n",numd2wallfiles,outpar.nsynciofiles);
-          printf("WARNING - Recomputing the d2wall field for safety\n");
-          *foundd2wall = 0;
-        }
-      }
-    } // end of tentative reading from d2wall files
 
     if (irank==0) {
       printf("\n");
