@@ -247,7 +247,6 @@ savelesrestart( Integer* lesId,
     int nPrjs, PrjSrcId;
     int nPresPrjs, PresPrjSrcId;
     char filename[255];
-    int fileHandle=0;
     int iarray[3];
     int size, nitems;
     double* projVec;
@@ -333,7 +332,7 @@ readlesrestart( Integer* lesId,
     int nPrjs, PrjSrcId;
     int nPresPrjs, PresPrjSrcId;
     char filename[255];
-    int fileHandle=0;
+    phio_fp fileHandle = NULL;
     int iarray[3]={-1,-1,-1};
     int size, nitems;
     int itwo=2;
@@ -367,15 +366,15 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    sprintf(filename,"restart-dat.%d.",lstep);
+    sprintf(filename,"restart-dat.%d.",*lstep);
     phio_openfile_read(filename, &nfiles, &fileHandle);
 
     if ( fileHandle < 0 ) return; // See phastaIO.cc for error fileHandle
-    phio_readheader(&fileHandle, "projection vectors", (void*)iarray,
+    phio_readheader(fileHandle, "projection vectors", (void*)iarray,
                 &itwo, "integer", phasta_iotype);
 
     if ( iarray[0] != *nshg ) {
-        phio_closefile_read(&fileHandle);
+        phio_closefile_read(fileHandle);
         if(workfc.myrank==workfc.master)
           printf("projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -387,7 +386,7 @@ readlesrestart( Integer* lesId,
     size = (*nshg)*nPrjs;
     projVec = (double*)malloc( size * sizeof( double ));
 
-    phio_readdatablock( &fileHandle, "projection vectors", (void*)projVec,
+    phio_readdatablock(fileHandle, "projection vectors", (void*)projVec,
                     &size, "double", phasta_iotype );
 
     lesSetPar( lesArray[ *lesId ], LES_ACT_PRJS, (Real) nPrjs );
@@ -407,14 +406,14 @@ readlesrestart( Integer* lesId,
 
     iarray[0] = -1; iarray[1] = -1; iarray[2] = -1;
 
-    phio_readheader( &fileHandle, "pressure projection vectors", (void*)iarray,
+    phio_readheader(fileHandle, "pressure projection vectors", (void*)iarray,
                  &itwo, "integer", phasta_iotype );
 
     lnshg = iarray[ 0 ] ;
     nPresPrjs = iarray[ 1 ] ;
 
     if ( lnshg != *nshg )  {
-        phio_closefile_read(&fileHandle);
+        phio_closefile_read(fileHandle);
         if(workfc.myrank==workfc.master)
           printf("pressure projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -423,7 +422,7 @@ readlesrestart( Integer* lesId,
     size = (*nshg)*nPresPrjs;
     projVec = (double*)malloc( size * sizeof( double ));
 
-    phio_readdatablock( &fileHandle, "pressure projection vectors", (void*)projVec,
+    phio_readdatablock(fileHandle, "pressure projection vectors", (void*)projVec,
                     &size, "double", phasta_iotype );
 
     lesSetPar( lesArray[ *lesId ], LES_ACT_PRES_PRJS, (Real) nPresPrjs );
@@ -439,7 +438,7 @@ readlesrestart( Integer* lesId,
 
     free( projVec );
 
-    phio_closefile_read(&fileHandle);
+    phio_closefile_read(fileHandle);
 }
 
 void  myflessolve( Integer* lesId,
