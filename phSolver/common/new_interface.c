@@ -386,7 +386,7 @@ Write_Restart(  int* pid,
     char filename[255],path[255];
     bzero((void*)filename,255);
 
-    sprintf(filename,"restart-dat.%d", stepno);
+    sprintf(filename,"restart-dat.%d.", *stepno);
     phio_openfile_write(filename, &nfiles, &nfields, &nppf, &f_descriptor);
 
 //MR CHANGE
@@ -423,7 +423,7 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writeheader( &f_descriptor, "solution", (void*)iarray, &nitems,
+        phio_writeheader(f_descriptor, "solution", (void*)iarray, &nitems,
             &isize, "double", phasta_iotype);
 
 //MR CHANGE
@@ -445,7 +445,7 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writedatablock(&f_descriptor, "solution", (void*)(array1),
+        phio_writedatablock(f_descriptor, "solution", (void*)(array1),
             &isize, "double", phasta_iotype );
 
 //MR CHANGE
@@ -498,7 +498,7 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writeheader( &f_descriptor, "time derivative of solution",
+        phio_writeheader(f_descriptor, "time derivative of solution",
             (void*)iarray, &nitems, &isize, "double", phasta_iotype);
 
 //MR CHANGE
@@ -519,7 +519,7 @@ Write_Restart(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writedatablock( &f_descriptor, "time derivative of solution",
+        phio_writedatablock(f_descriptor, "time derivative of solution",
             (void*)(array2), &isize, "double", phasta_iotype );
 
 //MR CHANGE
@@ -577,7 +577,7 @@ Write_Restart(  int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      phio_closefile_write(&f_descriptor);
+      phio_closefile_write(f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -693,7 +693,7 @@ Write_Error(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writeheader( &f_descriptor, "errors", (void*)iarray, &nitems,
+        phio_writeheader(f_descriptor, "errors", (void*)iarray, &nitems,
             &isize, "double", phasta_iotype);
 
 //MR CHANGE
@@ -712,7 +712,7 @@ Write_Error(  int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writedatablock( &f_descriptor, "errors", (void*)array1, &isize,
+        phio_writedatablock(f_descriptor, "errors", (void*)array1, &isize,
             "double", phasta_iotype );
 
 //MR CHANGE
@@ -777,7 +777,7 @@ Write_Error(  int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      phio_closefile_write(&f_descriptor);
+      phio_closefile_write(f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -923,7 +923,7 @@ Write_Field(  int *pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writeheader( &f_descriptor, fieldlabel, (void*)iarray, &nitems,
+        phio_writeheader(f_descriptor, fieldlabel, (void*)iarray, &nitems,
             &isize, datatype, phasta_iotype);
 
 //MR CHANGE
@@ -944,7 +944,7 @@ Write_Field(  int *pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writedatablock( &f_descriptor, fieldlabel, array, &isize,
+        phio_writedatablock(f_descriptor, fieldlabel, array, &isize,
             datatype, phasta_iotype );
 
 //MR CHANGE
@@ -1018,7 +1018,7 @@ Write_Field(  int *pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      phio_closefile_write(&f_descriptor);
+      phio_closefile_write(f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer
@@ -1196,7 +1196,7 @@ Write_PhAvg2( int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writeheader( &f_descriptor, fieldlabel, (void*)iarray, &nitems,
+        phio_writeheader(f_descriptor, fieldlabel, (void*)iarray, &nitems,
             &isize, "double", phasta_iotype);
 
 //MR CHANGE
@@ -1217,7 +1217,7 @@ Write_PhAvg2( int* pid,
 //        timer_start = rdtsc();
 //MR CHANGE END
 
-        phio_writedatablock( &f_descriptor, fieldlabel, array, &isize,
+        phio_writedatablock(f_descriptor, fieldlabel, array, &isize,
             "double", phasta_iotype );
 
 //MR CHANGE
@@ -1288,7 +1288,7 @@ Write_PhAvg2( int* pid,
 //      timer_start = rdtsc();
 //MR CHANGE END
 
-      phio_closefile_write(&f_descriptor);
+      phio_closefile_write(f_descriptor);
 
 //MR CHANGE
 //    Measure the time - End of timer

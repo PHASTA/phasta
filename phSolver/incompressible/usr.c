@@ -18,8 +18,6 @@
 #include <FCMangle.h>
 
 extern char phasta_iotype[80];
-extern int field_flag; //new_interface.c //TODO: figure out where these
-extern int f_descriptor; //new_interface.c // should be
 
 /*===========================================================================
  *

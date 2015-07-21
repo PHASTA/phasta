@@ -2,6 +2,7 @@
 #define __NEW_INTERFACE_H__
 
 #include <FCMangle.h>
+#include "phIO.h"
 
 #define igetMinMaxAvg FortranCInterface_GLOBAL_(igetminmaxavg,IGETMINMAXAVG)
 #define rgetMinMaxAvg FortranCInterface_GLOBAL_(rgetminmaxavg,RGETMINMAXAVG)
@@ -21,7 +22,7 @@
 
 extern char phasta_iotype[80];
 extern int field_flag;
-extern int f_descriptor;
+extern phio_fp f_descriptor;
 
 void igetMinMaxAvg(int *ivalue, double *stats, int *statRanks);
 void rgetMinMaxAvg(double *value, double *stats, int *statRanks);
