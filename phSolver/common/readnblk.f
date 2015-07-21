@@ -22,8 +22,8 @@ c
       integer, allocatable :: point2ilwork(:)
       integer, allocatable :: nBC(:)
       integer, allocatable :: point2iper(:)
-      integer, allocatable :: point2ifath(:)
-      integer, allocatable :: point2nsons(:)
+      integer, target, allocatable :: point2ifath(:)
+      integer, target, allocatable :: point2nsons(:)
       
       end module
 
@@ -36,11 +36,11 @@ c
       use phio
       include "common.h"
 c
-      real*8, allocatable :: xread(:,:), qread(:,:), acread(:,:)
-      real*8, allocatable :: uread(:,:)
-      real*8, allocatable :: BCinpread(:,:)
-      integer, allocatable :: iperread(:), iBCtmpread(:)
-      integer, allocatable :: ilworkread(:), nBCread(:)
+      real*8, target, allocatable :: xread(:,:), qread(:,:), acread(:,:)
+      real*8, target, allocatable :: uread(:,:)
+      real*8, target, allocatable :: BCinpread(:,:)
+      integer, target, allocatable :: iperread(:), iBCtmpread(:)
+      integer, target, allocatable :: ilworkread(:), nBCread(:)
       character*10 cname2
       character*8 mach2
 !MR CHANGE
@@ -50,7 +50,7 @@ c
       character*255 fname1,fnamer,fnamelr
       character*255 warning
       integer igeomBAK, ibndc, irstin, ierr
-      integer intfromfile(50) ! integers read from headers
+      integer, target :: intfromfile(50) ! integers read from headers
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccccccccccccccccccc New PhastaIO Definition Part ccccccccccccccccccccccccccccccccccccccccc

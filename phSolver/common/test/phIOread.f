@@ -13,9 +13,9 @@
       character(len=30) :: dataDbl, iotype
       character(len=256) :: phrase
       character(len=256), dimension(2) :: dir, fname
-      integer, dimension(2) :: nfiles, numpts, ncoords
+      integer, target, dimension(2) :: nfiles, numpts, ncoords
       real(c_double), allocatable, target :: syncCoords(:,:), posixCoords(:,:)
-      type(ptrarr), dimension(2) :: coords
+      type(ptrarr), target, dimension(2) :: coords
 
       call MPI_Init(ierror)
       call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierror)

@@ -113,6 +113,12 @@ c
 c
         common /mbndnod/ mnodeb(9,8,3)
 c
+	integer, target :: numnp,  numel,  numelb, numpbc, nen,    nfaces,
+     &                  numflx, ndof,   nelblk, nelblb,ntopsh, nlwork,
+     &                  nedof,
+     &                  nshg,   nnz,    nflow,
+     &                  nfath
+
         common /conpar/ numnp,  numel,  numelb, numpbc, nen,    nfaces,
      &                  numflx, ndof,   iALE,   icoord, navier,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,

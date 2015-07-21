@@ -3,12 +3,12 @@
       use phio
       include "mpif.h"
 
-      integer :: rank, ierror, one, ppf, peers, fish
+      integer, target :: rank, ierror, one, ppf, peers, fish
       type(c_ptr) :: handle
       character(len=30) :: dataDbl, iotype
       character(len=256) :: phrase
       character(len=256), dimension(2) :: fname
-      integer, dimension(2) :: nfiles, fishweight, numFish
+      integer, target, dimension(2) :: nfiles, fishweight, numFish
 
       call MPI_Init(ierror)
       call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierror)

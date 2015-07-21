@@ -19,10 +19,10 @@ c
 !MR CHANGE END
 c
 
-        integer, allocatable :: ientp(:,:),iBCBtp(:,:)
-        real*8, allocatable :: BCBtp(:,:)
+        integer, target, allocatable :: ientp(:,:),iBCBtp(:,:)
+        real*8, target, allocatable :: BCBtp(:,:)
         integer materb(ibksz)
-        integer intfromfile(50) ! integers read from headers
+        integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
 
 cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
@@ -32,7 +32,7 @@ cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
         integer :: ierr_io, numprocs, itmp, itmp2 
 !        integer :: num_local_loop, num_global_loop
 !MR CHANGE
-        integer :: itpblktot,ierr
+        integer, target :: itpblktot,ierr
 !MR CHANGE END
 
         character*255 fnamer, fname2, temp2

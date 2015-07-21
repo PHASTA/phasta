@@ -17,9 +17,9 @@ c
         include "mpif.h" !Required to determine the max for itpblk
 !MR CHANGE END
 c
-        integer, allocatable :: ientp(:,:)
+        integer, target, allocatable :: ientp(:,:)
         integer mater(ibksz)
-        integer intfromfile(50) ! integers read from headers
+        integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
 
 cccccccccccccc New Phasta IO starts here ccccccccccccccccccccccccc
@@ -28,7 +28,7 @@ cccccccccccccc New Phasta IO starts here ccccccccccccccccccccccccc
         integer ::  numparts, writeLock
         integer :: ierr_io, numprocs, itmp, itmp2
 !MR CHANGE
-        integer :: itpblktot,ierr,iseven
+        integer, target :: itpblktot,ierr,iseven
 !MR CHANGE END
         character*255 fnamer, fname2, temp2
         character*64 temp1, temp3
