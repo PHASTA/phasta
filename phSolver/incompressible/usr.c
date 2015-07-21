@@ -367,8 +367,7 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    sprintf(filename,"restart-dat.");
-    phio_restartname(lstep, filename);
+    sprintf(filename,"restart-dat.%d.",lstep);
     phio_openfile_read(filename, &nfiles, &fileHandle);
 
     if ( fileHandle < 0 ) return; // See phastaIO.cc for error fileHandle

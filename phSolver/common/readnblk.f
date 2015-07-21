@@ -656,7 +656,8 @@ c      nppf = numparts/nfiles
 cc      fnamer = "/users/nliu/PIG4/4-procs_case/restart-file"
 cc      fnamer="./4-procs_case/restart-file"
 
-      call phio_restartname(irstart, fnamer)
+      fnamer = c_char_"restart-dat."//c_null_char
+      call phio_appendStep(fnamer, irstart)
       call phio_openfile_read(fnamer, nfiles, fhandle)
 
       ithree=3

@@ -36,7 +36,6 @@ void posix_openfile_read(
 void posix_openfile_write(
     const char filename[],
     phio_fp* fileDescriptor);
-void posix_restartname(int* step, char* filename);
 void posix_closefile_read(phio_fp fileDescriptor);
 void posix_closefile_write(phio_fp fileDescriptor);
 #endif

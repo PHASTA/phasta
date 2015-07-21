@@ -89,4 +89,12 @@
           character(c_char), intent(in) :: iotype(*)
         end subroutine
       end interface
+      interface
+        subroutine phio_appendStep(str, val)
+     &   bind(C, NAME='phio_appendStep')
+        use :: iso_c_binding
+          character(c_char) :: str(*)
+          integer(c_int), value, intent(in) :: val
+        end subroutine
+      end interface
       end module

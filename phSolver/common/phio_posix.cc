@@ -33,7 +33,6 @@ static phio_ops posix_ops = {
   posix_writeheader,
   posix_readdatablock,
   posix_writedatablock,
-  posix_restartname,
   posix_closefile_read,
   posix_closefile_write
 };
@@ -110,13 +109,6 @@ void posix_openfile_write(
   const char* mode = "write";
   std::string posixName = appendRank(filename);
   openfile(posixName.c_str(), mode, (*fileDescriptor)->file);
-}
-
-void posix_restartname(int* step, char* filename) {
-  std::stringstream ss;
-  ss << "restart.dat." << *step << '.';
-  std::string s = ss.str();
-  strcpy(filename, s.c_str()); 
 }
 
 void posix_closefile_read(phio_fp f) {

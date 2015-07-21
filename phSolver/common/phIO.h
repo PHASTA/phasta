@@ -3,9 +3,6 @@
 
 #include <FCMangle.h>
 
-#define phio_restartname \
-  FortranCInterface_GLOBAL_(phio_restartname, PHIO_RESTARTNAME)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,9 +46,9 @@ extern "C" {
       int* numFields,
       int* numPPF,
       phio_fp* fileDescriptor);
-  void phio_restartname(int* step, char* filename);
   void phio_closefile_read(phio_fp fileDescriptor);
   void phio_closefile_write(phio_fp fileDescriptor);
+  void phio_appendStep(char* dest, int v);
 #ifdef __cplusplus
 }
 #endif

@@ -147,7 +147,7 @@ read_d2wall(  int* pid,
     // First we try to read dwal from the restart files.
     ////////////////////////////////////////////////////
 
-    phio_restartname(&(timdat.lstep), filename);
+    sprintf(filename,"restart-dat.%d.", timdat.lstep);
     phio_openfile_read(filename, &nfiles, &f_descriptor);
 
     int i;

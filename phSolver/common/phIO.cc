@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstring>
 #include <string>
+#include <sstream>
 #include "phIO.h"
 #include "phComm.h"
 #include "phio_base.h"
@@ -56,9 +58,9 @@ void phio_openfile_read(
   std::string syncSuffix("-dat");
   std::string posixSuffix(".dat");
   if( fn.find(syncSuffix) != std::string::npos ) 
-    sync_openfile_read(filename, numFiles, fileDescriptor);
+    sync_openfile_read(fn.c_str(), numFiles, fileDescriptor);
   else if( fn.find(posixSuffix) != std::string::npos ) 
-    posix_openfile_read(filename, fileDescriptor);
+    posix_openfile_read(fn.c_str(), fileDescriptor);
   else {
     fprintf(stderr,
         "type of file %s is unknown... exiting\n", filename);
@@ -84,12 +86,15 @@ void phio_openfile_write(
     exit(1);
   }
 }
-void phio_restartname(int* step, char* filename) {
-}
 void phio_closefile_read(phio_fp f) {
   f->ops->closefile_read(f);
 }
 void phio_closefile_write(phio_fp f) {
   f->ops->closefile_write(f);
 }
-
+void phio_appendStep(char* dest, int v) {
+  std::stringstream ss;
+  ss << dest << v << '.';
+  std::string s = ss.str();
+  strcpy(dest, s.c_str());
+}

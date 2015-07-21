@@ -44,7 +44,6 @@ static struct phio_ops sync_ops = {
   sync_writeheader,
   sync_readdatablock,
   sync_writedatablock,
-  sync_restartname,
   sync_closefile_read,
   sync_closefile_write
 };
@@ -133,13 +132,6 @@ void sync_openfile_write(
   const char* mode = "write";
   initphmpiio(numFields, numPPF, numFiles, (*fileDescriptor)->file, mode); 
   openfile(syncName.c_str(), mode, (*fileDescriptor)->file);
-}
-
-void sync_restartname(int* step, char* filename) {
-  std::stringstream ss;
-  ss << "restart-dat." << *step << '.';
-  std::string s = ss.str();
-  strcpy(filename, s.c_str()); 
 }
 
 void sync_closefile_read(phio_fp f) {

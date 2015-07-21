@@ -386,7 +386,7 @@ Write_Restart(  int* pid,
     char filename[255],path[255];
     bzero((void*)filename,255);
 
-    phio_restartname(stepno, filename);
+    sprintf(filename,"restart-dat.%d", stepno);
     phio_openfile_write(filename, &nfiles, &nfields, &nppf, &f_descriptor);
 
 //MR CHANGE
