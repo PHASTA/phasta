@@ -5,6 +5,7 @@ include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 set(CASES "/path/to/test/cases/"
   CACHE string
   "path to the test cases")
+option(IS_TESTING "enable tests" OFF)
 
 add_subdirectory(common)
 option(PHASTA_INCOMPRESSIBLE "Build the incompressible solver" OFF)

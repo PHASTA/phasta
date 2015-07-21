@@ -10,4 +10,6 @@ ADD_LIBRARY(common ${SRC_FILES})
 TARGET_LINK_LIBRARIES(common ${MPI_LIBRARIES})
 TARGET_LINK_LIBRARIES(common ${MPI_Fortran_LIBRARIES})
 
-add_subdirectory(test)
+if(IS_TESTING)
+  add_subdirectory(test)
+endif(IS_TESTING)
