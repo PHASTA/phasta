@@ -1,6 +1,9 @@
 set(CDIR ${CASES}/compressible)
 add_test(copyInpCfg 
   cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
+
+add_test(linkProcsDir-sync
+  ln -snf ${CDIR}/2-procs_case-SyncIO-1 ${CDIR}/2-procs_case)
 add_test(compressibleResetNumStart-sync
   cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
 add_test(
