@@ -228,7 +228,9 @@ void countfieldstowriterestart()
   if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
 
     //projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)
-    nfields = nfields +2;
+    if(matdat.matflg[0][0] ==-1) {
+        nfields = nfields +2;
+    }
 
     //if Print Error Indicators = true (call write_error in itrdrv)
     if(turbvar.ierrcalc == 1){
@@ -363,6 +365,7 @@ Write_Restart(  int* pid,
     int numparts;
     int irank;
     int nprocs;
+    int nppf;
 
     //  First, count the number of fields to write and store the result in
     countfieldstowriterestart();
@@ -373,20 +376,20 @@ Write_Restart(  int* pid,
     numparts = workfc.numpe;
     irank = *pid; //workfc.myrank;
     nprocs = workfc.numpe;
+    int nppp = numparts/nprocs;   // always 1 for PHASTA
 //MR CHANGE END
-    int nppf = numparts/nfiles;
-    int GPID;
-
-    // Calculate number of parts each proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     int descriptor;
-    char filename[255],path[255];
+    char filename[255];
     bzero((void*)filename,255);
 
-    sprintf(filename,"restart-dat.%d.", *stepno);
+    if(nfiles == 0 ){
+      sprintf(filename,"restart.%d.", *stepno);
+      nppf=1;
+    } else {
+      nppf=numparts/nfiles;
+      sprintf(filename,"restart-dat.%d.", *stepno);
+    }
     phio_openfile_write(filename, &nfiles, &nfields, &nppf, &f_descriptor);
 
 //MR CHANGE
@@ -404,12 +407,6 @@ Write_Restart(  int* pid,
 
      int i;
      for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-     // GPID : global part id, corresponds to rank ...
-        // e.g : (in this example)
-        // proc 0 : 1--4
-        // proc 1 : 5--8 ...
-        GPID = startpart + i;
-
         // Write solution field ...
         isize = (*nshg)*(*numVars);
         nitems = 3;
@@ -479,11 +476,6 @@ Write_Restart(  int* pid,
 
     for ( i = 0; i < nppp; i++) {
 
-        // GPID : global part id, corresponds to rank ...
-        // e.g : (in this example)
-        // proc 0 : 1--4
-        // proc 1 : 5--8 ...
-        GPID = startpart + i;
 
         // Write solution field ...
         isize = (*nshg)*(*numVars);
@@ -661,8 +653,6 @@ Write_Error(  int* pid,
     irank = *pid; //workfc.myrank;
     nprocs = workfc.numpe;
 
-    int nppf = numparts/nfiles;
-    int GPID;
 
     // Calculate number of parts each  proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
@@ -673,7 +663,6 @@ Write_Error(  int* pid,
 
     int i;
     for ( i = 0; i < nppp; i++  ) {
-        GPID = startpart + i;
 
         if(*pid==0) {
 //          printf("\n*****************************\n");
@@ -881,16 +870,12 @@ Write_Field(  int *pid,
     irank = *pid; //workfc.myrank;
     nprocs = workfc.numpe;
 
-    int nppf = numparts/nfiles;
-    int GPID;
 
     // Calculate number of parts each  proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
     int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
-    char filename[255],path[255];
-    bzero((void*)filename,255);
 
     strncpy(fieldlabel, fieldtag, *tagsize);
 
@@ -901,14 +886,12 @@ Write_Field(  int *pid,
       printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldlabel);
     }
 
-    sprintf(filename,"restart-dat.%d.%d",*stepno,((int)(irank/(nprocs/nfiles))+1));
 
 //     MPI_Barrier(MPI_COMM_WORLD);
 //     timer_start = rdtsc();
 
     int i;
     for ( i = 0; i < nppp; i++  ) {
-        GPID = startpart + i;
 
         // Write solution field ...
         isize = (*nshg)*(*numvars);
@@ -1152,8 +1135,6 @@ Write_PhAvg2( int* pid,
     irank = *pid; //workfc.myrank;
     nprocs = workfc.numpe;
 
-    int nppf = numparts/nfiles;
-    int GPID;
 
     // Calculate number of parts each  proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
@@ -1161,8 +1142,6 @@ Write_PhAvg2( int* pid,
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     //int descriptor;
-    char filename[255],path[255];
-    bzero((void*)filename,255);
 
 //     char * namer;
 //     namer = strtok(fieldlabel," ");
@@ -1175,11 +1154,9 @@ Write_PhAvg2( int* pid,
       printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldlabel);
     }
 
-    sprintf(filename,"restart-dat.%d.%d",*stepno,((int)(irank/(nprocs/nfiles))+1));
 
     int i;
     for ( i = 0; i < nppp; i++  ) {
-        GPID = startpart + i;
 
         // Write solution field ...
         //printf("This is %d and fieldtag_s is %s \n",myrank,fieldtag_s);
@@ -1338,8 +1315,6 @@ Write_d2wall(   int* pid,
     numparts = workfc.numpe;
     irank = *pid; //workfc.myrank;
     nprocs = workfc.numpe;
-    int nppf = numparts/nfiles;
-    int GPID;
 
     // Calculate number of parts each proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
@@ -1347,8 +1322,7 @@ Write_d2wall(   int* pid,
     int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
 
     int descriptor;
-    char filename[255],path[255];
-    bzero((void*)filename,255);
+    int nppf=numparts/nfiles;
 
     phio_openfile_write("d2wall.", &nfiles, &nfields, &nppf, &f_descriptor);
 
@@ -1356,11 +1330,6 @@ Write_d2wall(   int* pid,
 
      int i;
      for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-     // GPID : global part id, corresponds to rank ...
-        // e.g : (in this example)
-        // proc 0 : 1--4
-        // proc 1 : 5--8 ...
-        GPID = startpart + i;
 
         // Write solution field ...
         isize = (*numnp);

@@ -62,9 +62,12 @@ void phio_openfile_read(
   else if( fn.find(posixSuffix) != std::string::npos ) 
     posix_openfile_read(fn.c_str(), fileDescriptor);
   else {
+  posix_openfile_read(fn.c_str(), fileDescriptor);
+/*
     fprintf(stderr,
         "type of file %s is unknown... exiting\n", filename);
     exit(1);
+*/
   }
 }
 void phio_openfile_write(
@@ -81,9 +84,11 @@ void phio_openfile_write(
   else if( fn.find(posixSuffix) != std::string::npos ) 
     posix_openfile_write(filename, fileDescriptor);
   else {
-    fprintf(stderr,
+    posix_openfile_write(filename, fileDescriptor);
+    /*fprintf(stderr,
         "type of file %s is unknown... exiting\n", filename);
     exit(1);
+    */ 
   }
 }
 void phio_closefile_read(phio_fp f) {

@@ -131,7 +131,6 @@ read_d2wall(  int* pid,
     numparts = workfc.numpe;
     irank = *pid; // workfc.myrank;
     nprocs = workfc.numpe;
-    int nppf = numparts/nfiles;
 
     // Calculate number of parts each proc deal with and where it start and end ...
     int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
@@ -147,7 +146,12 @@ read_d2wall(  int* pid,
     // First we try to read dwal from the restart files.
     ////////////////////////////////////////////////////
 
-    sprintf(filename,"restart-dat.%d.", timdat.lstep);
+    if ( nfiles == 0 ) {
+      sprintf(filename,"restart.%d.", timdat.lstep);
+    }
+    else {
+      sprintf(filename,"restart-dat.%d.", timdat.lstep);
+    }
     phio_openfile_read(filename, &nfiles, &handle);
 
     int i;

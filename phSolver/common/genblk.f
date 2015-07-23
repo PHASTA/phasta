@@ -26,12 +26,11 @@ cccccccccccccc New Phasta IO starts here ccccccccccccccccccccccccc
 
         integer :: descriptor, descriptorG, GPID, color, nfiles
         integer ::  numparts, writeLock
-        integer :: ierr_io, numprocs, itmp, itmp2
+        integer :: ierr_io, numprocs
 !MR CHANGE
         integer, target :: itpblktot,ierr,iseven
 !MR CHANGE END
-        character*255 fnamer, fname2, temp2
-        character*64 temp1, temp3
+        character*255 fname2
  
         character(len=30) :: dataInt
         dataInt = c_char_'integer'//c_null_char
@@ -41,21 +40,11 @@ cccccccccccccc New Phasta IO starts here ccccccccccccccccccccccccc
 !        nfields = nsynciofieldsreadgeombc
         numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
 
-!        nppp = numparts/numpe
-!        nppf = numparts/nfiles
-
-        color = int(myrank/(numparts/nfiles)) !Should call the SyncIO routine here
-        itmp2 = int(log10(float(color+1)))+1
-        write (temp2,"('(''geombc-dat.'',i',i1,')')") itmp2
-        temp2=trim(temp2)
-        write (fnamer,temp2) (color+1)
-        fnamer=trim(fnamer)
 
         ione=1
         itwo=2
         iseven=7
         ieleven=11
-        itmp = int(log10(float(myrank+1)))+1
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
@@ -66,7 +55,7 @@ c
 
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
-        itpblktot=-1
+          itpblktot=1  ! hardwired to montopology for now
         call phio_readheader(fhandle,
      &   c_char_'total number of interior tpblocks' // char(0),
      &   c_loc(itpblktot), ione, dataInt, iotype) 
@@ -87,7 +76,11 @@ c
 
             intfromfile(:)=-1
             iblk = iblk+1
-            write (fname2,"('connectivity interior',i1)") iblk
+            if(nfiles.gt.0) then
+              write (fname2,"('connectivity interior',i1)") iblk
+            else
+              write (fname2,"('connectivity interior linear tetrahedron')") 
+            endif
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
             call phio_readheader(fhandle, fname2 // char(0),
@@ -124,7 +117,11 @@ c     &          neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst)
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-           write (fname2,"('connectivity interior',i1)") iblk
+            if(nfiles.gt.0) then
+              write (fname2,"('connectivity interior',i1)") iblk
+            else
+              write (fname2,"('connectivity interior linear tetrahedron')") 
+            endif
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 

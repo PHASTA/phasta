@@ -28,15 +28,14 @@ c
 cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
 
         integer :: descriptor, descriptorG, GPID, color, nfiles, nfields
-        integer :: numparts, nppf, nppp, nprocs, writeLock
+        integer :: numparts, nppp, nprocs, writeLock
         integer :: ierr_io, numprocs, itmp, itmp2 
 !        integer :: num_local_loop, num_global_loop
 !MR CHANGE
         integer, target :: itpblktot,ierr
 !MR CHANGE END
 
-        character*255 fnamer, fname2, temp2
-        character*64 temp1, temp3
+        character*255 fname2
 
         character(len=30) :: dataInt, dataDbl
         dataInt = c_char_'integer'//c_null_char
@@ -47,14 +46,7 @@ cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
         numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
 
         nppp = numparts/numpe
-        nppf = numparts/nfiles
 
-        color = int(myrank/(numparts/nfiles))
-        itmp2 = int(log10(float(color+1)))+1
-        write (temp2,"('(''geombc-dat.'',i',i1,')')") itmp2
-        temp2=trim(temp2)
-        write (fnamer,temp2) (color+1)
-        fnamer=trim(fnamer)
 
         ione=1
         itwo=2
@@ -74,7 +66,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 !MR CHANGE
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
-        itpblktot=-1
+        itpblktot=1  ! hardwired to monotopology for now
         call phio_readheader(fhandle,
      &   c_char_'total number of boundary tpblocks' // char(0),
      &   c_loc(itpblktot), ione, dataInt, iotype)
@@ -95,8 +87,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
             intfromfile(:)=-1
             iblk = iblk+1
-            call phio_readheader(fhandle,
-     &       c_char_'connectivity boundary1' // char(0),
+            if(nfiles.gt.0)then
+               write (fname2,"('connectivity boundary',i1)") iblk
+            else
+               write (fname2,"('connectivity boundary linear tetrahedron')")
+            endif
+ 
+            call phio_readheader(fhandle, fname2 // char(0),
      &       c_loc(intfromfile), ieight, dataInt, iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
@@ -129,10 +126,15 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
+            if(nfiles.gt.0)then
+               write (fname2,"('connectivity boundary',i1)") iblk
+            else
+               write (fname2,"('connectivity boundary linear tetrahedron')")
+            endif
+           
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call phio_readheader(fhandle,
-     &      c_char_'connectivity boundary1' // char(0),
+           call phio_readheader(fhandle, fname2 // char(0),
      &      c_loc(intfromfile), ieight, dataInt, iotype)
            neltp =intfromfile(1)
            nenl  =intfromfile(2)
@@ -163,8 +165,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 !           print *, "neltp is ", neltp
 
-           call phio_readdatablock(fhandle,
-     &      c_char_'connectivity boundary1' // char(0),
+           call phio_readdatablock(fhandle, fname2 // char(0),
      &      c_loc(ientp),iientpsiz,dataInt,iotype)
 
 !MR CHANGE
@@ -194,13 +195,16 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
            
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            if(nfiles.gt.0)then
+               write (fname2,"('nbc codes',i1)") iblk
+            else
+               write (fname2,"('nbc codes linear tetrahedron')")
+            endif
 
-           call phio_readheader(fhandle,
-     &      c_char_'nbc codes1' // char(0),
+           call phio_readheader(fhandle, fname2 // char(0),
      &      c_loc(intfromfile), ieight, dataInt, iotype)
            iiBCBtpsiz=neltp*ndiBCB
-           call phio_readdatablock(fhandle,
-     &      c_char_'nbc codes1' // char(0),
+           call phio_readdatablock(fhandle, fname2 // char(0),
      &      c_loc(iBCBtp),iiBCBtpsiz,dataInt,iotype)
 
 !MR CHANGE
@@ -227,14 +231,17 @@ c
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+            if(nfiles.gt.0)then
+               write (fname2,"('nbc values',i1)") iblk
+            else
+               write (fname2,"('nbc values linear tetrahedron')")
+            endif
 
-           call phio_readheader(fhandle,
-     &      c_char_'nbc values1' // char(0),
+           call phio_readheader(fhandle, fname2 // char(0),
      &      c_loc(intfromfile), ieight, dataInt, iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
-           call phio_readdatablock(fhandle,
-     &      c_char_'nbc values1' // char(0),
+           call phio_readdatablock(fhandle, fname2 // char(0),
      &      c_loc(BCBtp),iBCBtpsiz,dataDbl,iotype)
 
 !MR CHANGE

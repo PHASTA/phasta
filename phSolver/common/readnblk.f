@@ -135,7 +135,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       ieleven=11
       itmp = int(log10(float(myrank+1)))+1
 
-      call phio_openfile_read(c_char_'geombc-dat.' // char(0), nfiles, fhandle);
+      if(nsynciofiles.gt.0) then
+        call phio_openfile_read(c_char_'geombc-dat.' // char(0), 
+     &                          nfiles, fhandle);
+      else 
+        call phio_openfile_read(c_char_'geombc.dat.' // char(0), 
+     &                          nfiles, fhandle);
+      endif
 
       call phio_readheader(fhandle,c_char_'number of nodes' // char(0),
      & c_loc(numnp),ione, dataInt, iotype)
@@ -656,7 +662,12 @@ c      nppf = numparts/nfiles
 cc      fnamer = "/users/nliu/PIG4/4-procs_case/restart-file"
 cc      fnamer="./4-procs_case/restart-file"
 
-      fnamer = c_char_"restart-dat."//c_null_char
+      if(nsynciofiles.gt.0) then
+        fnamer = c_char_"restart-dat."//c_null_char
+      else 
+        fnamer = c_char_"restart."//c_null_char
+      endif
+
       call phio_appendStep(fnamer, irstart)
       call phio_openfile_read(fnamer, nfiles, fhandle)
 
