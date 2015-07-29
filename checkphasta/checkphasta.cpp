@@ -15,37 +15,44 @@
 #define OMPI_SKIP_MPICXX 1
 #include <mpi.h>
 
-#include "phastaIO.h"
-
-//Provided by phastaIO
-void Gather_Headers( int* fileDescriptor, std::vector< std::string >& headers );
+#include "phIO.h"
 
 char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
-		int nump, int rank, int timestep, char* casedir);
-
-std::set<int>* find_timesteps(char* casedir, int nump);
-double compare_solution(char* lpath, char* rpath, int timestep, int nump);
+		int nump, int rank, int timestep, int nSyncFiles, char* casedir);
+std::set<int>* find_timesteps(char* casedir, int nSyncFiles);
+double compare_solution(char* lpath, char* rpath, 
+    int timestep, int nump, int nSyncFiles);
+const char* getRestartName(int nSyncFiles);
 
 int main(int argc, char** argv)
 {
-	int rank;
+       	int rank;
 	int size;
 	MPI_Init(&argc, &argv);
 	
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
-	
-	assert(argc>2);
+        
+	if(argc != 4) {
+          fprintf(stderr, "argc %d\n", argc);
+          fprintf(stderr, 
+              "Usage: %s <left> <right> <numSyncFiles>\n"
+              "where <left> and <right> are different"
+              "N-procs_case directories\n", argv[0]);
+          MPI_Finalize();
+          return 1;
+        }
 	char* lpath = argv[1];
 	char* rpath = argv[2];
+        int nSyncFiles = atoi(argv[3]);
 
 	int ndof;
 	int nshg;
 	int solsize;
 	double* solution;
 
-	std::set<int>* l_timesteps = find_timesteps(lpath, size);
-	std::set<int>* r_timesteps = find_timesteps(rpath, size);
+	std::set<int>* l_timesteps = find_timesteps(lpath, nSyncFiles);
+	std::set<int>* r_timesteps = find_timesteps(rpath, nSyncFiles);
 	std::set<int>* timesteps_to_check = new std::set<int>;
 	std::set_intersection(l_timesteps->begin(), l_timesteps->end(),
 			r_timesteps->begin(), r_timesteps->end(),
@@ -56,7 +63,8 @@ int main(int argc, char** argv)
 		printf("Found %d common timesteps\n",
 			       	timesteps_to_check->size());
 #ifdef DBGONLY
-	read_solution(&solution, &solsize, &nshg, &ndof, size, rank, 0, "./");
+	read_solution(&solution, &solsize, &nshg, &ndof, 
+            size, rank, 0, numSyncFiles, "./");
 	printf("nshg: %d, ndof: %d\n", nshg, ndof);
 	assert(solsize == ndof*nshg);
 #endif
@@ -66,7 +74,7 @@ int main(int argc, char** argv)
 	for(std::set<int>::iterator i = timesteps_to_check->begin();
 			i!=timesteps_to_check->end();i++)
 	{
-		error = compare_solution(lpath, rpath, *i, size);
+		error = compare_solution(lpath, rpath, *i, size, nSyncFiles);
 		if(error>maxerror) maxerror = error;
 	}
         delete timesteps_to_check;
@@ -77,7 +85,7 @@ int main(int argc, char** argv)
 			gblmaxerror);
 	MPI_Finalize();
 }
-double compare_solution(char* lpath, char* rpath, int timestep, int nump)
+double compare_solution(char* lpath, char* rpath, int timestep, int nump, int nSyncFiles)
 {
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -86,8 +94,10 @@ double compare_solution(char* lpath, char* rpath, int timestep, int nump)
 	int lsize;
 	int rsize;
 
-	read_solution(&lsol, &lsize, NULL, NULL, nump, rank, timestep, lpath);
-	read_solution(&rsol, &rsize, NULL, NULL, nump, rank, timestep, rpath);
+	read_solution(&lsol, &lsize, NULL, NULL, 
+            nump, rank, timestep, nSyncFiles, lpath);
+	read_solution(&rsol, &rsize, NULL, NULL, 
+            nump, rank, timestep, nSyncFiles, rpath);
 
 	double maxdiff=0.0;
 	double gblmaxdiff;
@@ -113,7 +123,7 @@ double compare_solution(char* lpath, char* rpath, int timestep, int nump)
 
 }
 char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
-		int nump, int rank, int timestep, char* casedir)
+		int nump, int rank, int timestep, int nSyncFiles, char* casedir)
 {
 	int iarray[10];
         const char* iformat = "binary";
@@ -123,22 +133,18 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
 	int nshg;
 	int ndof;
 	double* solution;
-	if(nump == 1)
-		asprintf(&fn, "%s/restart.%d.%d",
-				casedir,timestep,rank+1);
-	else
-		asprintf(&fn, "%s/%d-procs_case/restart.%d.%d",
-				casedir, nump,timestep,rank+1);
-        openfile(fn, "read", &igeombc);
-	//TODO: error handle
-	readheader(&igeombc, "solution", (void*) iarray, &ithree, "integer", iformat);
+        const char* rname = getRestartName(nSyncFiles);
+        asprintf(&fn,"%s/%s.%d",casedir,rname,timestep);
+        phio_fp fp;
+        phio_openfile_read(fn,&nSyncFiles,&fp);
+	phio_readheader(fp, "solution", (void*) iarray, &ithree, "integer", iformat);
 	nshg = iarray[0];
 	ndof = iarray[1];
 	if(size != NULL)
 		*size = nshg*ndof;
 	solution = (double*) malloc(sizeof(double)*nshg*ndof);
-	readdatablock(&igeombc, "solution", solution, size, "double", iformat);
-	closefile(&igeombc, "read");
+	phio_readdatablock(fp, "solution", solution, size, "double", iformat);
+	phio_closefile_read(fp);
 	if(solutiono != NULL)
 		*solutiono = solution;
 	if(nshgo != NULL)
@@ -149,33 +155,47 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
 	return(0);
 }
 
-std::set<int>* find_timesteps(char* casedir, int nump)
+std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
 {
 	char* path;
-	char* fullpath;
 	DIR* dir;
 	struct dirent* d;
 	int part, ts;
 	std::set<int>* step_list = new std::set<int>;
 
-	if(nump == 1)
-		asprintf(&path, "%s", casedir);
-	else
-		asprintf(&path, "%s/%d-procs_case", casedir, nump);
+        asprintf(&path, "%s", casedir);
 	dir = opendir(path);
 	if(!dir)
 	{
 		perror("Error opening case: "); 
 		MPI_Abort(MPI_COMM_WORLD,1);
 	}
+        const char* rname = getRestartName(nSyncFiles);
+        char* fmt;
+        asprintf(&fmt, "%s.%%d.%%d", rname);
+        fprintf(stderr, "fmt %s\n", fmt);
 	while((d=readdir(dir)))
 	{
-		asprintf(&fullpath, "%s/%s", path, d->d_name);
 		if(sscanf(d->d_name, "restart.%d.%d", &ts, &part)==2)
 		{
 			step_list->insert(ts);
 		}
 	}
-	return(step_list);
+        free(fmt);
 	free(path);
+	return(step_list);
+}
+
+const char* getRestartName(int nSyncFiles) {
+  if(0 == nSyncFiles)
+    return "restart";
+  else if(nSyncFiles > 0)
+    return "restart-dat";
+  else {
+    fprintf(stderr, 
+        "ERROR: the number of sync-io files must be"
+        "greater than or equal to zero\n");
+    MPI_Abort(MPI_COMM_WORLD, 1);
+    return NULL;
+  }
 }
