@@ -136,3 +136,5 @@ if(EXISTS ${PHASTA_SOURCE_DIR}/phNSpre)
 	add_subdirectory(phNSpre)
 endif(EXISTS ${PHASTA_SOURCE_DIR}/phNSpre)
 
+add_subdirectory(checkphasta)
+
