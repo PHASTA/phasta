@@ -134,7 +134,7 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
 	int ndof;
 	double* solution;
         const char* rname = getRestartName(nSyncFiles);
-        asprintf(&fn,"%s/%s.%d",casedir,rname,timestep);
+        asprintf(&fn,"%s/%s.%d.",casedir,rname,timestep);
         phio_fp fp;
         phio_openfile_read(fn,&nSyncFiles,&fp);
 	phio_readheader(fp, "solution", (void*) iarray, &ithree, "integer", iformat);
@@ -173,10 +173,9 @@ std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
         const char* rname = getRestartName(nSyncFiles);
         char* fmt;
         asprintf(&fmt, "%s.%%d.%%d", rname);
-        fprintf(stderr, "fmt %s\n", fmt);
 	while((d=readdir(dir)))
 	{
-		if(sscanf(d->d_name, "restart.%d.%d", &ts, &part)==2)
+		if(sscanf(d->d_name, fmt, &ts, &part)==2)
 		{
 			step_list->insert(ts);
 		}
