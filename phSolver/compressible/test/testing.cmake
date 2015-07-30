@@ -9,14 +9,27 @@ add_test(compressibleResetNumStart-sync
 add_test(
   NAME compressible-sync
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${PHASTA_BINARY_DIR}/bin/phastaC.exe
-  WORKING_DIRECTORY ${CASES}/compressible
+  WORKING_DIRECTORY ${CDIR}
 )
-add_test(compareCompressible-sync
-  diff ${CDIR}/restart-dat.2.1.ref ${CDIR}/2-procs_case/restart-dat.2.1)
+set(cmd 
+  ${PHASTA_BINARY_DIR}/bin/checkphasta 
+  ${CDIR}/2-procs_case-SyncIO-1/ 
+  ${CDIR}/2-procs_case-SyncIO-1_ref/ 
+  1 1e-6)
+add_test(
+  NAME compareCompressible-sync
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
+)
 add_test(
   NAME compressibleRestart-sync
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${PHASTA_BINARY_DIR}/bin/phastaC.exe
-  WORKING_DIRECTORY ${CASES}/compressible
+  WORKING_DIRECTORY ${CDIR}
+)
+add_test(
+  NAME compareCompressibleRestart-sync
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
 )
 
 add_test(linkProcsDir-posix
@@ -26,10 +39,25 @@ add_test(compressibleResetNumStart-posix
 add_test(
   NAME compressible-posix
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${PHASTA_BINARY_DIR}/bin/phastaC.exe
-  WORKING_DIRECTORY ${CASES}/compressible
+  WORKING_DIRECTORY ${CDIR}
+)
+set(cmd 
+  ${PHASTA_BINARY_DIR}/bin/checkphasta 
+  ${CDIR}/2-procs_case-Posix/ 
+  ${CDIR}/2-procs_case-Posix_ref/ 
+  0 1e-6)
+add_test(
+  NAME compareCompressible-posix
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
 )
 add_test(
   NAME compressibleRestart-posix
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${PHASTA_BINARY_DIR}/bin/phastaC.exe
-  WORKING_DIRECTORY ${CASES}/compressible
+  WORKING_DIRECTORY ${CDIR}
+)
+add_test(
+  NAME compareCompressibleRestart-posix
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
 )
