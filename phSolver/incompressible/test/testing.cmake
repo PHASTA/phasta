@@ -8,17 +8,28 @@ add_test(incompressibleResetNumStart-sync
 add_test(
   NAME incompressible-sync
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CASES}/incompressible
+  WORKING_DIRECTORY ${CDIR}
 )
-add_test(compareIncompressible-sync
-  diff ${CDIR}/restart-dat.4.1.syncio.ref ${CDIR}/4-procs_case/restart-dat.4.1)
+set(cmd 
+  ${PHASTA_BINARY_DIR}/bin/checkphasta 
+  ${CDIR}/4-procs_case-SyncIO-2/ 
+  ${CDIR}/4-procs_case-SyncIO-2_ref/ 
+  2 1e-6)
+add_test(
+  NAME compareIncompressible-sync
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
+)
 add_test(
   NAME incompressibleRestart-sync
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CASES}/incompressible
+  WORKING_DIRECTORY ${CDIR}
 )
-add_test(compareIncompressibleRestart-sync
-  diff ${CDIR}/restart-dat.8.1.syncio.ref ${CDIR}/4-procs_case/restart-dat.8.1)
+add_test(
+  NAME compareIncompressibleRestart-sync
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
+)
 
 add_test(linkProcsDir-posix
   ln -snf ${CDIR}/4-procs_case-Posix ${CDIR}/4-procs_case)
@@ -27,10 +38,25 @@ add_test(incompressibleResetNumStart-posix
 add_test(
   NAME incompressible-posix
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CASES}/incompressible
+  WORKING_DIRECTORY ${CDIR}
+)
+set(cmd 
+  ${PHASTA_BINARY_DIR}/bin/checkphasta 
+  ${CDIR}/4-procs_case-Posix/ 
+  ${CDIR}/4-procs_case-Posix_ref/ 
+  0 1e-6)
+add_test(
+  NAME compareIncompressible-posix
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
 )
 add_test(
   NAME incompressibleRestart-posix
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CASES}/incompressible
+  WORKING_DIRECTORY ${CDIR}
+)
+add_test(
+  NAME compareIncompressibleRestart-posix
+  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
+  WORKING_DIRECTORY ${CDIR}
 )
