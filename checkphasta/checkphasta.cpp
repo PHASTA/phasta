@@ -33,10 +33,10 @@ int main(int argc, char** argv)
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
         
-	if(argc != 4) {
+	if(argc != 5) {
           fprintf(stderr, "argc %d\n", argc);
           fprintf(stderr, 
-              "Usage: %s <left> <right> <numSyncFiles>\n"
+              "Usage: %s <left> <right> <numSyncFiles> <tolerance>\n"
               "where <left> and <right> are different"
               "N-procs_case directories\n", argv[0]);
           MPI_Finalize();
@@ -45,6 +45,7 @@ int main(int argc, char** argv)
 	char* lpath = argv[1];
 	char* rpath = argv[2];
         int nSyncFiles = atoi(argv[3]);
+        double tolerance = atof(argv[4]);
 
 	int ndof;
 	int nshg;
@@ -84,6 +85,7 @@ int main(int argc, char** argv)
 	if(rank == 0) printf("Maximum difference across all timesteps: %e\n", 
 			gblmaxerror);
 	MPI_Finalize();
+        return (gblmaxerror > tolerance);
 }
 double compare_solution(char* lpath, char* rpath, int timestep, int nump, int nSyncFiles)
 {
