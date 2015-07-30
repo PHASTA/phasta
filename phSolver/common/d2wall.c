@@ -9,109 +9,11 @@
 #include "phIO.h"
 #include "setsyncioparam.h"
 
-/*
-void
-read_d2wall(  int* pid,
-               int* numnp,
-               double* array1 ) {
-
-//    time_t timenow = time ( &timenow);
-    int isize, nitems;
-    int iarray[10];
-
-    //MPI_Barrier(MPI_COMM_WORLD);
-
-    /////////////////////////////// Start of writing using new-lib ////////////////////////////
-
-    int nfiles;
-    int nfields;
-    int numparts;
-    int irank;
-    int nprocs;
-
-    //  First, count the number of fields to write and store the result in
-    //countfieldstowriterestart();
-
-    //  Retrieve and compute the parameters required for SyncIO
-    nfiles = outpar.nsynciofiles;
-    //    nfields = 1; //outpar.nsynciofieldswriterestart;  // Only the distance to the walls in d2wall
-    numparts = workfc.numpe;
-    irank = *pid; // workfc.myrank;
-    nprocs = workfc.numpe;
-    int nppf = numparts/nfiles;
-    int GPID;
-
-    // Calculate number of parts each proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
-
-    int descriptor;
-    char filename[255],path[255],fieldtag_s[255];
-    bzero((void*)filename,255);
-    bzero((void*)fieldtag_s,255);
-
-    sprintf(filename,"d2wall.%d",((int)(irank/(nprocs/nfiles))+1));
-
-    queryphmpiio(filename, &nfields, &nppf);
-
-    initphmpiio(&nfields, &nppf, &nfiles, &f_descriptor, "read");
-
-    if (irank==0) {
-      printf("Filename is %s \n",filename);
-    }
-    openfile(filename, "read", &f_descriptor);
-
-    field_flag=0;
-
-    int i;
-    for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-    // GPID : global part id, corresponds to rank ...
-      // e.g : (in this example)
-      // proc 0 : 1--4
-      // proc 1 : 5--8 ...
-      GPID = startpart + i;
-
-      // Write solution field ...
-      sprintf(fieldtag_s,"d2wall@%d",GPID);
-
-      nitems = 2;
-      readheader( &f_descriptor, fieldtag_s, (void*)iarray, &nitems, "double", phasta_iotype);
-      //iarray[ 0 ] = (*numnp); What we should get from readheader
-      //iarray[ 1 ] = 1;
-
-      if (iarray[0] != (*numnp)) {
-        printf("ERROR - numnp in d2wall.dat not coherent %d %d/n", iarray[0], *numnp);
-      }
-
-      isize = (*numnp);
-      readdatablock( &f_descriptor, fieldtag_s, (void*)(array1), &isize, "double", phasta_iotype );
-
-    }
-    field_flag++;
-
-    if (field_flag==1){
-
-      closefile(&f_descriptor, "read");
-
-      finalizephmpiio(&f_descriptor);
-
-      if (irank==0) {
-        printf("\n");
-      }
-    }
-}
-*/
-
-
 void
 read_d2wall(  int* pid,
               int* numnp,
               double* array1,
               int* foundd2wall ) {
-
-//    time_t timenow = time ( &timenow);
-
     int isize, nitems;
     int iarray[10];
     int j;
@@ -158,8 +60,6 @@ read_d2wall(  int* pid,
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
       nitems = 2;
       phio_readheader(handle, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
-      //iarray[ 0 ] = (*numnp); What we should get from readheader
-      //iarray[ 1 ] = 1;
 
       if (iarray[0] == (*numnp)) {
         if (irank==0) {
@@ -177,7 +77,6 @@ read_d2wall(  int* pid,
       }
     }
     phio_closefile_read(handle);
-
 
     if (irank==0) {
       printf("\n");
