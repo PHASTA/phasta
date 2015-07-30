@@ -11,47 +11,28 @@ c
         use pointer_data
         use phio
         use iso_c_binding
-c
         include "common.h"
-!MR CHANGE
         include "mpif.h" !Required to determine the max for itpblk
-!MR CHANGE END
-c
+
         integer, target, allocatable :: ientp(:,:)
         integer mater(ibksz)
         integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
-
-cccccccccccccc New Phasta IO starts here ccccccccccccccccccccccccc
-
         integer :: descriptor, descriptorG, GPID, color, nfiles
         integer ::  numparts, writeLock
         integer :: ierr_io, numprocs
-!MR CHANGE
         integer, target :: itpblktot,ierr,iseven
-!MR CHANGE END
         character*255 fname2
- 
         character(len=30) :: dataInt
         dataInt = c_char_'integer'//c_null_char
-
-!THIS NEEDS TO BE CLEANED - MR
         nfiles = nsynciofiles
-!        nfields = nsynciofieldsreadgeombc
         numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
-
-
         ione=1
         itwo=2
         iseven=7
         ieleven=11
-
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-c
         iel=1
         itpblk=nelblk
-!MR CHANGE
 
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
@@ -59,9 +40,6 @@ c
         call phio_readheader(fhandle,
      &   c_char_'total number of interior tpblocks' // char(0),
      &   c_loc(itpblktot), ione, dataInt, iotype) 
-
-!        write (*,*) 'Rank: ',myrank,' interior itpblktot intermediate:',
-!     &               itpblktot
 
         if (itpblktot == -1) then 
           ! The field 'total number of different interior tpblocks' was not found in the geombc file.
@@ -93,39 +71,19 @@ c
         if (myrank == 0) then
           write(*,*) 'Number of interior topologies: ',itpblktot
         endif
-!        write (*,*) 'Rank: ',myrank,' interior itpblktot final:',
-!     &               itpblktot
-
-!MR CHANGE END
 
         nelblk=0
         mattyp = 0
         ndofl = ndof
         nsymdl = nsymdf
 
-!        call initphmpiio( nfields, nppf, nfiles, igeom )
-!        call openfile( fnamer, 'read', igeom )
-
-!         do iblk = 1, itpblk
         do iblk = 1, itpblktot
            writeLock=0;
-!MR CHANGE END
-c
-c           read(igeomBAK) neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst
-c           call creadlist(igeomBAK,iseven,
-c     &          neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst)
-
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
             if(nfiles.gt.0) then
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
             endif
-
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-c           fname1='connectivity interior?'
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
@@ -139,7 +97,6 @@ c           fname1='connectivity interior?'
            ijunk  =intfromfile(6)
            lcsyst =intfromfile(7)
            allocate (ientp(neltp,nshl))
-c           read(igeomBAK) ientp
            iientpsiz=neltp*nshl
 
            if (neltp==0) then
@@ -149,19 +106,11 @@ c           read(igeomBAK) ientp
            call phio_readdatablock(fhandle,fname2 // char(0),
      &      c_loc(ientp), iientpsiz, dataInt, iotype)
 
-!            call closefile( igeom, "read" // char(0) )
-!            call finalizephmpiio( igeom )
-
-!MR CHANGE
            if(writeLock==0) then
-!MR CHANGE
-
              do n=1,neltp,ibksz 
                 nelblk=nelblk+1
                 npro= min(IBKSZ, neltp - n + 1)
-c
                 lcblk(1,nelblk)  = iel
-c                lcblk(2,nelblk)  = iopen ! available for later use
                 lcblk(3,nelblk)  = lcsyst
                 lcblk(4,nelblk)  = ipordl
                 lcblk(5,nelblk)  = nenl
@@ -187,25 +136,13 @@ c
      &                       mater,           mien(nelblk)%p,
      &                       mmat(nelblk)%p)
                 iel=iel+npro
-c
              enddo
-!MR CHANGE
            endif
-!MR CHANGE
            deallocate(ientp)
         enddo
 
-!        call closefile( igeom, "read" // char(0) )
-!        call finalizephmpiio( igeom )
-
         lcblk(1,nelblk+1) = iel
-c
-c.... return
-c
-CAD        call timer ('Back    ')
-c
         return
-c
 1000    format(a80,//,
      &  ' N o d a l   C o n n e c t i v i t y',//,
      &  '   Elem  ',/,
