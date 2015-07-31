@@ -84,8 +84,7 @@ using namespace std;
 
 namespace{
 
-        typedef map<int, char*> mic;
-	mic LastHeaderKey;
+        map<int, std::string> LastHeaderKey;
 	vector< FILE* > fileArray;
 	vector< bool > byte_order;
 	vector< int > header_type;
@@ -1384,11 +1383,7 @@ void readheader( int* fileDescriptor,
 			return;
 		}
 
-                if( LastHeaderKey.count(filePtr) )
-                  free(LastHeaderKey[filePtr]);
-                const int l = strlen(keyphrase)+1;
-                LastHeaderKey[filePtr] = (char*) malloc(l*sizeof(char));
-                strcpy(LastHeaderKey[filePtr], keyphrase);
+                LastHeaderKey[filePtr] = std::string(keyphrase);
 		LastHeaderNotFound = false;
 
 		fileObject = fileArray[ filePtr ] ;
@@ -1577,9 +1572,9 @@ void readdatablock( int*  fileDescriptor,
 		// since we require that a consistant header always preceed the data block
 		// let us check to see that it is actually the case.
 
-		if ( ! cscompare( LastHeaderKey[ filePtr ], keyphrase ) ) {
+		if ( ! cscompare( LastHeaderKey[ filePtr ].c_str(), keyphrase ) ) {
 			fprintf(stderr, "Header not consistant with data block\n");
-			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ] );
+			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ].c_str() );
 			fprintf(stderr, "DataBlock: %s\n ", keyphrase );
 			fprintf(stderr, "Please recheck read sequence \n");
 			if( Strict_Error ) {
@@ -1602,7 +1597,6 @@ void readdatablock( int*  fileDescriptor,
 		int nUnits = *nItems;
 		isBinary( iotype );
 
-                free(LastHeaderKey[filePtr]);
                 LastHeaderKey.erase(filePtr);
 
 		if ( binary_format ) {
@@ -1726,11 +1720,7 @@ void writeheader(  const int* fileDescriptor,
 			return;
 		}
 
-                if( LastHeaderKey.count(filePtr) )
-                  free(LastHeaderKey[filePtr]);
-                const int l = strlen(keyphrase)+1;
-                LastHeaderKey[filePtr] = (char*) malloc(l*sizeof(char));
-                strcpy(LastHeaderKey[filePtr], keyphrase);
+                LastHeaderKey[filePtr] = std::string(keyphrase);
 		DataSize = *ndataItems;
 		fileObject = fileArray[ filePtr ] ;
 		size_t type_size = typeSize( datatype );
@@ -1927,9 +1917,9 @@ void writedatablock( const int* fileDescriptor,
 		// since we require that a consistant header always preceed the data block
 		// let us check to see that it is actually the case.
 
-		if ( ! cscompare( LastHeaderKey[ filePtr ], keyphrase ) ) {
+		if ( ! cscompare( LastHeaderKey[ filePtr ].c_str(), keyphrase ) ) {
 			fprintf(stderr, "Header not consistant with data block\n");
-			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ] );
+			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ].c_str() );
 			fprintf(stderr, "DataBlock: %s\n ", keyphrase );
 			fprintf(stderr, "Please recheck write sequence \n");
 			if( Strict_Error ) {
@@ -1944,7 +1934,6 @@ void writedatablock( const int* fileDescriptor,
 		size_t type_size=typeSize( datatype );
 		isBinary( iotype );
 
-                free(LastHeaderKey[filePtr]);
                 LastHeaderKey.erase(filePtr);
 
 		if ( header_type[filePtr] != (int)type_size ) {
