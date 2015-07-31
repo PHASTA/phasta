@@ -281,6 +281,7 @@ Write_Restart(  int* pid,
 
     field_flag=0;
 
+
      int i;
      for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
         // Write solution field ...
@@ -624,15 +625,15 @@ Write_d2wall(   int* pid,
         iarray[ 0 ] = (*numnp);
         iarray[ 1 ] = 1; //numVars = 1
 
-        phio_writeheader( &f_descriptor, "d2wall", (void*)iarray, &nitems,
+        phio_writeheader(f_descriptor, "d2wall", (void*)iarray, &nitems,
             &isize, "double", phasta_iotype);
-        phio_writedatablock( &f_descriptor, "d2wall", (void*)(array1), &isize,
+        phio_writedatablock(f_descriptor, "d2wall", (void*)(array1), &isize,
             "double", phasta_iotype );
     }
     field_flag++;
 
     if (field_flag==nfields){
-      phio_closefile_write(&f_descriptor);
+      phio_closefile_write(f_descriptor);
       if (irank==0) {
         printf("\n");
       }
