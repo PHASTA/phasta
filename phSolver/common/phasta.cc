@@ -1,6 +1,4 @@
-//MR CHANGE
 #define OMPI_SKIP_MPICXX 1
-//MR CHANGE END
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,9 +34,7 @@ extern int SONFATH;
 extern "C" void proces();
 extern "C" void input();
 extern int input_fform(char inpfname[]);
-//MR CHANGE
 extern void setIOparam(); // For SyncIO
-//MR CHANGE END
 
 int myrank; /* made file global for ease in debugging */
 
@@ -77,7 +73,6 @@ phasta( int argc,
     int size,ierr;
     char inpfilename[100];
     char* pauseDebugger = getenv("catchDebugger");
-    //cout << "pauseDebugger" << pauseDebugger << endl;
     int initialized;
     MPI_Initialized(&initialized);
     if( !initialized )
@@ -146,11 +141,7 @@ phasta( int argc,
         return 1;
       }
       MPI_Barrier(MPI_COMM_WORLD);
-
-//MR CHANGE
         setIOparam();
-//MR CHANGE END
-
         input();
         /* now we can start the solver */
         proces();
@@ -158,15 +149,10 @@ phasta( int argc,
     else{
         printf("error during reading ascii input \n");
     }
-   
-//MR CHANGE
-
     MPI_Barrier(MPI_COMM_WORLD);
     if ( myrank == 0 ) {
       printf("phasta.cc - last call before finalize!\n");
     }
-//MR CHANGE
- 
     MPI_Finalize();
     return 0;
 }
