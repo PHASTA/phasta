@@ -336,7 +336,7 @@ readlesrestart( Integer* lesId,
     }
     phio_openfile_read(filename, &nfiles, &fileHandle);
 
-    if ( fileHandle < 0 ) return; // See phastaIO.cc for error fileHandle
+    if ( !fileHandle ) return; // See phastaIO.cc for error fileHandle
     phio_readheader(fileHandle, "projection vectors", (void*)iarray,
                 &itwo, "integer", phasta_iotype);
 
