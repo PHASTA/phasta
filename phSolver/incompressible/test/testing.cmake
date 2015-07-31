@@ -3,6 +3,21 @@ add_test(copyInpCfg
   cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
 add_test(linkProcsDir-sync
   ln -snf ${CDIR}/4-procs_case-SyncIO-2 ${CDIR}/4-procs_case)
+if(HAS_VALGRIND)
+  add_test(incompressibleResetNumStartValgrind-sync
+    cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
+  set(vgcmd
+    valgrind 
+    --leak-check=yes 
+    --log-file=icSyncValgrind.%p 
+    ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
+  )
+  add_test(
+    NAME incompressibleValgrind-sync
+    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${vgcmd}
+    WORKING_DIRECTORY ${CDIR}
+  )
+endif(HAS_VALGRIND)
 add_test(incompressibleResetNumStart-sync
   cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
 add_test(
@@ -33,6 +48,21 @@ add_test(
 
 add_test(linkProcsDir-posix
   ln -snf ${CDIR}/4-procs_case-Posix ${CDIR}/4-procs_case)
+if(HAS_VALGRIND)
+  add_test(incompressibleResetNumStartValgrind-posix
+    cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
+  set(vgcmd
+    valgrind 
+    --leak-check=yes 
+    --log-file=icPosixValgrind.%p 
+    ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
+  )
+  add_test(
+    NAME incompressibleValgrind-posix
+    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${vgcmd}
+    WORKING_DIRECTORY ${CDIR}
+  )
+endif(HAS_VALGRIND)
 add_test(incompressibleResetNumStart-posix
   cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
 add_test(

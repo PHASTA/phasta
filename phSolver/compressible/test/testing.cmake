@@ -4,6 +4,21 @@ add_test(copyInpCfg
 
 add_test(linkProcsDir-sync
   ln -snf ${CDIR}/2-procs_case-SyncIO-1 ${CDIR}/2-procs_case)
+if(HAS_VALGRIND)
+  add_test(compressibleResetNumStartValgrind-sync
+    cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
+  set(vgcmd
+    valgrind 
+    --leak-check=yes 
+    --log-file=cSyncValgrind.%p 
+    ${PHASTA_BINARY_DIR}/bin/phastaC.exe
+  )
+  add_test(
+    NAME compressibleValgrind-sync
+    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${vgcmd}
+    WORKING_DIRECTORY ${CDIR}
+  )
+endif(HAS_VALGRIND)
 add_test(compressibleResetNumStart-sync
   cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
 add_test(
@@ -34,6 +49,21 @@ add_test(
 
 add_test(linkProcsDir-posix
   ln -snf ${CDIR}/2-procs_case-Posix ${CDIR}/2-procs_case)
+if(HAS_VALGRIND)
+  add_test(compressibleResetNumStartValgrind-posix
+    cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
+  set(vgcmd
+    valgrind 
+    --leak-check=yes 
+    --log-file=cPosixValgrind.%p 
+    ${PHASTA_BINARY_DIR}/bin/phastaC.exe
+  )
+  add_test(
+    NAME compressibleValgrind-posix
+    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${vgcmd}
+    WORKING_DIRECTORY ${CDIR}
+  )
+endif(HAS_VALGRIND)
 add_test(compressibleResetNumStart-posix
   cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
 add_test(
