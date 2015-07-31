@@ -8,9 +8,6 @@
 #include <stdlib.h>
 #include "les.h"
 #include "usr.h"
-//mr change
-// #include "common_c.h" //not needed here any more because added in new_interface.c
-//mr change end
 #include "common_c.h"
 #include "phastaIO.h"
 #include "phIO.h"
@@ -250,9 +247,6 @@ savelesrestart( Integer* lesId,
     double* projVec;
     int i, j, count;
 
-//     sprintf( filename,"restart.%d.%d", *lstep, *myrank+1 );
-//     openfile_( filename, "append", &fileHandle );
-
     nPrjs = (Integer) lesGetPar( lesArray[ *lesId ], LES_ACT_PRJS );
     PrjSrcId = (Integer) lesGetPar( lesArray[ *lesId ], LES_PRJ_VEC_ID );
 
@@ -267,8 +261,6 @@ savelesrestart( Integer* lesId,
         }
     }
 
-    //printf("Savelessrestart, nPrjs is %d\n",nPrjs);
-
     iarray[ 0 ] = *nshg;
     iarray[ 1 ] = nPrjs;
     nitems = 2;
@@ -278,14 +270,7 @@ savelesrestart( Integer* lesId,
     name_length = 18;
     Write_Field(myrank,"a","projection vectors",&name_length, (void *)projVec,"d", nshg, &nPrjs, lstep);
 
-    //writeheader_( &fileHandle, "projection vectors ", (void*)iarray,
-    //              &nitems, &size, "double", phasta_iotype );
-    //nitems = size;
-    //writedatablock_( &fileHandle, "projection vectors ", (void*)projVec,
-    //                 &nitems, "double", phasta_iotype );
     free(projVec);
-
-    /*************************************************************************/
 
     nPresPrjs = (Integer) lesGetPar( lesArray[ *lesId ], LES_ACT_PRES_PRJS );
     PresPrjSrcId =(Integer)lesGetPar( lesArray[ *lesId ], LES_PRES_PRJ_VEC_ID );
@@ -308,15 +293,7 @@ savelesrestart( Integer* lesId,
     name_length = 27;
     Write_Field(myrank,"a","pressure projection vectors",&name_length, projVec,"d", nshg, &nPresPrjs, lstep);
 
-//writeheader_( &fileHandle, "pressure projection vectors ", (void*)iarray,
-//                  &nitems, &size, "double", phasta_iotype );
-//    nitems = size;
-
-//writedatablock_( &fileHandle, "pressure projection vectors ",
-//                     (void*)projVec, &nitems, "double", phasta_iotype );
     free( projVec);
-
-//closefile_( &fileHandle, "append" );
 }
 
 void
@@ -337,13 +314,6 @@ readlesrestart( Integer* lesId,
     int lnshg;
     double* projVec;
     int i,j,count;
-
-//MR CHANGE
-//    sprintf( filename,"restart.%d.%d", *lstep, *myrank+1 );
-
-//     int nfiles=2;
-//     int numParts=8;
-//     int nfields=6;
     int nfiles;
     int nfields;
     int numParts;
@@ -351,14 +321,8 @@ readlesrestart( Integer* lesId,
     int nppf;
 
     nfiles = outpar.nsynciofiles;
-//    nfields = outpar.nsynciofieldsreadrestart;
     numParts = workfc.numpe;
     nprocs = workfc.numpe;
-//MR CHANGE END
-
-//    int nppf = numParts/nfiles;
-
-//      MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     // Calculate number of parts each proc deal with and where it start and end ...
     int nppp = numParts/nprocs;        // nppp : Number of parts per proc ...
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
@@ -404,8 +368,6 @@ readlesrestart( Integer* lesId,
     }
 
     free( projVec );
-
-    /************************************************************************/
 
     iarray[0] = -1; iarray[1] = -1; iarray[2] = -1;
 
@@ -462,10 +424,7 @@ int solverlicenseserver(char key[]){
           fprintf(stderr,"environment variable LES_LICENSE_SERVER not defined \n");
           fprintf(stderr,"using wesley as default \n");
         }
-//MR CHANGE
-//        strcpy(key, "wesley.scorec.rpi.edu");
         strcpy(key, "acusim.license.scorec.rpi.edu");
-//MR CHANGE END
     }
 #endif
     return 1;
