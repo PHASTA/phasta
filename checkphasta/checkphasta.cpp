@@ -184,6 +184,7 @@ std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
 	}
         free(fmt);
 	free(path);
+        closedir(dir);
 	return(step_list);
 }
 
