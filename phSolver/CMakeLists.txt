@@ -16,3 +16,9 @@ endif(PHASTA_INCOMPRESSIBLE)
 if(PHASTA_COMPRESSIBLE)
 add_subdirectory(compressible)
 endif(PHASTA_COMPRESSIBLE)
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/phastaConfig.cmake.in"
+  "${CMAKE_BINARY_DIR}/phastaConfig.cmake"
+)
+
