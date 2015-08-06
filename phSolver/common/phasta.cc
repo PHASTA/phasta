@@ -71,7 +71,10 @@ piarray( void* iarray , int start, int end ) {
 int phasta( int argc,   
         char *argv[],
         GRStream* grs) {
-  return 0;
+  fprintf(stderr, "HEY! if you see this email Cameron and tell him "
+      "to implement %s(...) on line %d of %s "
+      "... returning an error\n", __func__, __LINE__, __FILE__);
+  return 1;
 }
  
 
