@@ -1,12 +1,7 @@
 #ifndef PHASTA_H_
 #define PHASTA_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-  int phasta(int argc, char**argv);
-#ifdef __cplusplus
-}
-#endif
-
+struct RStream;
+struct GRStream;
+int phasta(int argc, char**argv);
+int phasta(int argc, char**argv, GRStream* in);
 #endif

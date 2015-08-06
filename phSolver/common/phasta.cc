@@ -9,6 +9,8 @@
 
 #include "common_c.h"
 
+#include "phstream.h"
+
 #if !(defined IOSTREAMH)
 #include <iostream>
 #include <sstream>
@@ -66,8 +68,14 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
-extern "C" int 
-phasta( int argc,   
+int phasta( int argc,   
+        char *argv[],
+        GRStream* grs) {
+  return 0;
+}
+ 
+
+int phasta( int argc,   
         char *argv[] ) {
   
     int size,ierr;
