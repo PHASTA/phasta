@@ -1,4 +1,4 @@
-extern int phasta ( int ,  char* argv[] );
+#include<phasta.h>
 
 int 
 main( int argc,   
