@@ -16,7 +16,7 @@ if(PHASTA_CHEF_ENABLED)
     ${PHASTACHEF_SOURCE_DIR}/phstream
   )
 else()
-  set(SRC_FILES ${SRC_FILES} phstreamEmpty/phsEmpty.cc)
+  set(SRC_FILES ${SRC_FILES} phstreamEmpty/phstreamEmpty.cc)
   set(COMMON_INCLUDE_DIRS ${COMMON_INCLUDE_DIRS} phstreamEmpty)
 endif()
 
