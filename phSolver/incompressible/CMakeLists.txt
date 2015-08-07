@@ -4,14 +4,14 @@ add_library(incompressible ${SRC_FILES})
 
 find_package(phastaCommon REQUIRED PATHS ${CMAKE_BINARY_DIR})
 set(PHASTAIC_LIBS ${CMAKE_THREAD_LIBS_INIT} ${PHASTA_COMMON_LIBS})
-set(PHASTAIC_INCLUDE_DIRS)
-
-add_executable(phastaIC.exe main.cc)
-include_directories(
+set(PHASTAIC_INCLUDE_DIRS
   ${PHASTAIC_INCLUDE_DIRS}
   ${PHASTA_COMMON_INCLUDE_DIRS}
   ${PHASTA_BINARY_DIR}
 )
+
+add_executable(phastaIC.exe main.cc)
+include_directories(${PHASTAIC_INCLUDE_DIRS})
 set_target_properties(phastaIC.exe PROPERTIES HAS_CXX TRUE)
 set_target_properties(incompressible PROPERTIES HAS_CXX TRUE)
 set_target_properties(phastaIC.exe PROPERTIES LINKER_LANGUAGE Fortran)
