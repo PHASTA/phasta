@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "phIO.h"
+#include "syncio.h"
+#include "posixio.h"
 
 int main(int argc, char* argv[]) {
   MPI_Init(&argc,&argv);
@@ -18,15 +20,17 @@ int main(int argc, char* argv[]) {
   int nfiles[2] = {atoi(argv[1]), 1};
   const char* dir[2] = {"4-procs_case-SyncIO-2", "4-procs_case-Posix"};
   const char* filename[2] = {"geombc-dat.", "geombc.dat."};
-  phio_fp file;
+  phio_fp file[2];
+  syncio_setup_read(nfiles[0], &(file[0]));
+  posixio_setup(&(file[1]), 'r');
   int one = 1;
   for(int i=0; i<2; i++) {
     chdir(dir[i]);
     MPI_Barrier(MPI_COMM_WORLD);
-    phio_openfile_read(filename[i], &(nfiles[i]), &file);
-    phio_readheader(file, "number of nodes", &(numberOfNodes[i]),
+    phio_openfile(filename[i], file[i]);
+    phio_readheader(file[i], "number of nodes", &(numberOfNodes[i]),
         &one, "integer", iotype);
-    phio_closefile_read(file);
+    phio_closefile(file[i]);
     chdir("..");
     MPI_Barrier(MPI_COMM_WORLD);
   }

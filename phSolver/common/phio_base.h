@@ -3,10 +3,15 @@
 struct phio_file {
   struct phio_ops const* ops;
   int* file;
+  char mode;
 };
 typedef struct phio_file* phio_fp;
-
 struct phio_ops {
+  void (*openfile)(
+      const  char keyphrase[],
+      phio_fp fileDescriptor);
+  void (*closefile)(
+      phio_fp fileDescriptor);
   void (*readheader)(
       int* fileDescriptor,
       const  char keyphrase[],
@@ -36,8 +41,6 @@ struct phio_ops {
       const int* nItems,
       const char datatype[],
       const char iotype[]);
-  void (*closefile_read)(phio_fp fileDescriptor);
-  void (*closefile_write)(phio_fp fileDescriptor);
 };
 
 #endif

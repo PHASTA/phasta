@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "phIO.h"
+#include "syncio.h"
+#include "posixio.h"
 
 int main(int argc, char* argv[]) {
   MPI_Init(&argc,&argv);
@@ -18,25 +20,29 @@ int main(int argc, char* argv[]) {
   const char* phrase = "number of fishes";
   const char* type = "double";
   const char* iotype = "binary";
+  int one = 1;
   int fish = 2;
   int numFish[2] = {0,0};
   double fishWeight[2] = {1.23,1.23};
-  int nfiles[2] = {atoi(argv[1]), 1};
+  int nfiles = atoi(argv[1]);
+  int ppf = size/nfiles;
   const char* filename[2] = {"water-dat.", "water.dat."};
-  phio_fp file;
-  int one = 1;
-  int ppf = size/nfiles[0];
+  phio_fp file[2];
+  syncio_setup_write(nfiles, one, ppf, &(file[0]));
+  posixio_setup(&(file[1]), 'w');
   for(int i=0; i<2; i++) {
-    phio_openfile_write(filename[i], &(nfiles[i]), &one, &ppf, &file);
-    phio_writeheader(file, phrase, &fish, &one, &one, type, iotype);
-    phio_writedatablock(file, phrase, &(fishWeight[i]), &one, type, iotype);
-    phio_closefile_write(file);
+    phio_openfile(filename[i], file[i]);
+    phio_writeheader(file[i], phrase, &fish, &one, &one, type, iotype);
+    phio_writedatablock(file[i], phrase, &(fishWeight[i]), &one, type, iotype);
+    phio_closefile(file[i]);
   }
+  syncio_setup_read(nfiles, &(file[0]));
+  posixio_setup(&(file[1]), 'r');
   for(int i=0; i<2; i++) {
-    phio_openfile_read(filename[i], &(nfiles[i]), &file);
-    phio_readheader(file, phrase, &(numFish[i]), &one, type, iotype);
-    phio_readdatablock(file, phrase, &(fishWeight[i]), &one, type, iotype);
-    phio_closefile_read(file);
+    phio_openfile(filename[i], file[i]);
+    phio_readheader(file[i], phrase, &(numFish[i]), &one, type, iotype);
+    phio_readdatablock(file[i], phrase, &(fishWeight[i]), &one, type, iotype);
+    phio_closefile(file[i]);
   }
   int match = (numFish[0] == numFish[1]) && (fishWeight[0] == fishWeight[1]);
   if(!rank && match)

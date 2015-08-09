@@ -29,6 +29,9 @@ c
       use iso_c_binding 
       use readarrays
       use phio
+      use syncio
+      use posixio
+      use streamio
       include "common.h"
 
       real*8, target, allocatable :: xread(:,:), qread(:,:), acread(:,:)
@@ -81,13 +84,16 @@ c
       ieleven=11
       itmp = int(log10(float(myrank+1)))+1
 
-      if(nsynciofiles.gt.0) then
-        call phio_openfile_read(c_char_'geombc-dat.' // char(0), 
-     &                          nfiles, fhandle);
-      else 
-        call phio_openfile_read(c_char_'geombc.dat.' // char(0), 
-     &                          nfiles, fhandle);
-      endif
+      if( nsynciofiles .eq. -1 ) then
+        call streamio_setup(grstream, fhandle)
+      else if( nsynciofiles .eq. 0 ) then
+        call posixio_setup(fhandle, c_char_'r')
+      else if( nsynciofiles .gt. 1 ) then
+        call syncio_setup_read(nsynciofiles, fhandle)
+      end if
+      call phio_constructName(fhandle, 
+     &        c_char_'geombc' // char(0), fname)
+      call phio_openfile_read(fname, fhandle);
 
       call phio_readheader(fhandle,c_char_'number of nodes' // char(0),
      & c_loc(numnp),ione, dataInt, iotype)

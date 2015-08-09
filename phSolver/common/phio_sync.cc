@@ -31,22 +31,54 @@ namespace {
     ss << phrase << color+1;
     return ss.str();
   }
-  void close(phio_fp f, const char* mode) {
-    closefile(f->file, mode);
-    finalizephmpiio(f->file);
-    free(f->file);
+  void close(sync_fp f, const char* mode) {
+    int* file = f->base->file;
+    closefile(file, mode);
+    finalizephmpiio(file);
+    free(file);
     free(f);
   }
 }
 
-static struct phio_ops sync_ops = {
-  sync_readheader,
-  sync_writeheader,
-  sync_readdatablock,
-  sync_writedatablock,
-  sync_closefile_read,
-  sync_closefile_write
-};
+void sync_openfile_read(
+    const char filename[],
+    phio_fp f) {
+  sync_fp sf = (sync_fp) f;
+  std::string syncName = appendColor(filename, sf->nfiles);
+  int nfields=0;
+  int nppf=0;
+  queryphmpiio(syncName.c_str(), &nfields, &nppf);
+  const char* mode = "read";
+  int* file = sf->base->file;
+  initphmpiio(&nfields, &nppf, &(sf->nfiles), file, mode); 
+  openfile(syncName.c_str(), mode, file);
+}
+
+void sync_openfile_write(
+    const char filename[],
+    phio_fp f) {
+  sync_fp sf = (sync_fp) f;
+  std::string syncName = appendColor(filename, sf->nfiles);
+  const char* mode = "write";
+  int* file = sf->base->file;
+  initphmpiio(&(sf->nfields), &(sf->nppf),
+      &(sf->nfiles), file, mode); 
+  openfile(syncName.c_str(), mode, file);
+}
+
+void sync_closefile(phio_fp f) {
+  sync_fp sf = (sync_fp) f;
+  const char m = sf->base->mode;
+  if(m == 'r')
+    close(sf, "read");
+  else if(m == 'w')
+    close(sf, "write");
+  else {
+    fprintf(stderr, "ERROR unsupported file mode in %s on line %d"
+        "... exiting", __FILE__, __LINE__);
+    exit(EXIT_FAILURE);
+  }
+}
 
 void sync_readheader(
     int* fileDescriptor,
@@ -73,9 +105,8 @@ void sync_writeheader(
       valueArray, nItems, ndataItems, datatype, iotype);
 }
 
-
 void sync_readdatablock(
-    int*  fileDescriptor,
+    int* fileDescriptor,
     const char keyphrase[],
     void* valueArray,
     int*  nItems,
@@ -96,48 +127,4 @@ void sync_writedatablock(
   std::string syncPhrase = appendSyncWrite(keyphrase);
   writedatablock(fileDescriptor, syncPhrase.c_str(),
       valueArray, nItems, datatype, iotype);
-}
-
-void sync_openfile_read(
-    const char filename[],
-    int* numFiles,
-    phio_fp* fileDescriptor) {
-  *fileDescriptor =
-    (struct phio_file*) malloc(sizeof(struct phio_file));
-  (*fileDescriptor)->ops = &sync_ops; 
-  (*fileDescriptor)->file = (int*) malloc(sizeof(int*));
-  std::string syncName = appendColor(filename, *numFiles);
-  int nfields=0;
-  int nppf=0;
-  queryphmpiio(syncName.c_str(), &nfields, &nppf);
-  const char* mode = "read";
-  initphmpiio(&nfields, &nppf, numFiles, (*fileDescriptor)->file, mode); 
-  openfile(syncName.c_str(), mode, (*fileDescriptor)->file);
-}
-
-void sync_openfile_write(
-    const char filename[],
-    int* numFiles,
-    int* numFields,
-    int* numPPF,
-    phio_fp* fileDescriptor) {
-  *fileDescriptor =
-    (struct phio_file*) malloc(sizeof(struct phio_file));
-  (*fileDescriptor)->ops = &sync_ops; 
-  (*fileDescriptor)->file = (int*) malloc(sizeof(int*));
-  std::string syncName = appendColor(filename, *numFiles);
-  //TODO - define a good upper bound
-  assert(*numFields > 0 && *numFields < 1024);
-  assert(*numPPF > 0 && *numPPF < 1024);
-  const char* mode = "write";
-  initphmpiio(numFields, numPPF, numFiles, (*fileDescriptor)->file, mode); 
-  openfile(syncName.c_str(), mode, (*fileDescriptor)->file);
-}
-
-void sync_closefile_read(phio_fp f) {
-  close(f, "read");
-}
-
-void sync_closefile_write(phio_fp f) {
-  close(f, "write");
 }

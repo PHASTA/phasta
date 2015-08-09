@@ -7,6 +7,10 @@
 extern "C" {
 #endif
   typedef struct phio_file* phio_fp;
+  void phio_openfile(
+      const char filename[],
+      phio_fp fileDescriptor);
+  void phio_closefile(phio_fp fileDescriptor);
   void phio_readheader(
       phio_fp fileDescriptor,
       const  char keyphrase[],
@@ -36,18 +40,11 @@ extern "C" {
       const int* nItems,
       const char datatype[],
       const char iotype[]);
-  void phio_openfile_read(
-      const char filename[],
-      int* numFiles,
-      phio_fp* fileDescriptor);
-  void phio_openfile_write(
-      const char filename[],
-      int* numFiles,
-      int* numFields,
-      int* numPPF,
-      phio_fp* fileDescriptor);
-  void phio_closefile_read(phio_fp fileDescriptor);
-  void phio_closefile_write(phio_fp fileDescriptor);
+  typedef enum {PHIO_SYNC,PHIO_POSIX,PHIO_STREAM} phio_format;
+  void phio_constructName(
+      phio_format format,
+      const char* inName,
+      const char* outName);
   void phio_appendStep(char* dest, int v);
 #ifdef __cplusplus
 }

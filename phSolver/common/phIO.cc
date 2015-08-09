@@ -6,8 +6,6 @@
 #include "phIO.h"
 #include "phComm.h"
 #include "phio_base.h"
-#include "phio_sync.h"
-#include "phio_posix.h"
 
 void phio_readheader(
     phio_fp f,
@@ -50,53 +48,34 @@ void phio_writedatablock(
   f->ops->writedatablock(f->file, keyphrase, valueArray,
       nItems, datatype, iotype);
 }
-void phio_openfile_read(
+
+void phio_constructName(
+    phio_format format,
+    const char inName[],
+    char* outName) {
+  std::string fullname(inName);
+  std::string gname("geombc");
+  //sync restart and geombc gets '-dat'
+  if( format == PHIO_SYNC )
+    fullname.append("-dat");
+  //posix geombc gets '.dat'
+  else if( format == PHIO_POSIX &&
+    fullname.find(gname) != std::string::npos )
+      fullname.append(".dat");
+  //posix restart gets nothing
+  sprintf(outName, "%s", fullname.c_str());
+}
+
+void phio_openfile(
     const char filename[],
-    int* numFiles,
-    phio_fp* fileDescriptor) {
-  std::string fn(filename);
-  std::string syncSuffix("-dat");
-  std::string posixSuffix(".dat");
-  if( fn.find(syncSuffix) != std::string::npos ) 
-    sync_openfile_read(fn.c_str(), numFiles, fileDescriptor);
-  else if( fn.find(posixSuffix) != std::string::npos ) 
-    posix_openfile_read(fn.c_str(), fileDescriptor);
-  else {
-  posix_openfile_read(fn.c_str(), fileDescriptor);
-/*
-    fprintf(stderr,
-        "type of file %s is unknown... exiting\n", filename);
-    exit(1);
-*/
-  }
+    phio_fp f) {
+  f->ops->openfile(filename, f);
 }
-void phio_openfile_write(
-    const char filename[],
-    int* numFiles,
-    int* numFields,
-    int* numPPF,
-    phio_fp* fileDescriptor) {
-  std::string fn(filename);
-  std::string syncSuffix("-dat");
-  std::string posixSuffix(".dat");
-  if( fn.find(syncSuffix) != std::string::npos ) 
-    sync_openfile_write(filename, numFiles, numFields, numPPF, fileDescriptor);
-  else if( fn.find(posixSuffix) != std::string::npos ) 
-    posix_openfile_write(filename, fileDescriptor);
-  else {
-    posix_openfile_write(filename, fileDescriptor);
-    /*fprintf(stderr,
-        "type of file %s is unknown... exiting\n", filename);
-    exit(1);
-    */ 
-  }
+
+void phio_closefile(phio_fp f) {
+  f->ops->closefile(f);
 }
-void phio_closefile_read(phio_fp f) {
-  f->ops->closefile_read(f);
-}
-void phio_closefile_write(phio_fp f) {
-  f->ops->closefile_write(f);
-}
+
 void phio_appendStep(char* dest, int v) {
   std::stringstream ss;
   ss << dest << v << '.';

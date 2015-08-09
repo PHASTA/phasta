@@ -28,14 +28,22 @@ namespace {
   }
 }
 
-static phio_ops posix_ops = {
-  posix_readheader,
-  posix_writeheader,
-  posix_readdatablock,
-  posix_writedatablock,
-  posix_closefile_read,
-  posix_closefile_write
-};
+void posix_openfile( const char filename[], phio_fp f) {
+  assert(f->mode == 'r' || f->mode == 'w');
+  std::string posixName = appendRank(filename);
+  if(f->mode == 'r')
+    openfile(posixName.c_str(), "read", f->file);
+  else if(f->mode == 'w')
+    openfile(posixName.c_str(), "write", f->file);
+}
+
+void posix_closefile(phio_fp f) {
+  assert(f->mode == 'r' || f->mode == 'w');
+  if(f->mode == 'r')
+    close(f, "read");
+  else if(f->mode == 'w')
+    close(f, "write");
+}
 
 void posix_readheader(
     int* fileDescriptor,
@@ -62,7 +70,6 @@ void posix_writeheader(
       nItems, ndataItems, datatype, iotype);
 }
 
-
 void posix_readdatablock(
     int*  fileDescriptor,
     const char keyphrase[],
@@ -85,36 +92,4 @@ void posix_writedatablock(
   std::string posixPhrase = appendPosix(keyphrase);
   writedatablock(fileDescriptor, posixPhrase.c_str(), valueArray,
       nItems, datatype, iotype);
-}
-
-void posix_openfile_read(
-    const char filename[],
-    phio_fp* fileDescriptor) {
-  *fileDescriptor =
-    (struct phio_file*) malloc(sizeof(struct phio_file));
-  (*fileDescriptor)->ops = &posix_ops; 
-  (*fileDescriptor)->file = (int*) malloc(sizeof(int*));
-  const char* mode = "read";
-  std::string posixName = appendRank(filename);
-  openfile(posixName.c_str(), mode, (*fileDescriptor)->file);
-}
-
-void posix_openfile_write(
-    const char filename[],
-    phio_fp* fileDescriptor) {
-  *fileDescriptor =
-    (struct phio_file*) malloc(sizeof(struct phio_file));
-  (*fileDescriptor)->ops = &posix_ops; 
-  (*fileDescriptor)->file = (int*) malloc(sizeof(int*));
-  const char* mode = "write";
-  std::string posixName = appendRank(filename);
-  openfile(posixName.c_str(), mode, (*fileDescriptor)->file);
-}
-
-void posix_closefile_read(phio_fp f) {
-  close(f, "read");
-}
-
-void posix_closefile_write(phio_fp f) {
-  close(f, "write");
 }

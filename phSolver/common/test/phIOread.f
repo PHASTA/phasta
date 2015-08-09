@@ -1,6 +1,8 @@
       program readheaderFtn
       use iso_c_binding
       use phio
+      use syncio
+      use posixio
       use chdir_mod
       include "mpif.h"
 
@@ -9,11 +11,11 @@
       end type ptrarr
 
       integer :: rank, ierror, two
-      type(c_ptr) :: handle
+      type(c_ptr), dimension(2) :: handle
       character(len=30) :: dataDbl, iotype
       character(len=256) :: phrase
       character(len=256), dimension(2) :: dir, fname
-      integer, target, dimension(2) :: nfiles, numpts, ncoords
+      integer, target, dimension(2) :: numpts, ncoords
       real(c_double), allocatable, target :: syncCoords(:,:), posixCoords(:,:)
       type(ptrarr), target, dimension(2) :: coords
 
@@ -32,19 +34,19 @@
       dir(2) = c_char_"4-procs_case-Posix"//c_null_char
       fname(1) = c_char_"geombc-dat."//c_null_char
       fname(2) = c_char_"geombc.dat."//c_null_char
-      nfiles(1) = 2
-      nfiles(2) = 1
+      call syncio_setup_read(2, handle(1))
+      call posixio_setup(handle(2), c_char_"r"//c_null_char)
       do i=1,2
         call chdir(dir(i))
         call MPI_Barrier(MPI_COMM_WORLD, ierror)
-        call phio_openfile_read(fname(i), nfiles(i), handle)
+        call phio_openfile(fname(i), handle)
         call phio_readheader(handle, phrase, c_loc(numpts), 
      &      two, dataDbl, iotype)
         ncoords(i) = numpts(1)*numpts(2)
         allocate( coords(i)%ptr(numpts(1),numpts(2)) )
         call phio_readdatablock(handle, phrase, 
      &      c_loc(coords(i)%ptr), ncoords(i), dataDbl, iotype)
-        call phio_closefile_read(handle)
+        call phio_closefile(handle)
         call chdir(c_char_'..'//c_null_char)
       end do
       if( ncoords(1) .ne. ncoords(2) ) then

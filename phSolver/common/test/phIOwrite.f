@@ -1,14 +1,16 @@
       program readheaderFtn
       use iso_c_binding
       use phio
+      use syncio
+      use posixio
       include "mpif.h"
 
-      integer, target :: rank, ierror, one, ppf, peers, fish
-      type(c_ptr) :: handle
+      integer, target :: rank, ierror, one, ppf, peers, fish, nfiles
+      type(c_ptr), dimension(2) :: handle
       character(len=30) :: dataDbl, iotype
       character(len=256) :: phrase
       character(len=256), dimension(2) :: fname
-      integer, target, dimension(2) :: nfiles, fishweight, numFish
+      integer, target, dimension(2) :: fishweight, numFish
 
       call MPI_Init(ierror)
       call MPI_Comm_rank(MPI_COMM_WORLD, rank, ierror)
@@ -25,24 +27,27 @@
 
       fname(1) = c_char_"fortranWater-dat."//c_null_char
       fname(2) = c_char_"fortranWater.dat."//c_null_char
-      nfiles(1) = 2
-      nfiles(2) = 1
-      ppf = peers/nfiles(1)
+      nfiles = 2
+      ppf = peers/nfiles
+      call syncio_setup_write(nfiles, one, ppf, handle(1))
+      call posixio_setup(handle(2), c_char_"w"//c_null_char)
       do i=1,2
-        call phio_openfile_write(fname(i), nfiles(i), one, ppf, handle)
+        call phio_openfile(fname(i), handle)
         call phio_writeheader(handle, phrase, c_loc(fish), one, one,
      &      dataDbl, iotype)
         call phio_writedatablock(handle, phrase, c_loc(fishweight(i)),
      &      one, dataDbl, iotype)
-        call phio_closefile_write(handle)
+        call phio_closefile(handle)
       end do
+      call syncio_setup_read(nfiles, handle(1))
+      call posixio_setup(handle(2), c_char_"r"//c_null_char)
       do i=1,2
-        call phio_openfile_read(fname(i), nfiles(i), handle)
+        call phio_openfile(fname(i), handle)
         call phio_readheader(handle, phrase, c_loc(numFish(i)),
      &      one, dataDbl, iotype)
         call phio_readdatablock(handle, phrase, c_loc(fishweight(i)),
      &      one, dataDbl, iotype)
-        call phio_closefile_read(handle)
+        call phio_closefile(handle)
       end do
       if( numFish(1) .ne. numFish(2) .or.
      &    fishweight(1) .ne. fishweight(2) ) then
