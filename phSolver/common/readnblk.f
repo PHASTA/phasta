@@ -50,6 +50,7 @@ c
       integer ::  numparts, nppf
       integer :: ierr_io, numprocs, itmp, itmp2
       integer :: ignored
+      integer :: fileFmt
       character*255 fname2, temp2
       character*64 temp1
       type(c_ptr) :: handle
@@ -85,15 +86,16 @@ c
       itmp = int(log10(float(myrank+1)))+1
 
       if( nsynciofiles .eq. -1 ) then
+        fileFmt = PHIO_STREAM
         call streamio_setup(grstream, fhandle)
       else if( nsynciofiles .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
       else if( nsynciofiles .gt. 1 ) then
         call syncio_setup_read(nsynciofiles, fhandle)
       end if
-      call phio_constructName(fhandle, 
-     &        c_char_'geombc' // char(0), fname)
-      call phio_openfile_read(fname, fhandle);
+      call phio_constructName(fileFmt, 
+     &        c_char_'geombc' // char(0), fname1)
+      call phio_openfile(fname1, fhandle);
 
       call phio_readheader(fhandle,c_char_'number of nodes' // char(0),
      & c_loc(numnp),ione, dataInt, iotype)
@@ -365,7 +367,7 @@ c
          allocate (point2ifath(1))
       endif
 
-      call phio_closefile_read(fhandle);
+      call phio_closefile(fhandle);
 c.... Read restart files
       if(nsynciofiles.gt.0) then
         fnamer = c_char_"restart-dat."//c_null_char
@@ -373,8 +375,18 @@ c.... Read restart files
         fnamer = c_char_"restart."//c_null_char
       endif
 
+      if( nsynciofiles .eq. -1 ) then
+        fileFmt = PHIO_STREAM
+        call streamio_setup(grstream, fhandle)
+      else if( nsynciofiles .eq. 0 ) then
+        call posixio_setup(fhandle, c_char_'r')
+      else if( nsynciofiles .gt. 1 ) then
+        call syncio_setup_read(nsynciofiles, fhandle)
+      end if
+      call phio_constructName(fileFmt, 
+     &        c_char_'restart' // char(0), fnamer)
       call phio_appendStep(fnamer, irstart)
-      call phio_openfile_read(fnamer, nfiles, fhandle)
+      call phio_openfile(fnamer, fhandle);
 
       ithree=3
 
@@ -486,7 +498,7 @@ c
 c
 c.... close c-binary files
 c
-      call phio_closefile_read(fhandle)
+      call phio_closefile(fhandle)
 
       deallocate(xread)
       if ( numpbc > 0 )  then

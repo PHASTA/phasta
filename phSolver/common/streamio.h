@@ -5,7 +5,7 @@ extern "C" {
 #endif
 typedef struct phio_file* phio_fp;
 typedef struct Stream stream;
-void streamio_setup(stream* s, phio_fp* f)
+void streamio_setup(stream* s, phio_fp* f);
 #ifdef __cplusplus
 }
 #endif

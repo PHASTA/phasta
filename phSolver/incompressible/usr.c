@@ -11,6 +11,9 @@
 #include "common_c.h"
 #include "phastaIO.h"
 #include "phIO.h"
+#include "syncio.h"
+#include "posixio.h"
+#include "streamio.h"
 #include "new_interface.h"
 #include <FCMangle.h>
 
@@ -328,20 +331,28 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    if(nfiles == 0) {
-      sprintf(filename,"restart.%d.",*lstep);
+    phio_format fmt = 0;
+    stream* grstream;
+    if( nfiles == -1 ) {
+      fmt = PHIO_STREAM;
+      streamio_setup(grstream, &fileHandle);
+    } else if( nfiles == 0 ) {
+      fmt = PHIO_POSIX;
+      posixio_setup(&fileHandle, 'r');
+    } else if( nfiles == 1 ) {
+      fmt = PHIO_SYNC;
+      syncio_setup_read(nfiles, &fileHandle);
     }
-    else {
-      sprintf(filename,"restart-dat.%d.",*lstep);
-    }
-    phio_openfile_read(filename, &nfiles, &fileHandle);
+    phio_constructName(fmt,"restart",filename);
+    phio_appendStep(filename, *lstep);
+    phio_openfile(filename, fileHandle);
 
     if ( !fileHandle ) return; // See phastaIO.cc for error fileHandle
     phio_readheader(fileHandle, "projection vectors", (void*)iarray,
                 &itwo, "integer", phasta_iotype);
 
     if ( iarray[0] != *nshg ) {
-        phio_closefile_read(fileHandle);
+        phio_closefile(fileHandle);
         if(workfc.myrank==workfc.master)
           printf("projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -378,7 +389,7 @@ readlesrestart( Integer* lesId,
     nPresPrjs = iarray[ 1 ] ;
 
     if ( lnshg != *nshg )  {
-        phio_closefile_read(fileHandle);
+        phio_closefile(fileHandle);
         if(workfc.myrank==workfc.master)
           printf("pressure projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -403,7 +414,7 @@ readlesrestart( Integer* lesId,
 
     free( projVec );
 
-    phio_closefile_read(fileHandle);
+    phio_closefile(fileHandle);
 }
 
 void  myflessolve( Integer* lesId,

@@ -7,6 +7,10 @@
 #include "phComm.h"
 #include "phio_base.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void phio_readheader(
     phio_fp f,
     const  char keyphrase[],
@@ -82,3 +86,7 @@ void phio_appendStep(char* dest, int v) {
   std::string s = ss.str();
   strcpy(dest, s.c_str());
 }
+
+#ifdef __cplusplus
+}
+#endif

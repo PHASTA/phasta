@@ -3,18 +3,22 @@
 
    Anil Karanam March 2001 */
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <assert.h>
 #include "mpi.h"
 #include "phastaIO.h"
 #include "rdtsc.h"
 #include <FCMangle.h>
 #include "new_interface.h"
 #include "phIO.h"
+#include "syncio.h"
+#include "posixio.h"
 #include "common_c.h"
 
 #ifdef intel
@@ -272,12 +276,13 @@ Write_Restart(  int* pid,
 
     if(nfiles == 0 ){
       sprintf(filename,"restart.%d.", *stepno);
-      nppf=1;
+      posixio_setup(&f_descriptor, 'w');
     } else {
       nppf=numparts/nfiles;
       sprintf(filename,"restart-dat.%d.", *stepno);
+      syncio_setup_write(nfiles, nfields, nppf, &f_descriptor);
     }
-    phio_openfile_write(filename, &nfiles, &nfields, &nppf, &f_descriptor);
+    phio_openfile(filename, f_descriptor);
 
     field_flag=0;
 
@@ -315,7 +320,7 @@ Write_Restart(  int* pid,
     field_flag++;
 
     if (field_flag==nfields){
-      phio_closefile_write(f_descriptor);
+      phio_closefile(f_descriptor);
       if (*pid==0) {
         printf("\n");
       }
@@ -376,7 +381,7 @@ Write_Error(  int* pid,
             "double", phasta_iotype );
     }
     if (field_flag==nfields){
-      phio_closefile_write(f_descriptor);
+      phio_closefile(f_descriptor);
       if (*pid==0) {
         printf("Last field %d 'errors' finished! \n",nfields);
         printf("\n");
@@ -468,7 +473,7 @@ Write_Field(  int *pid,
             datatype, phasta_iotype );
     }
     if (field_flag==nfields){
-      phio_closefile_write(f_descriptor);
+      phio_closefile(f_descriptor);
       if (*pid==0) {
         printf("Last field %d '%s' finished! \n",nfields, fieldtag);
         printf("\n");
@@ -577,65 +582,10 @@ Write_PhAvg2( int* pid,
             "double", phasta_iotype );
     }
     if (field_flag==nfields){
-      phio_closefile_write(f_descriptor);
+      phio_closefile(f_descriptor);
       if (*pid==0) {
         printf("\n");
       }
     }
     free(fieldlabel);
-}
-
-
-void
-Write_d2wall(   int* pid,
-                int* numnp,
-                double* array1 ) {
-    int isize, nitems;
-    int iarray[10];
-    int nfiles;
-    int nfields;
-    int numparts;
-    int irank;
-    int nprocs;
-
-    //  Retrieve and compute the parameters required for SyncIO
-    nfiles = outpar.nsynciofiles;
-    nfields = 1; //outpar.nsynciofieldswriterestart;  // Only the distance to the walls in d2wall
-    numparts = workfc.numpe;
-    irank = *pid; //workfc.myrank;
-    nprocs = workfc.numpe;
-
-    // Calculate number of parts each proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
-
-    int descriptor;
-    int nppf=numparts/nfiles;
-
-    phio_openfile_write("d2wall.", &nfiles, &nfields, &nppf, &f_descriptor);
-
-    field_flag=0;
-
-     int i;
-     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-        // Write solution field ...
-        isize = (*numnp);
-        nitems = 2;
-        iarray[ 0 ] = (*numnp);
-        iarray[ 1 ] = 1; //numVars = 1
-
-        phio_writeheader(f_descriptor, "d2wall", (void*)iarray, &nitems,
-            &isize, "double", phasta_iotype);
-        phio_writedatablock(f_descriptor, "d2wall", (void*)(array1), &isize,
-            "double", phasta_iotype );
-    }
-    field_flag++;
-
-    if (field_flag==nfields){
-      phio_closefile_write(f_descriptor);
-      if (irank==0) {
-        printf("\n");
-      }
-    }
 }

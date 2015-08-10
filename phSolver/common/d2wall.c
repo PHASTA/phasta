@@ -7,6 +7,9 @@
 #include "common_c.h"
 #include "phastaIO.h"
 #include "phIO.h"
+#include "syncio.h"
+#include "posixio.h"
+#include "streamio.h"
 #include "setsyncioparam.h"
 
 void
@@ -48,13 +51,21 @@ read_d2wall(  int* pid,
     // First we try to read dwal from the restart files.
     ////////////////////////////////////////////////////
 
-    if ( nfiles == 0 ) {
-      sprintf(filename,"restart.%d.", timdat.lstep);
+    phio_format fmt = 0;
+    stream* grstream;
+    if( nfiles == -1 ) {
+      fmt = PHIO_STREAM;
+      streamio_setup(grstream, &handle);
+    } else if( nfiles == 0 ) {
+      fmt = PHIO_POSIX;
+      posixio_setup(&handle, 'r');
+    } else if( nfiles == 1 ) {
+      fmt = PHIO_SYNC;
+      syncio_setup_read(nfiles, &handle);
     }
-    else {
-      sprintf(filename,"restart-dat.%d.", timdat.lstep);
-    }
-    phio_openfile_read(filename, &nfiles, &handle);
+    phio_constructName(fmt,"restart",filename);
+    phio_appendStep(filename, timdat.lstep);
+    phio_openfile(filename, handle);
 
     int i;
     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
@@ -76,7 +87,7 @@ read_d2wall(  int* pid,
         }
       }
     }
-    phio_closefile_read(handle);
+    phio_closefile(handle);
 
     if (irank==0) {
       printf("\n");

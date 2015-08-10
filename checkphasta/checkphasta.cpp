@@ -15,6 +15,8 @@
 #define OMPI_SKIP_MPICXX 1
 #include <mpi.h>
 
+#include "syncio.h"
+#include "posixio.h"
 #include "phIO.h"
 
 char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
@@ -138,7 +140,12 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
         const char* rname = getRestartName(nSyncFiles);
         asprintf(&fn,"%s/%s.%d.",casedir,rname,timestep);
         phio_fp fp;
-        phio_openfile_read(fn,&nSyncFiles,&fp);
+        if( nSyncFiles == 0 )
+          posixio_setup(&fp, 'r');
+        else if( nSyncFiles == 1 )
+          syncio_setup_read(nSyncFiles, &fp);
+        phio_openfile(rname, fp);
+
 	phio_readheader(fp, "solution", (void*) iarray, &ithree, "integer", iformat);
 	nshg = iarray[0];
 	ndof = iarray[1];
@@ -146,7 +153,7 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
 		*size = nshg*ndof;
 	solution = (double*) malloc(sizeof(double)*nshg*ndof);
 	phio_readdatablock(fp, "solution", solution, size, "double", iformat);
-	phio_closefile_read(fp);
+	phio_closefile(fp);
 	if(solutiono != NULL)
 		*solutiono = solution;
 	if(nshgo != NULL)
@@ -189,10 +196,11 @@ std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
 }
 
 const char* getRestartName(int nSyncFiles) {
+  phio_format fmt;
   if(0 == nSyncFiles)
-    return "restart";
+    fmt = PHIO_POSIX;
   else if(nSyncFiles > 0)
-    return "restart-dat";
+    fmt = PHIO_SYNC;
   else {
     fprintf(stderr, 
         "ERROR: the number of sync-io files must be"
@@ -200,4 +208,7 @@ const char* getRestartName(int nSyncFiles) {
     MPI_Abort(MPI_COMM_WORLD, 1);
     return NULL;
   }
+  char *filename = new char[1024];
+  phio_constructName(fmt,"restart",filename);
+  return filename;
 }

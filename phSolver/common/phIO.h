@@ -1,8 +1,6 @@
 #ifndef PHSOLVER_PHIO_H
 #define PHSOLVER_PHIO_H
 
-#include <FCMangle.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,7 +42,7 @@ extern "C" {
   void phio_constructName(
       phio_format format,
       const char* inName,
-      const char* outName);
+      char* outName);
   void phio_appendStep(char* dest, int v);
 #ifdef __cplusplus
 }

@@ -16,7 +16,6 @@
 //MR CHANGE END
 #define Write_PhAvg   FortranCInterface_GLOBAL_(write_phavg,WRITE_PHAVG)
 #define Write_PhAvg2  FortranCInterface_GLOBAL_(write_phavg2,WRITE_PHAVG2)
-#define Write_d2wall  FortranCInterface_GLOBAL_(write_d2wall,WRITE_D2WALL)
 //MR CHANGE END
 #define read_d2wall FortranCInterface_GLOBAL_(read_d2wall,READ_D2WALL)
 
