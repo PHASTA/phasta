@@ -10,7 +10,7 @@
         real(c_double), pointer :: ptr(:,:)
       end type ptrarr
 
-      integer :: rank, ierror, two
+      integer :: rank, ierror, two, nfiles
       type(c_ptr), dimension(2) :: handle
       character(len=30) :: dataDbl, iotype
       character(len=256) :: phrase
@@ -29,24 +29,25 @@
       dataDbl = c_char_"double"//c_null_char
       iotype =  c_char_"binary"//c_null_char
       two = 2 
+      nfiles = 2
 
       dir(1) = c_char_"4-procs_case-SyncIO-2"//c_null_char
       dir(2) = c_char_"4-procs_case-Posix"//c_null_char
       fname(1) = c_char_"geombc-dat."//c_null_char
       fname(2) = c_char_"geombc.dat."//c_null_char
-      call syncio_setup_read(2, handle(1))
+      call syncio_setup_read(nfiles, handle(1))
       call posixio_setup(handle(2), c_char_"r"//c_null_char)
       do i=1,2
         call chdir(dir(i))
         call MPI_Barrier(MPI_COMM_WORLD, ierror)
-        call phio_openfile(fname(i), handle)
-        call phio_readheader(handle, phrase, c_loc(numpts), 
+        call phio_openfile(fname(i), handle(i))
+        call phio_readheader(handle(i), phrase, c_loc(numpts), 
      &      two, dataDbl, iotype)
         ncoords(i) = numpts(1)*numpts(2)
         allocate( coords(i)%ptr(numpts(1),numpts(2)) )
-        call phio_readdatablock(handle, phrase, 
+        call phio_readdatablock(handle(i), phrase, 
      &      c_loc(coords(i)%ptr), ncoords(i), dataDbl, iotype)
-        call phio_closefile(handle)
+        call phio_closefile(handle(i))
         call chdir(c_char_'..'//c_null_char)
       end do
       if( ncoords(1) .ne. ncoords(2) ) then

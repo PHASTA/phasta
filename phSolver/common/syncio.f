@@ -4,7 +4,7 @@
         subroutine syncio_setup_read(nfiles, handle) 
      &   bind(C, NAME='syncio_setup_read')
         use :: iso_c_binding
-          integer(c_int), intent(in) :: nfiles
+          integer(c_int), value :: nfiles
           type(c_ptr) :: handle
         end subroutine
         subroutine syncio_setup_write(nfiles, nfields, nppf, handle) 
