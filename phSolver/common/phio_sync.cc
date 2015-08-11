@@ -1,5 +1,4 @@
 #include "phIO.h"
-#include "phio_base.h"
 #include "phio_sync.h"
 #include "phComm.h"
 #include <stdio.h>
@@ -32,7 +31,7 @@ namespace {
     return ss.str();
   }
   void close(sync_fp f, const char* mode) {
-    int* file = f->base->file;
+    int* file = f->file;
     closefile(file, mode);
     finalizephmpiio(file);
     free(file);
@@ -49,7 +48,7 @@ void sync_openfile_read(
   int nppf=0;
   queryphmpiio(syncName.c_str(), &nfields, &nppf);
   const char* mode = "read";
-  int* file = sf->base->file;
+  int* file = sf->file;
   initphmpiio(&nfields, &nppf, &(sf->nfiles), file, mode); 
   openfile(syncName.c_str(), mode, file);
 }
@@ -60,7 +59,7 @@ void sync_openfile_write(
   sync_fp sf = (sync_fp) f;
   std::string syncName = appendColor(filename, sf->nfiles);
   const char* mode = "write";
-  int* file = sf->base->file;
+  int* file = sf->file;
   initphmpiio(&(sf->nfields), &(sf->nppf),
       &(sf->nfiles), file, mode); 
   openfile(syncName.c_str(), mode, file);
@@ -68,7 +67,7 @@ void sync_openfile_write(
 
 void sync_closefile(phio_fp f) {
   sync_fp sf = (sync_fp) f;
-  const char m = sf->base->mode;
+  const char m = sf->mode;
   if(m == 'r')
     close(sf, "read");
   else if(m == 'w')

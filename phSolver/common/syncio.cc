@@ -24,16 +24,16 @@ static struct phio_ops sync_ops_read = {
 
 void init(sync_fp f, char mode) {
   if(mode == 'w')
-    f->base->ops = &sync_ops_write;
+    f->ops = &sync_ops_write;
   else if(mode == 'r')
-    f->base->ops = &sync_ops_read;
+    f->ops = &sync_ops_read;
   else {
     fprintf(stderr, "ERROR unsupported file mode in %s on line %d"
         "... exiting", __FILE__, __LINE__);
     exit(EXIT_FAILURE);
   }
-  f->base->file = (int*) malloc(sizeof(int*));
-  f->base->mode = mode;
+  f->file = (int*) malloc(sizeof(int*));
+  f->mode = mode;
 }
 
 void syncio_setup_read(int nfiles, phio_fp* f) {

@@ -1,8 +1,7 @@
 #ifndef PHSOLVER_PHIO_SYNC_H
 #define PHSOLVER_PHIO_SYNC_H
-typedef struct phio_file* phio_fp;
-struct syncio_file {
-  phio_fp base;
+#include "phio_base.h"
+struct syncio_file : phio_file {
   int nfiles;
   int nfields;
   int nppf;
