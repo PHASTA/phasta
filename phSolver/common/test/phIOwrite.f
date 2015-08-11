@@ -32,22 +32,22 @@
       call syncio_setup_write(nfiles, one, ppf, handle(1))
       call posixio_setup(handle(2), c_char_"w"//c_null_char)
       do i=1,2
-        call phio_openfile(fname(i), handle)
-        call phio_writeheader(handle, phrase, c_loc(fish), one, one,
+        call phio_openfile(fname(i), handle(i))
+        call phio_writeheader(handle(i), phrase, c_loc(fish), one, one,
      &      dataDbl, iotype)
-        call phio_writedatablock(handle, phrase, c_loc(fishweight(i)),
+        call phio_writedatablock(handle(i), phrase, c_loc(fishweight(i)),
      &      one, dataDbl, iotype)
-        call phio_closefile(handle)
+        call phio_closefile(handle(i))
       end do
       call syncio_setup_read(nfiles, handle(1))
       call posixio_setup(handle(2), c_char_"r"//c_null_char)
       do i=1,2
-        call phio_openfile(fname(i), handle)
-        call phio_readheader(handle, phrase, c_loc(numFish(i)),
+        call phio_openfile(fname(i), handle(i))
+        call phio_readheader(handle(i), phrase, c_loc(numFish(i)),
      &      one, dataDbl, iotype)
-        call phio_readdatablock(handle, phrase, c_loc(fishweight(i)),
+        call phio_readdatablock(handle(i), phrase, c_loc(fishweight(i)),
      &      one, dataDbl, iotype)
-        call phio_closefile(handle)
+        call phio_closefile(handle(i))
       end do
       if( numFish(1) .ne. numFish(2) .or.
      &    fishweight(1) .ne. fishweight(2) ) then

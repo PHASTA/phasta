@@ -10,9 +10,9 @@
         subroutine syncio_setup_write(nfiles, nfields, nppf, handle) 
      &   bind(C, NAME='syncio_setup_write')
         use :: iso_c_binding
-          integer(c_int), intent(in) :: nfiles
-          integer(c_int), intent(in) :: nfields
-          integer(c_int), intent(in) :: nppf
+          integer(c_int), value :: nfiles
+          integer(c_int), value :: nfields
+          integer(c_int), value :: nppf
           type(c_ptr) :: handle
         end subroutine
       end interface
