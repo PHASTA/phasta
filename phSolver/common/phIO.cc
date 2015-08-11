@@ -61,11 +61,11 @@ void phio_constructName(
   std::string gname("geombc");
   //sync restart and geombc gets '-dat'
   if( format == PHIO_SYNC )
-    fullname.append("-dat");
+    fullname.append("-dat.");
   //posix geombc gets '.dat'
   else if( format == PHIO_POSIX &&
     fullname.find(gname) != std::string::npos )
-      fullname.append(".dat");
+      fullname.append(".dat.");
   //posix restart gets nothing
   sprintf(outName, "%s", fullname.c_str());
 }
