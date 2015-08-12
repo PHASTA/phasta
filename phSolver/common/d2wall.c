@@ -64,7 +64,7 @@ read_d2wall(  int* pid,
       syncio_setup_read(nfiles, &handle);
     }
     phio_constructName(fmt,"restart",filename);
-    phio_appendStep(filename, timdat.lstep);
+    phio_appendInt(filename, timdat.lstep);
     phio_openfile(filename, handle);
 
     int i;

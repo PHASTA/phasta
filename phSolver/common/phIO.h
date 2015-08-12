@@ -43,7 +43,7 @@ extern "C" {
       phio_format format,
       const char* inName,
       char* outName);
-  void phio_appendStep(char* dest, int v);
+  void phio_appendInt(char* dest, int v);
 #ifdef __cplusplus
 }
 #endif

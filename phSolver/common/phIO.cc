@@ -80,7 +80,7 @@ void phio_closefile(phio_fp f) {
   f->ops->closefile(f);
 }
 
-void phio_appendStep(char* dest, int v) {
+void phio_appendInt(char* dest, int v) {
   std::stringstream ss;
   ss << dest << v << '.';
   std::string s = ss.str();

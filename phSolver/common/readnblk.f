@@ -385,7 +385,7 @@ c.... Read restart files
       end if
       call phio_constructName(fileFmt, 
      &        c_char_'restart' // char(0), fnamer)
-      call phio_appendStep(fnamer, irstart)
+      call phio_appendInt(fnamer, irstart)
       call phio_openfile(fnamer, fhandle);
 
       ithree=3

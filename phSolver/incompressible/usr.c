@@ -344,7 +344,7 @@ readlesrestart( Integer* lesId,
       syncio_setup_read(nfiles, &fileHandle);
     }
     phio_constructName(fmt,"restart",filename);
-    phio_appendStep(filename, *lstep);
+    phio_appendInt(filename, *lstep);
     phio_openfile(filename, fileHandle);
 
     if ( !fileHandle ) return; // See phastaIO.cc for error fileHandle
