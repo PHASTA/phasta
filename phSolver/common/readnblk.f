@@ -86,14 +86,13 @@ c
       itmp = int(log10(float(myrank+1)))+1
 
       if( nsynciofiles .eq. -1 ) then
-        fileFmt = PHIO_STREAM
         call streamio_setup(grstream, fhandle)
       else if( nsynciofiles .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
-      else if( nsynciofiles .gt. 1 ) then
+      else if( nsynciofiles .ge. 1 ) then
         call syncio_setup_read(nsynciofiles, fhandle)
       end if
-      call phio_constructName(fileFmt, 
+      call phio_constructName(fhandle, 
      &        c_char_'geombc' // char(0), fname1)
       call phio_openfile(fname1, fhandle);
 
@@ -376,14 +375,13 @@ c.... Read restart files
       endif
 
       if( nsynciofiles .eq. -1 ) then
-        fileFmt = PHIO_STREAM
         call streamio_setup(grstream, fhandle)
       else if( nsynciofiles .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
-      else if( nsynciofiles .gt. 1 ) then
+      else if( nsynciofiles .ge. 1 ) then
         call syncio_setup_read(nsynciofiles, fhandle)
       end if
-      call phio_constructName(fileFmt, 
+      call phio_constructName(fhandle,
      &        c_char_'restart' // char(0), fnamer)
       call phio_appendInt(fnamer, irstart)
       call phio_openfile(fnamer, fhandle);

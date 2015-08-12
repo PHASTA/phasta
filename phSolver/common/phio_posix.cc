@@ -93,3 +93,14 @@ void posix_writedatablock(
   writedatablock(fileDescriptor, posixPhrase.c_str(), valueArray,
       nItems, datatype, iotype);
 }
+
+void posix_constructname(
+    const char* in,
+    char* out) {
+  std::string fullname(in);
+  std::string gname("geombc");
+  if( fullname.find(gname) != std::string::npos )
+    fullname.append(".dat");
+  fullname.append(".");
+  sprintf(out, "%s", fullname.c_str());
+}

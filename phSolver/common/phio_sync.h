@@ -44,4 +44,7 @@ void sync_writedatablock(
     const int* nItems,
     const char datatype[],
     const char iotype[]);
+void sync_constructname(
+    const char* in,
+    char* out);
 #endif

@@ -78,10 +78,10 @@
         end subroutine
       end interface
       interface
-        subroutine phio_constructName(fileFmt, inName, outName)
+        subroutine phio_constructName(handle, inName, outName)
      &   bind(C, NAME='phio_constructName')
         use :: iso_c_binding
-          integer(c_int), value, intent(in) :: fileFmt
+          type(c_ptr), value :: handle
           character(c_char) :: inName(*)
           character(c_char) :: outName(*)
         end subroutine

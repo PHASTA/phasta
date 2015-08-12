@@ -10,7 +10,8 @@ static struct phio_ops posix_ops = {
   posix_readheader,
   posix_writeheader,
   posix_readdatablock,
-  posix_writedatablock
+  posix_writedatablock,
+  posix_constructname
 };
 
 void posixio_setup(phio_fp* f, char mode) {

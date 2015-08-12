@@ -24,7 +24,7 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
 std::set<int>* find_timesteps(char* casedir, int nSyncFiles);
 double compare_solution(char* lpath, char* rpath, 
     int timestep, int nump, int nSyncFiles);
-const char* getRestartName(int nSyncFiles);
+char* getRestartName(int nSyncFiles);
 
 int main(int argc, char** argv)
 {
@@ -137,13 +137,14 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
 	int nshg;
 	int ndof;
 	double* solution;
-        const char* rname = getRestartName(nSyncFiles);
-        asprintf(&fn,"%s/%s.%d.",casedir,rname,timestep);
         phio_fp fp;
         if( nSyncFiles == 0 )
           posixio_setup(&fp, 'r');
         else if( nSyncFiles == 1 )
           syncio_setup_read(nSyncFiles, &fp);
+        char rname[1024];
+        phio_constructName(fp,"restart",rname);
+        asprintf(&fn,"%s/%s.%d.",casedir,rname,timestep);
         phio_openfile(rname, fp);
 
 	phio_readheader(fp, "solution", (void*) iarray, &ithree, "integer", iformat);
@@ -179,7 +180,7 @@ std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
 		perror("Error opening case: "); 
 		MPI_Abort(MPI_COMM_WORLD,1);
 	}
-        const char* rname = getRestartName(nSyncFiles);
+        char* rname = getRestartName(nSyncFiles);
         char* fmt;
         asprintf(&fmt, "%s.%%d.%%d", rname);
 	while((d=readdir(dir)))
@@ -189,18 +190,19 @@ std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
 			step_list->insert(ts);
 		}
 	}
+        free(rname);
         free(fmt);
 	free(path);
         closedir(dir);
 	return(step_list);
 }
 
-const char* getRestartName(int nSyncFiles) {
-  phio_format fmt;
+char* getRestartName(int nSyncFiles) {
+  char* f;
   if(0 == nSyncFiles)
-    fmt = PHIO_POSIX;
+    asprintf(&f, "restart-dat.");
   else if(nSyncFiles > 0)
-    fmt = PHIO_SYNC;
+    asprintf(&f, "restart.");
   else {
     fprintf(stderr, 
         "ERROR: the number of sync-io files must be"
@@ -208,7 +210,5 @@ const char* getRestartName(int nSyncFiles) {
     MPI_Abort(MPI_COMM_WORLD, 1);
     return NULL;
   }
-  char *filename = new char[1024];
-  phio_constructName(fmt,"restart",filename);
-  return filename;
+  return f;
 }

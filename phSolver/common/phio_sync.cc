@@ -127,3 +127,11 @@ void sync_writedatablock(
   writedatablock(fileDescriptor, syncPhrase.c_str(),
       valueArray, nItems, datatype, iotype);
 }
+
+void sync_constructname(
+    const char* in,
+    char* out) {
+  std::string fullname(in);
+  fullname.append("-dat.");
+  sprintf(out, "%s", fullname.c_str());
+}

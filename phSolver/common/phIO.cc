@@ -54,20 +54,10 @@ void phio_writedatablock(
 }
 
 void phio_constructName(
-    phio_format format,
+    phio_fp f,
     const char inName[],
     char* outName) {
-  std::string fullname(inName);
-  std::string gname("geombc");
-  //sync restart and geombc gets '-dat'
-  if( format == PHIO_SYNC )
-    fullname.append("-dat.");
-  //posix geombc gets '.dat'
-  else if( format == PHIO_POSIX &&
-    fullname.find(gname) != std::string::npos )
-      fullname.append(".dat.");
-  //posix restart gets nothing
-  sprintf(outName, "%s", fullname.c_str());
+  f->ops->constructname(inName, outName);
 }
 
 void phio_openfile(

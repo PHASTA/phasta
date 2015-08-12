@@ -38,9 +38,8 @@ extern "C" {
       const int* nItems,
       const char datatype[],
       const char iotype[]);
-  typedef enum {PHIO_SYNC,PHIO_POSIX,PHIO_STREAM} phio_format;
   void phio_constructName(
-      phio_format format,
+      phio_fp fileDescriptor,
       const char* inName,
       char* outName);
   void phio_appendInt(char* dest, int v);

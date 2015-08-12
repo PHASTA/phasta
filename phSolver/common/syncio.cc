@@ -10,7 +10,8 @@ static struct phio_ops sync_ops_write = {
   sync_readheader,
   sync_writeheader,
   sync_readdatablock,
-  sync_writedatablock
+  sync_writedatablock,
+  sync_constructname
 };
 
 static struct phio_ops sync_ops_read = {
@@ -19,7 +20,8 @@ static struct phio_ops sync_ops_read = {
   sync_readheader,
   sync_writeheader,
   sync_readdatablock,
-  sync_writedatablock
+  sync_writedatablock,
+  sync_constructname
 };
 
 void init(sync_fp f, char mode) {

@@ -331,19 +331,14 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    phio_format fmt = 0;
     stream* grstream;
-    if( nfiles == -1 ) {
-      fmt = PHIO_STREAM;
+    if( nfiles == -1 )
       streamio_setup(grstream, &fileHandle);
-    } else if( nfiles == 0 ) {
-      fmt = PHIO_POSIX;
+    else if( nfiles == 0 )
       posixio_setup(&fileHandle, 'r');
-    } else if( nfiles == 1 ) {
-      fmt = PHIO_SYNC;
+    else if( nfiles > 0 )
       syncio_setup_read(nfiles, &fileHandle);
-    }
-    phio_constructName(fmt,"restart",filename);
+    phio_constructName(fileHandle,"restart",filename);
     phio_appendInt(filename, *lstep);
     phio_openfile(filename, fileHandle);
 

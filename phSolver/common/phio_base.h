@@ -41,6 +41,9 @@ struct phio_ops {
       const int* nItems,
       const char datatype[],
       const char iotype[]);
+  void (*constructname)(
+      const char inName[],
+      char* outName);
 };
 
 #endif
