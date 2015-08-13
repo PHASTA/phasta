@@ -224,7 +224,9 @@ void countfieldstowriterestart()
 
 //   if(ideformwall.eq.1) not handled yet
 
-  if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
+// KEJ says save all with this version 
+// BEFORE we do animations, we will want to have a "saveall" frequency flag
+// if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
 
     //projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)
     nfields = nfields +2;
@@ -253,7 +255,7 @@ void countfieldstowriterestart()
       nfields++; //dwal
     }
 
-  }
+//  }
 
   outpar.nsynciofieldswriterestart = nfields;
 

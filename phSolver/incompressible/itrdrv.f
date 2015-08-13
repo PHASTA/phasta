@@ -464,21 +464,26 @@ c
             enddo
         endif
 
-!MR CHANGE
-!        do irank=0,numpe-1
-!          if(irank==myrank) then
-!             write(*,*) 'NUMTASK - rank,numtask: ',myrank,ilwork(1)
-!          endif
-!          call MPI_Barrier(MPI_COMM_WORLD,ierr)
-!        enddo
-!MR CHANGE END
-
          do 2000 istp = 1, nstp
            if(iramp.eq.1) 
      &        call BCprofileScale(vbc_prof,BC,yold)
 
            call rerun_check(stopjob)
-           if(stopjob.ne.0) goto 2001
+           if(myrank.eq.master) write(*,*) 
+     &         'stopjob,lstep,istep', stopjob,lstep,istep
+           if(stopjob.eq.lstep) then
+              stopjob=-2 ! this is the code to finish
+             if ((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) then
+                if(myrank.eq.master) write(*,*) 
+     &         'line 473 says last step written so exit'
+                goto 2002  ! the step was written last step so just exit
+             else            
+                if(myrank.eq.master) 
+     &         write(*,*) 'line 473 says last step not written'
+                istep=nstp  ! have to do this so that solution will be written 
+                goto 2001
+             endif
+           endif
 
             xi=istp*1.0/nstp
             datmat(1,2,1)=rmub*(1.0-xi)+xi*rmue
@@ -748,41 +753,51 @@ c
      &                                    +    strain(:,6)*strain(:,6)))
 
             endif
-
 c
-c .. write out the solution
+c .. write out the instantaneoud solution
 c
-!MR CHANGE
+2001    continue  ! we could get here by 2001 label if user requested stop
+        if (((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) .or.
+     &      istep.eq.nstep(itseq)) then
+ 
+!so that we can see progress in force file close it so that it flushes
+!and  then reopen in append mode
 
-!             if (((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) .or.
-!      &          lstep.eq.nstep(itseq)) then
-            if (((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) .or.
-     &          istep.eq.nstep(itseq)) then
-!MR CHANGE END
+           close(iforce)
+           open (unit=iforce, file=fforce, position='append')
 
 !              Call to restar() will open restart file in write mode (and not append mode)
 !              that is needed as other fields are written in append mode
-               call restar ('out ',  yold  ,ac)
-               if(ideformwall == 1) then
-                  call write_displ(myrank, lstep, nshg, 3, uold )
-               endif
 
-               if(ivort == 1) then 
-                 call write_field(myrank,'a','vorticity',9,vorticity,
+           call restar ('out ',  yold  ,ac)
+           if(ideformwall == 1) then
+              call write_displ(myrank, lstep, nshg, 3, uold )
+           endif
+
+           if(ivort == 1) then 
+             call write_field(myrank,'a','vorticity',9,vorticity,
      &                       'd',nshg,5,lstep)
-               endif
-!MR CHANGE
-!               if(ioybar.eq.1) then
-!                 call write_field(myrank,'a','ybar',4,
-!     &                    ybar,'d',nshg,13,lstep)
-!                 call write_field(myrank,'a','ybar',4,
-!     &                    ybar,'d',nshg,12,lstep)
-!               endif
+           endif
 
-               call printmeminfo("itrdrv after checkpoint"//char(0))
-!MR CHANGE END
-
+           call printmeminfo("itrdrv after checkpoint"//char(0))
+         else if(stopjob.eq.-2) then
+           if(myrank.eq.master) then
+             write(*,*) 'line 755 says no write before stopping'
+             write(*,*) 'istep,nstep,irs',istep,nstep(itseq),irs
+           endif    
+        endif  !just the instantaneous stuff for vidos
+c
+c.... compute the consistent boundary flux
+c
+            if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
+               call Bflux ( yold,      acold,      uold,    x,
+     &                      shp,       shgl,       shpb,   
+     &                      shglb,     ilwork,     iBC,
+     &                      BC,        iper,       wallssVec)
             endif
+
+           if(stopjob.eq.-2) goto 2003
+
 
 c 
 c ... update the flow history for the impedance convolution, filter it and write it out
@@ -798,15 +813,6 @@ c
                call UpdHistConv(y,nsrflistRCR,numRCRSrfs) !uses lstep
             endif
 
-c
-c.... compute the consistent boundary flux
-c
-            if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
-               call Bflux ( yold,      acold,      uold,    x,
-     &                      shp,       shgl,       shpb,   
-     &                      shglb,     ilwork,     iBC,
-     &                      BC,        iper,       wallssVec)
-            endif
 
 c...  dump TIME SERIES
             
@@ -1103,10 +1109,154 @@ c
                   rerr(:,10)=rerr(:,10)+(yold(:,4)-ybar(:,4))**2
                endif
             endif
-            
-            if(istop.eq.1000) exit ! stop when delta small (see rstatic)
- 2000    continue
- 2001    continue
+ 2003       continue ! we get here if stopjob equals lstep and this jumped over
+!           the statistics computation because we have no new data to average in
+!           rather we are just trying to output the last state that was not already
+!           written
+c
+c.... ---------------------->  Complete Restart  Processing  <----------------------
+c   
+!   for now it is the same frequency but need to change this
+!   soon.... but don't forget to change the field counter in
+!  new_interface.cc
+!
+        if (((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) .or.
+     &      istep.eq.nstep(itseq)) then
+          if ((irs .ge. 1) .and. ((mod(lstep, ntout) .ne. 0) .or.
+     &         (nstp .eq. 0))) then
+             if(
+     &          ((irscale.ge.0).or.(itwmod.gt.0) .or. 
+     &          ((nsonmax.eq.1).and.iLES.gt.0)))
+     &          call rwvelb  ('out ',  velbar  ,ifail)
+          endif
+
+          lesId   = numeqns(1)
+          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+          if(myrank.eq.0)  then
+            tcormr1 = TMRC()
+          endif
+          call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
+     &                    nPermDims )
+          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+          if(myrank.eq.0)  then
+            tcormr2 = TMRC()
+            write(6,*) 'call saveLesRestart for projection and'//
+     &           'pressure projection vectors', tcormr2-tcormr1
+          endif
+
+          if(ierrcalc.eq.1) then
+c
+c.....smooth the error indicators
+c
+            do i=1,ierrsmooth
+              call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
+            end do
+            if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            if(myrank.eq.0)  then
+              tcormr1 = TMRC()
+            endif
+            call write_error(myrank, lstep, nshg, 10, rerr )
+            if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            if(myrank.eq.0)  then
+              tcormr2 = TMRC()
+              write(6,*) 'Time to write the error fields to the disks',
+     &            tcormr2-tcormr1
+            endif
+          endif ! ierrcalc
+
+          if(ioybar.eq.1) then
+            if(ivort == 1) then
+              call write_field(myrank,'a','ybar',4,
+     &                  ybar,'d',nshg,17,lstep)
+            else
+              call write_field(myrank,'a','ybar',4,
+     &                ybar,'d',nshg,13,lstep)
+            endif
+                 
+            if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
+              call write_field(myrank,'a','wssbar',6,
+     &             wallssVecBar,'d',nshg,3,lstep)
+            endif
+
+            if(nphasesincycle .gt. 0) then
+              if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+              if(myrank.eq.0)  then
+                tcormr1 = TMRC()
+              endif
+              do iphase=1,nphasesincycle
+                if(ivort == 1) then
+                 call write_phavg2(myrank,'a','phase_average',13,iphase,
+     &              nphasesincycle,yphbar(:,:,iphase),'d',nshg,15,lstep)
+                else
+                 call write_phavg2(myrank,'a','phase_average',13,iphase,
+     &              nphasesincycle,yphbar(:,:,iphase),'d',nshg,11,lstep)
+                endif
+              end do
+              if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+              if(myrank.eq.0)  then
+                tcormr2 = TMRC()
+                write(6,*) 'write all phase avg to the disks = ',
+     &                tcormr2-tcormr1
+              endif
+            endif !nphasesincyle
+          endif !ioybar
+
+          if ( ( ihessian .eq. 1 ) .and. ( numpe < 2 )  )then
+            uhess = zero
+            gradu = zero
+            tf = zero
+
+            do ku=1,nshg
+              tf(ku,1) = x(ku,1)**3
+            end do
+            call hessian( yold, x,     shp,  shgl,   iBC, 
+     &              shpb, shglb, iper, ilwork, uhess, gradu )
+
+            call write_hessian( uhess, gradu, nshg )
+          endif
+
+          if(iRANS.lt.0) then
+            if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            if(myrank.eq.0)  then
+              tcormr1 = TMRC()
+            endif
+            call write_field(myrank,'a','dwal',4,d2wall,'d',
+     &                       nshg,1,lstep)
+            if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+            if(myrank.eq.0)  then
+              tcormr2 = TMRC()
+              write(6,*) 'Time to write dwal to the disks = ',
+     &        tcormr2-tcormr1
+            endif
+          endif !iRANS
+
+        endif ! write out complete restart state
+        !next 2 lines are two ways to end early
+        if(stopjob.eq.-2) goto 2002    
+        if(istop.eq.1000) goto 2002 ! stop when delta small (see rstatic)
+ 2000 continue
+ 2002 continue
+
+! dnoe with time stepping so deallocate fields alfready written
+!
+          if(ioybar.eq.1) then
+            deallocate(ybar)
+            if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
+              deallocate(wallssVecbar)
+            endif
+            if(nphasesincycle .gt. 0) then
+              deallocate(yphbar)
+            endif !nphasesincyle
+          endif !ioybar
+          if(ivort == 1) then
+            deallocate(strain,vorticity)
+          endif
+          if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
+            deallocate(wallssVec) 
+          endif
+          if(iRANS.lt.0) then
+            deallocate(d2wall)
+          endif
         
 
 CAD         tcorecp2 = second(0)
@@ -1137,180 +1287,6 @@ c         call MPI_ABORT(MPI_COMM_WORLD, ierr)
 
  3000 continue
  
-c
-c.... ---------------------->  Post Processing  <----------------------
-c
-c.... print out the last step
-c
-      if ((irs .ge. 1) .and. ((mod(lstep, ntout) .ne. 0) .or.
-     &     (nstp .eq. 0))) then
-         if(
-     &              ((irscale.ge.0).or.(itwmod.gt.0) .or. 
-     &              ((nsonmax.eq.1).and.iLES.gt.0)))
-     &              call rwvelb  ('out ',  velbar  ,ifail)
-      endif
-
-
-         lesId   = numeqns(1)
-
-!MR CHANGE
-          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-          if(myrank.eq.0)  then
-            tcormr1 = TMRC()
-          endif
-!MR CHANGE END
-
-         call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
-     &                        nPermDims )
-
-!MR CHANGE
-        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-        if(myrank.eq.0)  then
-          tcormr2 = TMRC()
-          write(6,*) 'Time to call saveLesRestart for projection and'//
-     &               'pressure projection vectors', tcormr2-tcormr1
-        endif
-!MR CHANGE END
-
-
-      if(ierrcalc.eq.1) then
-c
-c.....smooth the error indicators
-c
-        do i=1,ierrsmooth
-            call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
-        end do
-
-!MR CHANGE
-        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-        if(myrank.eq.0)  then
-          tcormr1 = TMRC()
-        endif
-!MR CHANGE END
-
-         call write_error(myrank, lstep, nshg, 10, rerr )
-
-!MR CHANGE
-        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-        if(myrank.eq.0)  then
-          tcormr2 = TMRC()
-          write(6,*) 'Time to write the error fields to the disks',
-     &                tcormr2-tcormr1
-        endif
-!MR CHANGE END
-
-
-      endif
-
-      if(ioybar.eq.1) then
-
-!MR CHANGE
-!        call write_field(myrank,'a','ybar',4,
-!     &                    ybar,'d',nshg,12,lstep)
-         if(ivort == 1) then
-           call write_field(myrank,'a','ybar',4,
-     &                      ybar,'d',nshg,17,lstep)
-         else
-           call write_field(myrank,'a','ybar',4,
-     &                    ybar,'d',nshg,13,lstep)
-         endif
-         deallocate(ybar)
-
-                 
-         if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
-           call write_field(myrank,'a','wssbar',6,
-     &                 wallssVecBar,'d',nshg,3,lstep)
-           deallocate(wallssVecbar)
-         endif
-
-!MR CHANGE END
-        if(nphasesincycle .gt. 0) then
-
-          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-          if(myrank.eq.0)  then
-            tcormr1 = TMRC()
-          endif
-
-          do iphase=1,nphasesincycle
-
-!           call write_phavg(myrank,'w','phase average',13,iphase,
-!     &                      yphbar(:,:,iphase),'d',nshg,5,lstep)
-!           ! ybar field is repeated in files for phase average
-!           call write_phavg(myrank,'a','ybar',4,iphase,
-!     &                      ybar(:,1:5),'d',nshg,5,lstep)
-            if(ivort == 1) then
-              call write_phavg2(myrank,'a','phase_average',13,iphase,
-     &             nphasesincycle,yphbar(:,:,iphase),'d',nshg,15,lstep)
-            else
-              call write_phavg2(myrank,'a','phase_average',13,iphase,
-     &             nphasesincycle,yphbar(:,:,iphase),'d',nshg,11,lstep)
-            endif
-
-          end do
-
-          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-          if(myrank.eq.0)  then
-              tcormr2 = TMRC()
-              write(6,*) 'Time to write all phase avg to the disks = ',
-     &                        tcormr2-tcormr1
-          endif
-          deallocate(yphbar)
-        endif
-
-      endif
-
-      if(ivort == 1) then
-         deallocate(strain,vorticity)
-      endif
-
-      if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
-        deallocate(wallssVec) 
-      endif
-
-!MR CHANGE END
-
-      if ( ( ihessian .eq. 1 ) .and. ( numpe < 2 )  )then
-          uhess = zero
-          gradu = zero
-          tf = zero
-
-          do ku=1,nshg
-c           tf(ku,1) = x(ku,1)**2+2*x(ku,1)*x(ku,2)
-            tf(ku,1) = x(ku,1)**3
-          end do
-
-          call hessian( yold, x,     shp,  shgl,   iBC, 
-     &                  shpb, shglb, iper, ilwork, uhess, gradu )
-
-          call write_hessian( uhess, gradu, nshg )
-      endif
-
-c      if(iRANS.lt.0 .and. idistcalc.eq.1) then
-      if(iRANS.lt.0) then
-c         call write_field(myrank,'a','DESd',4,
-c     &                    elDw,'d',numel,1,lstep)
-
-!MR CHANGE
-        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-        if(myrank.eq.0)  then
-           tcormr1 = TMRC()
-        endif
-!MR CHANGE END
-
-        call write_field(myrank,'a','dwal',4,d2wall,'d',nshg,1,lstep)
-        deallocate(d2wall)
-
-!MR CHANGE
-        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-        if(myrank.eq.0)  then
-          tcormr2 = TMRC()
-          write(6,*) 'Time to write dwal to the disks = ',
-     &                tcormr2-tcormr1
-        endif
-!MR CHANGE END
-
-
-      endif
 
 c
 c.... close history and aerodynamic forces files
