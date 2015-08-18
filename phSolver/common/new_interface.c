@@ -274,7 +274,9 @@ Write_Restart(  int* pid,
     char filename[255];
     bzero((void*)filename,255);
 
-    if(nfiles == 0 ){
+    if(nfiles == -1 ){
+      streamio_setup(rstream, &f_descriptor, 'w');
+    } if(nfiles == 0 ){
       sprintf(filename,"restart.%d.", *stepno);
       posixio_setup(&f_descriptor, 'w');
     } else {
