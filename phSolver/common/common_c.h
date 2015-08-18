@@ -1,9 +1,9 @@
-// Routine contains the structures for reading the user input through
-// input_fform.cpp. The default values for all these variables are defined in
-// input.config.
-//
-// Input variables that have been previously declared in common.h have to be
-// re-declared here, in a consistant structure.   
+/* Routine contains the structures for reading the user input through
+ input_fform.cpp. The default values for all these variables are defined in
+ input.config.
+
+ Input variables that have been previously declared in common.h have to be
+ re-declared here, in a consistant structure.*/
 
 #include <FCMangle.h>
 
@@ -269,8 +269,6 @@ extern "C" {
     double pres_ini;
     double evis_ini;
   } ctrlvar;
-//////////////////////////////////////////
-
  
   extern struct { 
     double epsilon_ls;
@@ -431,10 +429,10 @@ extern "C" {
   extern struct { 
     double pr, Planck, Stephan, Nh, Rh, Rgas;
     double gamma, gamma1, s0;
-    //, const, xN2, xO2;
-    //double yN2,    yO2,    Msh[5], cpsh[5],s0sh[5],h0sh[5];
-    //double Rs[5],  cps[5], cvs[5], h0s[5], Trot[5],sigs[5];
-    //double Tvib[5],g0s[5], dofs[5],ithm;
+    /*, const, xN2, xO2;*/
+    /*double yN2,    yO2,    Msh[5], cpsh[5],s0sh[5],h0sh[5];*/
+    /*double Rs[5],  cps[5], cvs[5], h0s[5], Trot[5],sigs[5];*/
+    /*double Tvib[5],g0s[5], dofs[5],ithm;*/
   } mmatpar ;
 
   extern struct { 
@@ -452,14 +450,12 @@ extern "C" {
     int nstepsincycle;
     int nphasesincycle;
     int ncycles_startphaseavg;
-//MR CHANGE
     int ivort;
     int icomputevort;
     int nsynciofiles;
     int nsynciofieldswriterestart;
     int iv_rankpercore;
     int iv_corepernode; 
-//MR CHANGE END
     /*  int iostats; */
 /*      int ipresref; */
   } outpar ;

@@ -118,7 +118,7 @@ extern "C" {
   int computeColor( int myrank, int numprocs, int nfiles);
 
 #ifdef __cplusplus
-} // end of extern "C".
+} /* end of extern "C".*/
 
 #include <string>
 
@@ -171,8 +171,8 @@ write_header( const int  fileDescriptor,
 }
 
 
-} // namespace PHASTA
+} /* namespace PHASTA */
 
-#endif // __cplusplus
+#endif /* __cplusplus */
 
-#endif // _PHASTAIO_H_
+#endif /* _PHASTAIO_H_ */

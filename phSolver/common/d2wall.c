@@ -2,7 +2,7 @@
 #include <FCMangle.h>
 #include <new_interface.h>
 #include <stdio.h>
-#include <string.h> //memset
+#include <string.h> /*memset*/
 #include <assert.h>
 #include "common_c.h"
 #include "phastaIO.h"
@@ -21,7 +21,7 @@ read_d2wall(  int* pid,
     int iarray[10];
     int j;
     for ( j = 0; j < 10; j++) { 
-       //Initialize iarray to 0 so that we can assess the result of readheader
+       /*Initialize iarray to 0 so that we can assess the result of readheader*/
        iarray[j] = 0;
     }
 
@@ -31,25 +31,23 @@ read_d2wall(  int* pid,
     int irank;
     int nprocs;
 
-    //  Retrieve and compute the parameters required for SyncIO
+    /*  Retrieve and compute the parameters required for SyncIO */
     nfiles = outpar.nsynciofiles;
     numparts = workfc.numpe;
-    irank = *pid; // workfc.myrank;
+    irank = *pid; /* workfc.myrank; */
     nprocs = workfc.numpe;
 
-    // Calculate number of parts each proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
+    /* Calculate number of parts each proc deal with and where it start and end ... */
+    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ... */
     assert(nppp==1);
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
+    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ... */
+    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ... */
 
     phio_fp handle;
     char filename[255],path[255];
     memset((void*)filename,0,255);
     *foundd2wall = 0;
-    ////////////////////////////////////////////////////
-    // First we try to read dwal from the restart files.
-    ////////////////////////////////////////////////////
+    /* First we try to read dwal from the restart files. */
 
     stream* grstream;
     if( nfiles == -1 )
@@ -63,7 +61,7 @@ read_d2wall(  int* pid,
     phio_openfile(filename, handle);
 
     int i;
-    for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
+    for ( i = 0; i < nppp; i++) { /*This loop is useful only if several parts per processor*/
       nitems = 2;
       phio_readheader(handle, "dwal", (void*)iarray, &nitems, "double", phasta_iotype);
 
@@ -75,7 +73,7 @@ read_d2wall(  int* pid,
         isize = (*numnp);
         phio_readdatablock(handle, "dwal", (void*)(array1), &isize, "double", phasta_iotype );
       }
-      else { //d2wall fields was not found in the restart file
+      else { /*d2wall fields was not found in the restart file*/
         *foundd2wall = 0;
         if (irank==0) {
           printf("d2wall field not found in %s - trying d2wall files now\n",filename);

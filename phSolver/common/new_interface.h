@@ -13,10 +13,8 @@
 #define Write_Error   FortranCInterface_GLOBAL_(write_error,WRITE_ERROR)
 #define Write_Displ   FortranCInterface_GLOBAL_(write_displ,WRITE_DISPL)
 #define Write_Field   FortranCInterface_GLOBAL_(write_field,WRITE_FIELD)
-//MR CHANGE END
 #define Write_PhAvg   FortranCInterface_GLOBAL_(write_phavg,WRITE_PHAVG)
 #define Write_PhAvg2  FortranCInterface_GLOBAL_(write_phavg2,WRITE_PHAVG2)
-//MR CHANGE END
 #define read_d2wall FortranCInterface_GLOBAL_(read_d2wall,READ_D2WALL)
 
 extern char phasta_iotype[80];
@@ -97,4 +95,4 @@ read_d2wall(  int* pid,
               int* foundd2wall );
 
 
-#endif //header guard
+#endif
