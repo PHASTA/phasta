@@ -68,7 +68,7 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
-int phasta( int argc,   
+int phasta(int argc,
         char *argv[],
         GRStream* grs) {
   fprintf(stderr, "HEY! if you see this email Cameron and tell him "
@@ -76,9 +76,27 @@ int phasta( int argc,
       "... returning an error\n", __func__, __LINE__, __FILE__);
   return 1;
 }
- 
 
-int phasta( int argc,   
+int phasta(int argc,
+        char *argv[],
+        RStream* rs) {
+  fprintf(stderr, "HEY! if you see this email Cameron and tell him "
+      "to implement %s(...) on line %d of %s "
+      "... returning an error\n", __func__, __LINE__, __FILE__);
+  return 1;
+}
+
+int phasta(int argc,
+        char *argv[],
+        GRStream* grs,
+        RStream* rs) {
+  fprintf(stderr, "HEY! if you see this email Cameron and tell him "
+      "to implement %s(...) on line %d of %s "
+      "... returning an error\n", __func__, __LINE__, __FILE__);
+  return 1;
+}
+
+int phasta( int argc,
         char *argv[] ) {
   
     int size,ierr;

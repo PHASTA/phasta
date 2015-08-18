@@ -4,4 +4,6 @@ struct RStream;
 struct GRStream;
 int phasta(int argc, char**argv);
 int phasta(int argc, char**argv, GRStream* in);
+int phasta(int argc, char**argv, RStream* out);
+int phasta(int argc, char**argv, GRStream* in, RStream* out);
 #endif
