@@ -19,6 +19,7 @@
 #include "phIO.h"
 #include "syncio.h"
 #include "posixio.h"
+#include "streamio.h"
 #include "common_c.h"
 
 #ifdef intel
@@ -274,8 +275,9 @@ Write_Restart(  int* pid,
     char filename[255];
     bzero((void*)filename,255);
 
+    rstream hackcrap; /* FIXME */
     if(nfiles == -1 ){
-      streamio_setup(rstream, &f_descriptor, 'w');
+      streamio_setup_write(&f_descriptor, hackcrap);
     } if(nfiles == 0 ){
       sprintf(filename,"restart.%d.", *stepno);
       posixio_setup(&f_descriptor, 'w');
