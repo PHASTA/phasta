@@ -49,7 +49,7 @@ read_d2wall(  int* pid,
     *foundd2wall = 0;
     /* First we try to read dwal from the restart files. */
 
-    grstream hackcake; /* FIXME */
+    grstream hackcake = NULL; /* FIXME */
     if( nfiles == -1 )
       streamio_setup_read(&handle, hackcake);
     else if( nfiles == 0 )
