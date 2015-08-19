@@ -69,12 +69,44 @@ piarray( void* iarray , int start, int end ) {
 }
 
 int phasta(int argc,
-        char *argv[],
-        GRStream* grs) {
-  fprintf(stderr, "HEY! if you see this email Cameron and tell him "
-      "to implement %s(...) on line %d of %s "
-      "... returning an error\n", __func__, __LINE__, __FILE__);
-  return 1;
+    char *argv[],
+    grstream grs) {
+  int size,ierr;
+  char inpfilename[100];
+  int initialized;
+  MPI_Initialized(&initialized);
+  if( !initialized )
+    MPI_Init(&argc,&argv);
+  MPI_Comm_size (MPI_COMM_WORLD, &size);
+  MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+
+  workfc.numpe = size;
+  workfc.myrank = myrank;
+
+  /* Input data  */
+  ierr = input_fform("solver.inp");
+  if(!ierr){
+    sprintf(inpfilename,"%d-procs_case/",size);
+    if( chdir( inpfilename ) ) {
+      cerr << "could not change to the problem directory "
+        << inpfilename << endl;
+      return 1;
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    setIOparam();
+    input();
+    /* now we can start the solver */
+    proces();
+  }
+  else{
+    printf("error during reading ascii input \n");
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  if ( myrank == 0 ) {
+    printf("phasta.cc - last call before finalize!\n");
+  }
+  MPI_Finalize();
+  return 0;
 }
 
 int phasta(int argc,
