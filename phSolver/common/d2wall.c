@@ -47,11 +47,11 @@ read_d2wall(  int* pid,
     *foundd2wall = 0;
     /* First we try to read dwal from the restart files. */
 
-    if( outpar.output_mode == -1 )
+    if( outpar.input_mode == -1 )
       streamio_setup_read(&handle, streamio_get_gr());
-    else if( outpar.output_mode == 0 )
+    else if( outpar.input_mode == 0 )
       posixio_setup(&handle, 'r');
-    else if( outpar.output_mode > 0 )
+    else if( outpar.input_mode > 0 )
       syncio_setup_read(outpar.nsynciofiles, &handle);
     phio_constructName(handle,"restart",filename);
     phio_appendInt(filename, timdat.lstep);
