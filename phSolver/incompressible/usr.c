@@ -331,9 +331,8 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    grstream hackcake = NULL;
     if( nfiles == -1 )
-      streamio_setup_read(&fileHandle, hackcake);
+      streamio_setup_read(&fileHandle, streamio_get_gr());
     else if( nfiles == 0 )
       posixio_setup(&fileHandle, 'r');
     else if( nfiles > 0 )
