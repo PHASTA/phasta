@@ -71,6 +71,14 @@ extern "C" {
     closefile( int* fileDescriptor,
                 const char mode[] );
 
+
+    int
+    readHeader( FILE*       fileObject,
+                const char  phrase[],
+                int*        params,
+                int         numParams,
+                const char   iotype[] );
+
     void
     readheader( int*   fileDescriptor,
                  const char  keyphrase[],

@@ -1354,6 +1354,12 @@ void closefile( int* fileDescriptor,
 	printPerf("closefile_", timer_start, timer_end, 0, 0, "");
 }
 
+int readHeader( FILE* f, const char phrase[],
+    int* params, int numParams, const char* iotype) {
+  isBinary(iotype);
+  return readHeader(f,phrase,params,numParams);
+}
+
 void readheader( int* fileDescriptor,
                   const  char keyphrase[],
                   void* valueArray,
