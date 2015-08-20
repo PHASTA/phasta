@@ -213,6 +213,7 @@ int input_fform(char inpfname[])
 
     conpar.necho = inp.GetValue("Verbosity Level");
     outpar.ntout = inp.GetValue("Number of Timesteps between Restarts");
+    outpar.nsynciofiles = inp.GetValue("Number of SyncIO Files");
     if((string)inp.GetValue("Print Statistics") == "True") outpar.ioform = 2;
     else outpar.ioform = 1;
   

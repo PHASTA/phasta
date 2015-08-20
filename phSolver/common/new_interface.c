@@ -277,7 +277,7 @@ Write_Restart(  int* pid,
 
     rstream hackcrap; /* FIXME */
     if(outpar.output_mode == -1 ){
-      streamio_setup_write(&f_descriptor, hackcrap);
+      streamio_setup_write(&f_descriptor, hackcrap); /* FIXME */
     } if(outpar.output_mode == 0 ){
       sprintf(filename,"restart.%d.", *stepno);
       posixio_setup(&f_descriptor, 'w');

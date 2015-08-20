@@ -18,14 +18,13 @@ c
         integer mater(ibksz)
         integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
-        integer :: descriptor, descriptorG, GPID, color, nfiles
+        integer :: descriptor, descriptorG, GPID, color
         integer ::  numparts, writeLock
         integer :: ierr_io, numprocs
         integer, target :: itpblktot,ierr,iseven
         character*255 fname2
         character(len=30) :: dataInt
         dataInt = c_char_'integer'//c_null_char
-        nfiles = nsynciofiles
         numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
         ione=1
         itwo=2
@@ -54,7 +53,7 @@ c
 
             intfromfile(:)=-1
             iblk = iblk+1
-            if(nfiles.gt.0) then
+            if(input_mode.eq.1) then
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
@@ -79,7 +78,7 @@ c
 
         do iblk = 1, itpblktot
            writeLock=0;
-            if(nfiles.gt.0) then
+            if(input_mode.eq.1) then
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 

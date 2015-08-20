@@ -20,7 +20,7 @@ c
         integer materb(ibksz)
         integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
-        integer :: descriptor, descriptorG, GPID, color, nfiles, nfields
+        integer :: descriptor, descriptorG, GPID, color, nfields
         integer :: numparts, nppp, nprocs, writeLock
         integer :: ierr_io, numprocs, itmp, itmp2 
         integer, target :: itpblktot,ierr
@@ -29,7 +29,6 @@ c
         dataInt = c_char_'integer'//c_null_char
         dataDbl = c_char_'double'//c_null_char
 
-        nfiles = nsynciofiles
         nfields = nsynciofieldsreadgeombc
         numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
         nppp = numparts/numpe
@@ -61,7 +60,7 @@ c
 
             intfromfile(:)=-1
             iblk = iblk+1
-            if(nfiles.gt.0)then
+            if(input_mode.eq.1)then
                write (fname2,"('connectivity boundary',i1)") iblk
             else
                write (fname2,"('connectivity boundary linear tetrahedron')")
@@ -84,7 +83,7 @@ c
 
         do iblk = 1, itpblktot
            writeLock=0;
-            if(nfiles.gt.0)then
+            if(input_mode.eq.1)then
                write (fname2,"('connectivity boundary',i1)") iblk
             else
                write (fname2,"('connectivity boundary linear tetrahedron')")
@@ -118,7 +117,7 @@ c
 c.... Read the boundary flux codes
 c
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-            if(nfiles.gt.0)then
+            if(input_mode.eq.1)then
                write (fname2,"('nbc codes',i1)") iblk
             else
                write (fname2,"('nbc codes linear tetrahedron')")
@@ -133,7 +132,7 @@ c
 c.... read the boundary condition data
 c     
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-            if(nfiles.gt.0)then
+            if(input_mode.eq.1)then
                write (fname2,"('nbc values',i1)") iblk
             else
                write (fname2,"('nbc values linear tetrahedron')")
