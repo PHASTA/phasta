@@ -3,7 +3,7 @@
       include "common.h"
 
       dimension   u(nshg,n),rnan(2)
-      character*8 arrname
+      character(len=*) arrname
 
       nnanq = 0
       nlarge = 0
