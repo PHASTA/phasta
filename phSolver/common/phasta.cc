@@ -74,10 +74,6 @@ int phasta(int argc,
     grstream grs) {
   int size,ierr;
   char inpfilename[100];
-  int initialized;
-  MPI_Initialized(&initialized);
-  if( !initialized )
-    MPI_Init(&argc,&argv);
   MPI_Comm_size (MPI_COMM_WORLD, &size);
   MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
 
@@ -107,7 +103,6 @@ int phasta(int argc,
   if ( myrank == 0 ) {
     printf("phasta.cc - last call before finalize!\n");
   }
-  MPI_Finalize();
   return 0;
 }
 
@@ -132,14 +127,9 @@ int phasta(int argc,
 
 int phasta( int argc,
         char *argv[] ) {
-  
     int size,ierr;
     char inpfilename[100];
     char* pauseDebugger = getenv("catchDebugger");
-    int initialized;
-    MPI_Initialized(&initialized);
-    if( !initialized )
-      MPI_Init(&argc,&argv);
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
 
@@ -216,6 +206,5 @@ int phasta( int argc,
     if ( myrank == 0 ) {
       printf("phasta.cc - last call before finalize!\n");
     }
-    MPI_Finalize();
     return 0;
 }
