@@ -1544,6 +1544,33 @@ void readheader( int* fileDescriptor,
 
 }
 
+void readDataBlock(
+    FILE* fileObject,
+    void* valueArray,
+    int nItems,
+    const char  datatype[],
+    const char  iotype[] )
+{
+  isBinary(iotype);
+  size_t type_size = typeSize( datatype );
+  if ( binary_format ) {
+    char junk = '\0';
+    fread( valueArray, type_size, nItems, fileObject );
+    fread( &junk, sizeof(char), 1 , fileObject );
+    if ( Wrong_Endian ) SwapArrayByteOrder( valueArray, type_size, nItems );
+  } else {
+    char* ts1 = StringStripper( datatype );
+    if ( cscompare( "integer", ts1 ) ) {
+      for( int n=0; n < nItems ; n++ )
+        fscanf(fileObject, "%d\n",(int*)((int*)valueArray+n) );
+    } else if ( cscompare( "double", ts1 ) ) {
+      for( int n=0; n < nItems ; n++ )
+        fscanf(fileObject, "%lf\n",(double*)((double*)valueArray+n) );
+    }
+    free (ts1);
+  }
+}
+
 void readdatablock( int*  fileDescriptor,
                      const char keyphrase[],
                      void* valueArray,
@@ -1598,29 +1625,8 @@ void readdatablock( int*  fileDescriptor,
                 }
 		fileObject = fileArray[ filePtr ];
 		Wrong_Endian = byte_order[ filePtr ];
-
-		size_t type_size = typeSize( datatype );
-		int nUnits = *nItems;
-		isBinary( iotype );
-
                 LastHeaderKey.erase(filePtr);
-
-		if ( binary_format ) {
-			fread( valueArray, type_size, nUnits, fileObject );
-			fread( &junk, sizeof(char), 1 , fileObject );
-			if ( Wrong_Endian ) SwapArrayByteOrder( valueArray, type_size, nUnits );
-		} else {
-
-			char* ts1 = StringStripper( datatype );
-			if ( cscompare( "integer", ts1 ) ) {
-				for( int n=0; n < nUnits ; n++ )
-					fscanf(fileObject, "%d\n",(int*)((int*)valueArray+n) );
-			} else if ( cscompare( "double", ts1 ) ) {
-				for( int n=0; n < nUnits ; n++ )
-					fscanf(fileObject, "%lf\n",(double*)((double*)valueArray+n) );
-			}
-			free (ts1);
-		}
+                readDataBlock(fileObject,valueArray,*nItems,datatype,iotype);
 
 		//return;
 	}

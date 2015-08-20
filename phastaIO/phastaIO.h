@@ -97,6 +97,13 @@ extern "C" {
                   const char  iotype[] );
 
     void
+    readDataBlock( FILE* fileObject,
+                   void* valueArray,
+                   int nItems,
+                   const char  datatype[],
+                   const char  iotype[] );
+
+    void
     readdatablock( int*  fileDescriptor,
                     const char keyphrase[],
                     void* valueArray,
