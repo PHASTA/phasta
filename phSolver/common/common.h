@@ -198,20 +198,16 @@ c
         logical         mexist
         common /matdat/ datmat(3,7,MAXTS),      matflg(6,MAXTS),
      &                  nummat,                 mexist
-c
-cMR CHANGE
-c         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
-c      &                  ioform, iowflux, iofieldv, iotype, ioybar,
-c      &                  nstepsincycle, nphasesincycle, ncycles_startphaseavg
+
+        integer input_mode, output_mode
         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
      &                  ioform, iowflux, iofieldv, iotype, ioybar,
      &                  nstepsincycle, nphasesincycle, 
      &                  ncycles_startphaseavg, ivort, icomputevort,
      &                  nsynciofiles, nsynciofieldswriterestart, 
-     &                  iv_rankpercore, iv_corepernode 
-cMR CHANGE END
+     &                  iv_rankpercore, iv_corepernode, 
+     &                  input_mode, output_mode
 
-c
         common /point / mbeg,   mend,   mprec
 c
         common /precis/ epsM,   iabres

@@ -79,7 +79,8 @@ int phasta(int argc,
 
   workfc.numpe = size;
   workfc.myrank = myrank;
-  outpar.nsynciofiles = -1; //FIXME magic value
+  outpar.input_mode = -1; //FIXME magic value for streams
+  outpar.output_mode = 1; //FIXME magic value for syncio
   streamio_set_gr(grs);
 
   /* Input data  */
@@ -194,10 +195,12 @@ int phasta( int argc,
         return 1;
       }
       MPI_Barrier(MPI_COMM_WORLD);
-        setIOparam();
-        input();
-        /* now we can start the solver */
-        proces();
+      setIOparam();
+      outpar.input_mode = outpar.nsynciofiles; //FIXME this is awful
+      outpar.output_mode = outpar.nsynciofiles; //FIXME this is awful
+      input();
+      /* now we can start the solver */
+      proces();
     }
     else{
         printf("error during reading ascii input \n");

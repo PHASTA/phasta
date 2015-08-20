@@ -46,7 +46,7 @@ c
       character*255 warning
       integer igeomBAK, ibndc, irstin, ierr
       integer, target :: intfromfile(50) ! integers read from headers
-      integer :: descriptor, descriptorG, GPID, color, nfiles, nfields
+      integer :: descriptor, descriptorG, GPID, color, nfields
       integer ::  numparts, nppf
       integer :: ierr_io, numprocs, itmp, itmp2
       integer :: ignored
@@ -77,7 +77,6 @@ c
 c.... open input files
 c.... input the geometry parameters
 c
-      nfiles = nsynciofiles
       numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
 
       itwo=2
@@ -85,11 +84,11 @@ c
       ieleven=11
       itmp = int(log10(float(myrank+1)))+1
 
-      if( nsynciofiles .eq. -1 ) then
+      if( input_mode .eq. -1 ) then
         call streamio_setup_read(fhandle, geomRestartStream)
-      else if( nsynciofiles .eq. 0 ) then
+      else if( input_mode .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
-      else if( nsynciofiles .ge. 1 ) then
+      else if( input_mode .ge. 1 ) then
         call syncio_setup_read(nsynciofiles, fhandle)
       end if
       call phio_constructName(fhandle, 
@@ -368,17 +367,11 @@ c
 
       call phio_closefile(fhandle);
 c.... Read restart files
-      if(nsynciofiles.gt.0) then
-        fnamer = c_char_"restart-dat."//c_null_char
-      else 
-        fnamer = c_char_"restart."//c_null_char
-      endif
-
-      if( nsynciofiles .eq. -1 ) then
+      if( input_mode .eq. -1 ) then
         call streamio_setup_read(fhandle, geomRestartStream)
-      else if( nsynciofiles .eq. 0 ) then
+      else if( input_mode .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
-      else if( nsynciofiles .ge. 1 ) then
+      else if( input_mode .ge. 1 ) then
         call syncio_setup_read(nsynciofiles, fhandle)
       end if
       call phio_constructName(fhandle,

@@ -276,14 +276,14 @@ Write_Restart(  int* pid,
     bzero((void*)filename,255);
 
     rstream hackcrap; /* FIXME */
-    if(nfiles == -1 ){
+    if(outpar.output_mode == -1 ){
       streamio_setup_write(&f_descriptor, hackcrap);
-    } if(nfiles == 0 ){
+    } if(outpar.output_mode == 0 ){
       sprintf(filename,"restart.%d.", *stepno);
       posixio_setup(&f_descriptor, 'w');
     } else {
       nppf=numparts/nfiles;
-      sprintf(filename,"restart-dat.%d.", *stepno);
+      sprintf(filename,"restart-dat.%d.", *stepno); /* FIXME - use construct */
       syncio_setup_write(nfiles, nfields, nppf, &f_descriptor);
     }
     phio_openfile(filename, f_descriptor);

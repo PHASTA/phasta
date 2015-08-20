@@ -456,6 +456,8 @@ extern "C" {
     int nsynciofieldswriterestart;
     int iv_rankpercore;
     int iv_corepernode; 
+    int input_mode;
+    int output_mode;
     /*  int iostats; */
 /*      int ipresref; */
   } outpar ;

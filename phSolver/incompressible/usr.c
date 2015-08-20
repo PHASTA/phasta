@@ -317,13 +317,11 @@ readlesrestart( Integer* lesId,
     int lnshg;
     double* projVec;
     int i,j,count;
-    int nfiles;
     int nfields;
     int numParts;
     int nprocs;
     int nppf;
 
-    nfiles = outpar.nsynciofiles;
     numParts = workfc.numpe;
     nprocs = workfc.numpe;
     // Calculate number of parts each proc deal with and where it start and end ...
@@ -331,12 +329,12 @@ readlesrestart( Integer* lesId,
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    if( nfiles == -1 )
+    if( outpar.output_mode == -1 )
       streamio_setup_read(&fileHandle, streamio_get_gr());
-    else if( nfiles == 0 )
+    else if( outpar.output_mode == 0 )
       posixio_setup(&fileHandle, 'r');
-    else if( nfiles > 0 )
-      syncio_setup_read(nfiles, &fileHandle);
+    else if( outpar.output_mode > 0 )
+      syncio_setup_read(outpar.nsynciofiles, &fileHandle);
     phio_constructName(fileHandle,"restart",filename);
     phio_appendInt(filename, *lstep);
     phio_openfile(filename, fileHandle);
