@@ -2,6 +2,8 @@
 #include <sstream>
 #include <phastaIO.h>
 #include "phio_stream.h"
+
+#define PHIO_STREAM_TRACING 0
 namespace {
   std::string appendPosix(const char* phrase) {
     std::stringstream ss;
@@ -9,10 +11,12 @@ namespace {
     return ss.str();
   }
   void traceEnter(const char* key, const char* aux="") {
-    fprintf(stderr, "CAKE entering %s %s\n", key, aux);
+    if(PHIO_STREAM_TRACING)
+      fprintf(stderr, "CAKE entering %s %s\n", key, aux);
   }
   void traceExit(const char* key) {
-    fprintf(stderr, "CAKE exiting %s\n", key);
+    if(PHIO_STREAM_TRACING)
+      fprintf(stderr, "CAKE exiting %s\n", key);
   }
 }
 
