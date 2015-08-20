@@ -238,7 +238,7 @@ c--------------------------------------------------------------------
       
       integer vsize
       dimension rmass(nshg), qres( nshg, vsize),
-     &          iBC(nshg), iper(nshg)
+     &          iBC(nshg), iper(nshg), ilwork(nlwork)
 c
 c
 c.... compute qi for node A, i.e., qres <-- qres/rmass
