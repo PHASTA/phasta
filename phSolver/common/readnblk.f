@@ -86,7 +86,7 @@ c
       itmp = int(log10(float(myrank+1)))+1
 
       if( nsynciofiles .eq. -1 ) then
-        call streamio_setup_read(fhandle, grstream)
+        call streamio_setup_read(fhandle, geomRestartStream)
       else if( nsynciofiles .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
       else if( nsynciofiles .ge. 1 ) then
@@ -375,7 +375,7 @@ c.... Read restart files
       endif
 
       if( nsynciofiles .eq. -1 ) then
-        call streamio_setup_read(fhandle, grstream)
+        call streamio_setup_read(fhandle, geomRestartStream)
       else if( nsynciofiles .eq. 0 ) then
         call posixio_setup(fhandle, c_char_'r')
       else if( nsynciofiles .ge. 1 ) then

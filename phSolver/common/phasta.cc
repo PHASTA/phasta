@@ -10,6 +10,7 @@
 #include "common_c.h"
 
 #include "phstream.h"
+#include "streamio.h"
 
 #if !(defined IOSTREAMH)
 #include <iostream>
@@ -82,6 +83,8 @@ int phasta(int argc,
 
   workfc.numpe = size;
   workfc.myrank = myrank;
+  outpar.nsynciofiles = -1; //FIXME magic value
+  streamio_set_gr(grs);
 
   /* Input data  */
   ierr = input_fform("solver.inp");
@@ -93,7 +96,6 @@ int phasta(int argc,
       return 1;
     }
     MPI_Barrier(MPI_COMM_WORLD);
-    setIOparam();
     input();
     /* now we can start the solver */
     proces();

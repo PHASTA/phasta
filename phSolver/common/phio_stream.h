@@ -10,6 +10,20 @@ typedef struct streamio_file* stream_fp;
 void stream_openfile(
     const char filename[],
     phio_fp fileDescriptor);
+void stream_readheader(
+    int* fileDescriptor,
+    const  char keyphrase[],
+    void* valueArray,
+    int*  nItems,
+    const char  datatype[],
+    const char  iotype[] );
+void stream_readdatablock(
+    int* fileDescriptor,
+    const  char keyphrase[],
+    void* valueArray,
+    int*  nItems,
+    const char  datatype[],
+    const char  iotype[] );
 void stream_closefile(
     phio_fp fileDescriptor);
 void stream_constructname(

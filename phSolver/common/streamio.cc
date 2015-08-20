@@ -5,12 +5,14 @@
 #include "phio_posix.h"
 #include "phio_base.h"
 
+extern grstream geomRestartStream;
+
 static struct phio_ops stream_ops = {
   stream_openfile,
   stream_closefile,
-  posix_readheader,
+  stream_readheader,
   posix_writeheader,
-  posix_readdatablock,
+  stream_readdatablock,
   posix_writedatablock,
   stream_constructname
 };
@@ -33,4 +35,12 @@ void streamio_setup_write(phio_fp* f, RStream* rs) {
   sf->mode = 'w';
   sf->grs = NULL;
   sf->rs = rs;
+}
+
+void streamio_set_gr(grstream grs) {
+  geomRestartStream = grs;
+}
+
+grstream streamio_get_gr() {
+  return geomRestartStream;
 }

@@ -49,9 +49,8 @@ read_d2wall(  int* pid,
     *foundd2wall = 0;
     /* First we try to read dwal from the restart files. */
 
-    grstream hackcake = NULL; /* FIXME */
     if( nfiles == -1 )
-      streamio_setup_read(&handle, hackcake);
+      streamio_setup_read(&handle, streamio_get_gr());
     else if( nfiles == 0 )
       posixio_setup(&handle, 'r');
     else if( nfiles > 0 )
