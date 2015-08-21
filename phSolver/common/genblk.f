@@ -53,7 +53,7 @@ c
 
             intfromfile(:)=-1
             iblk = iblk+1
-            if(input_mode.eq.1) then
+            if(input_mode.ge.1) then
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
@@ -78,7 +78,7 @@ c
 
         do iblk = 1, itpblktot
            writeLock=0;
-            if(input_mode.eq.1) then
+            if(input_mode.ge.1) then
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
