@@ -19,11 +19,4 @@
         type(c_ptr), value :: stream
         end subroutine
       end interface
-      interface 
-        subroutine streamio_set_gr(stream) 
-     &   bind(C, NAME='streamio_set_gr')
-        use :: iso_c_binding
-        type(c_ptr), value :: stream
-        end subroutine
-      end interface
       end module
