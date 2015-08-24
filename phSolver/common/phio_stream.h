@@ -17,6 +17,14 @@ void stream_readheader(
     int*  nItems,
     const char  datatype[],
     const char  iotype[] );
+void stream_writeheader( 
+    const int* fileDescriptor,
+    const char keyphrase[],
+    const void* valueArray,
+    const int* nItems,
+    const int* ndataItems,
+    const char datatype[],
+    const char iotype[] );
 void stream_readdatablock(
     int* fileDescriptor,
     const  char keyphrase[],
@@ -24,6 +32,13 @@ void stream_readdatablock(
     int*  nItems,
     const char  datatype[],
     const char  iotype[] );
+void stream_writedatablock(
+    const int* fileDescriptor,
+    const char keyphrase[],
+    const void* valueArray,
+    const int* nItems,
+    const char datatype[],
+    const char iotype[]);
 void stream_closefile(
     phio_fp fileDescriptor);
 void stream_constructname(

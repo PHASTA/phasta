@@ -35,6 +35,7 @@ void stream_openfile(
         __func__, filename);
   traceExit(__func__);
 }
+
 void stream_readheader(
     int* fileDescriptor,
     const  char keyphrase[],
@@ -49,6 +50,21 @@ void stream_readheader(
   traceExit(__func__);
 }
 
+void stream_writeheader(
+    const int* fileDescriptor,
+    const char keyphrase[],
+    const void* valueArray,
+    const int* nItems,
+    const int* ndataItems,
+    const char datatype[],
+    const char iotype[] ) {
+  traceEnter(__func__, keyphrase);
+  std::string posixPhrase = appendPosix(keyphrase);
+  writeHeader((FILE*)fileDescriptor, posixPhrase.c_str(),
+      (int*)valueArray, *nItems, *ndataItems, datatype, iotype);
+  traceExit(__func__);
+}
+
 void stream_readdatablock(
     int* fileDescriptor,
     const  char*,
@@ -57,8 +73,21 @@ void stream_readdatablock(
     const char  datatype[],
     const char  iotype[] ) {
   traceEnter(__func__);
-  readDataBlock((FILE*)fileDescriptor, valueArray, *nItems, 
+  readDataBlock((FILE*)fileDescriptor, valueArray, *nItems,
       datatype, iotype);
+  traceExit(__func__);
+}
+
+void stream_writedatablock(
+    const int* fileDescriptor,
+    const char*,
+    const void* valueArray,
+    const int* nItems,
+    const char datatype[],
+    const char iotype[]) {
+  traceEnter(__func__);
+  writeDataBlock((FILE*)fileDescriptor, valueArray,
+      *nItems, datatype, iotype);
   traceExit(__func__);
 }
 

@@ -3,6 +3,7 @@
       type(c_ptr) :: geomRestartStream 
       bind(C, name='geomRestartStream') :: geomRestartStream
       type(c_ptr) :: restartStream
+      bind(C, name='restartStream') :: restartStream
       interface 
         subroutine streamio_setup_read(handle, stream) 
      &   bind(C, NAME='streamio_setup_read')

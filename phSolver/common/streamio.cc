@@ -6,14 +6,15 @@
 #include "phio_base.h"
 
 extern grstream geomRestartStream;
+extern rstream restartStream;
 
 static struct phio_ops stream_ops = {
   stream_openfile,
   stream_closefile,
   stream_readheader,
-  posix_writeheader,
+  stream_writeheader,
   stream_readdatablock,
-  posix_writedatablock,
+  stream_writedatablock,
   stream_constructname
 };
 
@@ -43,4 +44,12 @@ void streamio_set_gr(grstream grs) {
 
 grstream streamio_get_gr() {
   return geomRestartStream;
+}
+
+void streamio_set_r(rstream rs) {
+  restartStream = rs;
+}
+
+rstream streamio_get_r() {
+  return restartStream;
 }

@@ -87,6 +87,15 @@ extern "C" {
                  const char   datatype[],
                  const char   iotype[] );
 
+    void 
+    writeHeader( FILE* f,
+                 const char keyphrase[],
+                 const void* valueArray,
+                 const int nItems,
+                 const int ndataItems,
+                 const char datatype[],
+                 const char iotype[]);
+
     void
     writeheader( const int*  fileDescriptor,
                   const char keyphrase[],
@@ -111,6 +120,12 @@ extern "C" {
                     const char  datatype[],
                     const char  iotype[] );
 
+    void
+    writeDataBlock( FILE* f,
+                    const void* valueArray,
+                    const int   nItems,
+                    const char  datatype[],
+                    const char  iotype[]  );
 
     void
     writedatablock( const int*   fileDescriptor,

@@ -120,10 +120,40 @@ int phasta(int argc,
         char *argv[],
         GRStream* grs,
         RStream* rs) {
-  fprintf(stderr, "HEY! if you see this email Cameron and tell him "
-      "to implement %s(...) on line %d of %s "
-      "... returning an error\n", __func__, __LINE__, __FILE__);
-  return 1;
+  int size,ierr;
+  char inpfilename[100];
+  MPI_Comm_size (MPI_COMM_WORLD, &size);
+  MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+
+  workfc.numpe = size;
+  workfc.myrank = myrank;
+  outpar.input_mode = -1; //FIXME magic value for streams
+  outpar.output_mode = -1; //FIXME magic value for streams
+  streamio_set_gr(grs);
+  streamio_set_r(rs);
+
+  /* Input data  */
+  ierr = input_fform("solver.inp");
+  if(!ierr){
+    sprintf(inpfilename,"%d-procs_case/",size);
+    if( chdir( inpfilename ) ) {
+      cerr << "could not change to the problem directory "
+        << inpfilename << endl;
+      return 1;
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    input();
+    /* now we can start the solver */
+    proces();
+  }
+  else{
+    printf("error during reading ascii input \n");
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  if ( myrank == 0 ) {
+    printf("phasta.cc - last call before finalize!\n");
+  }
+
 }
 
 int phasta( int argc,
