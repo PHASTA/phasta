@@ -140,12 +140,12 @@ char read_solution(double** solutiono, int* size, int* nshgo, int* ndofo,
         phio_fp fp;
         if( nSyncFiles == 0 )
           posixio_setup(&fp, 'r');
-        else if( nSyncFiles == 1 )
+        else if( nSyncFiles > 0 )
           syncio_setup_read(nSyncFiles, &fp);
         char rname[1024];
         phio_constructName(fp,"restart",rname);
-        asprintf(&fn,"%s/%s.%d.",casedir,rname,timestep);
-        phio_openfile(rname, fp);
+        asprintf(&fn,"%s/%s%d.",casedir,rname,timestep);
+        phio_openfile(fn, fp);
 
 	phio_readheader(fp, "solution", (void*) iarray, &ithree, "integer", iformat);
 	nshg = iarray[0];
@@ -200,9 +200,9 @@ std::set<int>* find_timesteps(char* casedir, int nSyncFiles)
 char* getRestartName(int nSyncFiles) {
   char* f;
   if(0 == nSyncFiles)
-    asprintf(&f, "restart-dat.");
+    asprintf(&f, "restart");
   else if(nSyncFiles > 0)
-    asprintf(&f, "restart.");
+    asprintf(&f, "restart-dat");
   else {
     fprintf(stderr, 
         "ERROR: the number of sync-io files must be"
