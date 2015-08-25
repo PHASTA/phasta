@@ -259,7 +259,6 @@ Write_Restart(  int* pid,
     int numparts;
     int irank;
     int nprocs;
-    int nppf;
 
     //  First, count the number of fields to write and store the result in
     countfieldstowriterestart();
@@ -275,17 +274,17 @@ Write_Restart(  int* pid,
     char filename[255];
     bzero((void*)filename,255);
 
-    rstream hackcrap; /* FIXME */
-    if(outpar.output_mode == -1 ){
-      streamio_setup_write(&f_descriptor, hackcrap); /* FIXME */
-    } if(outpar.output_mode == 0 ){
-      sprintf(filename,"restart.%d.", *stepno);
+    if(outpar.output_mode == -1 )
+      streamio_setup_write(&f_descriptor, streamio_get_r());
+    else if(outpar.output_mode == 0 )
       posixio_setup(&f_descriptor, 'w');
-    } else {
-      nppf=numparts/nfiles;
-      sprintf(filename,"restart-dat.%d.", *stepno); /* FIXME - use construct */
-      syncio_setup_write(nfiles, nfields, nppf, &f_descriptor);
-    }
+    else if(outpar.output_mode > 0 )
+      syncio_setup_write(nfiles, nfields, numparts/nfiles, &f_descriptor);
+    else
+      exit(EXIT_FAILURE);
+    phio_constructName(f_descriptor,"restart",filename);
+    phstr_appendInt(filename, *stepno);
+    phstr_appendStr(filename, ".");
     phio_openfile(filename, f_descriptor);
 
     field_flag=0;
