@@ -153,7 +153,10 @@ int phasta(int argc,
   if ( myrank == 0 ) {
     printf("phasta.cc - last call before finalize!\n");
   }
-
+  if( chdir("..") ) {
+    cerr << "could not change to the parent directory\n";
+    return 1;
+  }
 }
 
 int phasta( int argc,
