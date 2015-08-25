@@ -1868,9 +1868,11 @@ c
       character(len=*) :: key
       integer :: iomode
       real*8 :: timing
-      character(len=1024) :: timing_msg
-      character(len=*), parameter :: streamModeString = c_char_"stream"//c_null_char
-      character(len=*), parameter :: fileModeString = c_char_"disk"//c_null_char
+      character(len=1024) ::
+     &  timing_msg = c_char_"Time to write "//c_null_char
+      character(len=*), parameter ::
+     &  streamModeString = c_char_"stream"//c_null_char,
+     &  fileModeString = c_char_"disk"//c_null_char
 
       call phstr_appendStr(timing_msg,key)
       if ( iomode .eq. -1 ) then
