@@ -34,6 +34,7 @@ c
 !MR CHANGE
       use turbsa          ! used to access d2wall
 !MR CHANGE END
+      use iso_c_binding
 
 c      use readarrays !reads in uold and acold
       
@@ -1193,9 +1194,10 @@ c
 !MR CHANGE
         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
         if(myrank.eq.0)  then
-          tcormr2 = TMRC()
-          write(6,*) 'Time to write the error fields to the disks',
-     &                tcormr2-tcormr1
+          call writeTimingMessage(
+     &           c_char_"error fields to " // c_null_char,
+     &           output_mode,
+     &           TMRC()-tcormr1)
         endif
 !MR CHANGE END
 
@@ -1304,8 +1306,11 @@ c     &                    elDw,'d',numel,1,lstep)
         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
         if(myrank.eq.0)  then
           tcormr2 = TMRC()
-          write(6,*) 'Time to write dwal to the disks = ',
-     &                tcormr2-tcormr1
+          if ( output_mode .eq. -1 ) then
+            write(6,*) 'Time to write dwal to stream = ', tcormr2-tcormr1
+          else
+            write(6,*) 'Time to write dwal to disk = ', tcormr2-tcormr1
+          endif
         endif
 !MR CHANGE END
 
@@ -1855,7 +1860,27 @@ c
       return
       end
 
+      subroutine writeTimingMessage(key,iomode,timing)
+      use iso_c_binding
+      use phstr
+      implicit none
 
+      character(len=*) :: key
+      integer :: iomode
+      real*8 :: timing
+      character(len=1024) :: timing_msg
+      character(len=*), parameter :: streamModeString = c_char_"stream"//c_null_char
+      character(len=*), parameter :: fileModeString = c_char_"disk"//c_null_char
 
-
+      call phstr_appendStr(timing_msg,key)
+      if ( iomode .eq. -1 ) then
+        call phstr_appendStr(timing_msg, streamModeString)
+      else
+        call phstr_appendStr(timing_msg, fileModeString)
+      endif
+      call phstr_appendStr(timing_msg, c_char_' = ' // c_null_char)
+      call phstr_appendDbl(timing_msg, timing)
+      write(6,*) timing_msg
+      return
+      end subroutine
 

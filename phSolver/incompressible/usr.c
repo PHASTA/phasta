@@ -11,6 +11,7 @@
 #include "common_c.h"
 #include "phastaIO.h"
 #include "phIO.h"
+#include "phString.h"
 #include "syncio.h"
 #include "posixio.h"
 #include "streamio.h"
@@ -336,7 +337,8 @@ readlesrestart( Integer* lesId,
     else if( outpar.input_mode > 0 )
       syncio_setup_read(outpar.nsynciofiles, &fileHandle);
     phio_constructName(fileHandle,"restart",filename);
-    phio_appendInt(filename, *lstep);
+    phstr_appendInt(filename, *lstep);
+    phstr_appendStr(filename, ".");
     phio_openfile(filename, fileHandle);
 
     if ( !fileHandle ) return; // See phastaIO.cc for error fileHandle

@@ -29,6 +29,7 @@ c
       use iso_c_binding 
       use readarrays
       use phio
+      use phstr
       use syncio
       use posixio
       use streamio
@@ -376,7 +377,8 @@ c.... Read restart files
       end if
       call phio_constructName(fhandle,
      &        c_char_'restart' // char(0), fnamer)
-      call phio_appendInt(fnamer, irstart)
+      call phstr_appendInt(fnamer, irstart)
+      call phstr_appendStr(fnamer, c_char_'.'//c_null_char)
       call phio_openfile(fnamer, fhandle);
 
       ithree=3

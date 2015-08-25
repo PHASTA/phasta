@@ -42,7 +42,6 @@ extern "C" {
       phio_fp fileDescriptor,
       const char* inName,
       char* outName);
-  void phio_appendInt(char* dest, int v);
 #ifdef __cplusplus
 }
 #endif

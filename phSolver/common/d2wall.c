@@ -7,6 +7,7 @@
 #include "common_c.h"
 #include "phastaIO.h"
 #include "phIO.h"
+#include "phString.h"
 #include "syncio.h"
 #include "posixio.h"
 #include "streamio.h"
@@ -54,7 +55,8 @@ read_d2wall(  int* pid,
     else if( outpar.input_mode > 0 )
       syncio_setup_read(outpar.nsynciofiles, &handle);
     phio_constructName(handle,"restart",filename);
-    phio_appendInt(filename, timdat.lstep);
+    phstr_appendInt(filename, timdat.lstep);
+    phstr_appendStr(filename, ".");
     phio_openfile(filename, handle);
 
     int i;
