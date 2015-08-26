@@ -12,38 +12,20 @@
 
 using namespace std; //::cout;
 void print_error_code(int ierr);
-int input_fform(char inpfname[]);
 int SONFATH=0;
 extern "C" char phasta_iotype[80];
 
-extern "C" {
-
-  int input_fform_(char inpfname[]) {
-    return input_fform(inpfname);
-  }
-
-}
-
-int input_fform(char inpfname[])
+int input_fform(phSolver::Input& inp)
 {
 
   int ierr = 0 ;
   int i,j;
-  char* path_to_config = 0 ;
-  char complete_filename[256];
 
   try {
-    // get the input file stream
-    path_to_config = getenv("PHASTA_CONFIG");
-    if(path_to_config) strcpy(complete_filename, path_to_config);
-    else strcpy(complete_filename,".");
-    strcat(complete_filename, "/input.config");
     if(workfc.myrank==workfc.master) {
-      printf("\n Complete Filename: %s \n", complete_filename);
-      printf("\n Local Config: %s \n\n", inpfname);
+      printf("\n Complete Filename: %s \n", inp.GetDefaultFileName());
+      printf("\n Local Config: %s \n\n", inp.GetUserFileName());
     }
-    string def(complete_filename);
-    Input inp(inpfname,def);
 
 #ifdef AMG
     

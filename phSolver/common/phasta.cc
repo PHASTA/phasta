@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 
 #include "common_c.h"
-
+#include "Input.h"
 #include "phstream.h"
 #include "streamio.h"
 
@@ -36,7 +36,7 @@ char phasta_iotype[80];
 extern int SONFATH;
 extern "C" void proces();
 extern "C" void input();
-extern int input_fform(char inpfname[]);
+extern int input_fform(phSolver::Input&);
 extern void setIOparam(); // For SyncIO
 
 int myrank; /* made file global for ease in debugging */
@@ -69,7 +69,7 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
-int phasta(grstream grs) {
+int phasta(phSolver::Input& ctrl, grstream grs) {
   int size,ierr;
   char inpfilename[100];
   MPI_Comm_size (MPI_COMM_WORLD, &size);
@@ -82,7 +82,7 @@ int phasta(grstream grs) {
   streamio_set_gr(grs);
 
   /* Input data  */
-  ierr = input_fform("solver.inp");
+  ierr = input_fform(ctrl);
   if(!ierr){
     sprintf(inpfilename,"%d-procs_case/",size);
     if( chdir( inpfilename ) ) {
@@ -105,14 +105,14 @@ int phasta(grstream grs) {
   return timdat.lstep;
 }
 
-int phasta(RStream* rs) {
+int phasta(phSolver::Input& ctrl, RStream* rs) {
   fprintf(stderr, "HEY! if you see this email Cameron and tell him "
       "to implement %s(...) on line %d of %s "
       "... returning an error\n", __func__, __LINE__, __FILE__);
   return -1;
 }
 
-int phasta(GRStream* grs, RStream* rs) {
+int phasta(phSolver::Input& ctrl, GRStream* grs, RStream* rs) {
   int size,ierr;
   char inpfilename[100];
   MPI_Comm_size (MPI_COMM_WORLD, &size);
@@ -126,7 +126,7 @@ int phasta(GRStream* grs, RStream* rs) {
   streamio_set_r(rs);
 
   /* Input data  */
-  ierr = input_fform("solver.inp");
+  ierr = input_fform(ctrl);
   if(!ierr){
     sprintf(inpfilename,"%d-procs_case/",size);
     if( chdir( inpfilename ) ) {
@@ -212,7 +212,14 @@ int phasta( int argc, char *argv[] ) {
     } else {
         strcpy(inpfilename,"solver.inp");
     }
-    ierr = input_fform(inpfilename);
+    string defaultConf = ".";
+    const char* path_to_config = getenv("PHASTA_CONFIG");
+    if(path_to_config) 
+      defaultConf = path_to_config;
+    defaultConf.append("/input.config");
+    string userConf(inpfilename);
+    phSolver::Input ctrl(userConf, defaultConf);
+    ierr = input_fform(ctrl);
     if(!ierr){
       sprintf(inpfilename,"%d-procs_case/",size);
       if( chdir( inpfilename ) ) {

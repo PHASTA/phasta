@@ -9,7 +9,7 @@
 //MR CHANGE END
 
 // return a given key value (if it's in the map)
-ValType Input::GetValue(const string &str) const
+ValType phSolver::Input::GetValue(const string &str) const
 {
   if (input_map->find(str) != input_map->end()) {
     if ( (*input_map)[str] == "NODEFAULT" ) {
@@ -26,8 +26,16 @@ ValType Input::GetValue(const string &str) const
   return ValType( (*input_map)[str] );
 }
 
+const char* phSolver::Input::GetUserFileName() {
+  return userConfFileName.c_str();
+}
 
-Input::Input(const string &fname, const string &default_fname)
+const char* phSolver::Input::GetDefaultFileName() {
+  return defaultConfFileName.c_str();
+}
+
+phSolver::Input::Input(const string &fname, const string &default_fname) 
+  : userConfFileName(fname), defaultConfFileName(default_fname)
 {
   // open the input file
   ifstream infile( fname.c_str(), ios::in);
@@ -79,7 +87,7 @@ Input::Input(const string &fname, const string &default_fname)
   
 }
   
-Input::~Input()
+phSolver::Input::~Input()
 {
   delete input_text;
   delete input_map;
@@ -87,13 +95,13 @@ Input::~Input()
 
 
 // return the input map
-map<string,string> Input::InputMap() const
+map<string,string> phSolver::Input::InputMap() const
 {
   return *input_map;
 }
 
 // echo the entire map
-void Input::EchoInputMap(const ostream &ofile)
+void phSolver::Input::EchoInputMap(const ostream &ofile)
 {
   map<string,string>::const_iterator iter = input_map->begin();
   for ( ; iter != input_map->end(); ++iter ) {
@@ -103,7 +111,7 @@ void Input::EchoInputMap(const ostream &ofile)
 }
 
 // read the input text from the given stream
-void Input::get_input_lines(vector<string> *text, ifstream &infile)
+void phSolver::Input::get_input_lines(vector<string> *text, ifstream &infile)
 {
   string textline;
   while ( getline( infile, textline, '\n' ) ) {
@@ -116,7 +124,7 @@ void Input::get_input_lines(vector<string> *text, ifstream &infile)
 
 
 // 
-void Input::build_map(map<string,string> *inmap,
+void phSolver::Input::build_map(map<string,string> *inmap,
 		      vector<string>     *intext)
 {
   // iterate through input_text of text and separate at :'s
@@ -152,7 +160,7 @@ void Input::build_map(map<string,string> *inmap,
 }
 
 // remove leading and trailing spaces (or tabs)
-void Input::trim_string(string *str)
+void phSolver::Input::trim_string(string *str)
 {
   // check for empty string
   int length = str->length();
