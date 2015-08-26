@@ -88,7 +88,7 @@ int phasta(grstream grs) {
     if( chdir( inpfilename ) ) {
       cerr << "could not change to the problem directory "
         << inpfilename << endl;
-      return 1;
+      return -1;
     }
     MPI_Barrier(MPI_COMM_WORLD);
     input();
@@ -102,14 +102,14 @@ int phasta(grstream grs) {
   if ( myrank == 0 ) {
     printf("phasta.cc - last call before finalize!\n");
   }
-  return 0;
+  return timdat.lstep;
 }
 
 int phasta(RStream* rs) {
   fprintf(stderr, "HEY! if you see this email Cameron and tell him "
       "to implement %s(...) on line %d of %s "
       "... returning an error\n", __func__, __LINE__, __FILE__);
-  return 1;
+  return -1;
 }
 
 int phasta(GRStream* grs, RStream* rs) {
@@ -132,7 +132,7 @@ int phasta(GRStream* grs, RStream* rs) {
     if( chdir( inpfilename ) ) {
       cerr << "could not change to the problem directory "
         << inpfilename << endl;
-      return 1;
+      return -1;
     }
     MPI_Barrier(MPI_COMM_WORLD);
     input();
@@ -148,8 +148,9 @@ int phasta(GRStream* grs, RStream* rs) {
   }
   if( chdir("..") ) {
     cerr << "could not change to the parent directory\n";
-    return 1;
+    return -1;
   }
+  return timdat.lstep;
 }
 
 int phasta( int argc, char *argv[] ) {
@@ -217,7 +218,7 @@ int phasta( int argc, char *argv[] ) {
       if( chdir( inpfilename ) ) {
         cerr << "could not change to the problem directory "
           << inpfilename << endl;
-        return 1;
+        return -1;
       }
       MPI_Barrier(MPI_COMM_WORLD);
       setIOparam();
@@ -234,5 +235,5 @@ int phasta( int argc, char *argv[] ) {
     if ( myrank == 0 ) {
       printf("phasta.cc - last call before finalize!\n");
     }
-    return 0;
+    return timdat.lstep;
 }

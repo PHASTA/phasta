@@ -7,6 +7,14 @@
 #include "phComm.h"
 #include "phio_base.h"
 
+#define PHIO_TRACING 0
+namespace {
+  void trace(const char* key, const char* aux="", void* obj=NULL) {
+    if(PHIO_TRACING)
+      fprintf(stderr, "PHIO_TRACE entering %s %s %p\n", key, aux, obj);
+  }
+}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -63,10 +71,12 @@ void phio_constructName(
 void phio_openfile(
     const char filename[],
     phio_fp f) {
+  trace("openfile",filename,f);
   f->ops->openfile(filename, f);
 }
 
 void phio_closefile(phio_fp f) {
+  trace("closefile","unknown",f);
   f->ops->closefile(f);
 }
 
