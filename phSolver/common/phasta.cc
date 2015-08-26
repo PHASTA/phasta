@@ -69,9 +69,7 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
-int phasta(int argc,
-    char *argv[],
-    grstream grs) {
+int phasta(grstream grs) {
   int size,ierr;
   char inpfilename[100];
   MPI_Comm_size (MPI_COMM_WORLD, &size);
@@ -107,19 +105,14 @@ int phasta(int argc,
   return 0;
 }
 
-int phasta(int argc,
-        char *argv[],
-        RStream* rs) {
+int phasta(RStream* rs) {
   fprintf(stderr, "HEY! if you see this email Cameron and tell him "
       "to implement %s(...) on line %d of %s "
       "... returning an error\n", __func__, __LINE__, __FILE__);
   return 1;
 }
 
-int phasta(int argc,
-        char *argv[],
-        GRStream* grs,
-        RStream* rs) {
+int phasta(GRStream* grs, RStream* rs) {
   int size,ierr;
   char inpfilename[100];
   MPI_Comm_size (MPI_COMM_WORLD, &size);
@@ -159,8 +152,7 @@ int phasta(int argc,
   }
 }
 
-int phasta( int argc,
-        char *argv[] ) {
+int phasta( int argc, char *argv[] ) {
     int size,ierr;
     char inpfilename[100];
     char* pauseDebugger = getenv("catchDebugger");

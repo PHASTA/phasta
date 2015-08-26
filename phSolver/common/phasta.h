@@ -3,7 +3,7 @@
 struct RStream;
 struct GRStream;
 int phasta(int argc, char**argv);
-int phasta(int argc, char**argv, GRStream* in);
-int phasta(int argc, char**argv, RStream* out);
-int phasta(int argc, char**argv, GRStream* in, RStream* out);
+int phasta(GRStream* in);
+int phasta(RStream* out);
+int phasta(GRStream* in, RStream* out);
 #endif
