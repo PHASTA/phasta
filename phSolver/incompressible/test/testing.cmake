@@ -90,3 +90,5 @@ add_test(
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
   WORKING_DIRECTORY ${CDIR}
 )
+add_test(unlinkProcsDir-incompressible
+  rm ${CDIR}/4-procs_case)

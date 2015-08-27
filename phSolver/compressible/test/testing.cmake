@@ -91,3 +91,5 @@ add_test(
   COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 2 ${cmd}
   WORKING_DIRECTORY ${CDIR}
 )
+add_test(unlinkProcsDir-compressible
+  rm ${CDIR}/2-procs_case)
