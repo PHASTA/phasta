@@ -44,8 +44,7 @@ void stream_readheader(
     const char  datatype[],
     const char  iotype[] ) {
   traceEnter(__func__, keyphrase);
-  std::string posixPhrase = appendPosix(keyphrase);
-  readHeader((FILE*)fileDescriptor, posixPhrase.c_str(),
+  readHeader((FILE*)fileDescriptor, keyphrase,
       (int*)valueArray, *nItems, iotype);
   traceExit(__func__);
 }
@@ -59,8 +58,7 @@ void stream_writeheader(
     const char datatype[],
     const char iotype[] ) {
   traceEnter(__func__, keyphrase);
-  std::string posixPhrase = appendPosix(keyphrase);
-  writeHeader((FILE*)fileDescriptor, posixPhrase.c_str(),
+  writeHeader((FILE*)fileDescriptor, keyphrase,
       (int*)valueArray, *nItems, *ndataItems, datatype, iotype);
   traceExit(__func__);
 }
