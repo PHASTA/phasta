@@ -186,7 +186,7 @@ void print_system_stats(double *tcorecp, double *tcorecpscal) {
 
 void countfieldstowriterestart()
 {
-  int nfields = 2; //solution, time derivatives
+  int nfields = 3; //magic number, solution, time derivatives
 
   if(outpar.ivort == 1){
     nfields++; //vorticity
@@ -249,8 +249,8 @@ Write_Restart(  int* pid,
     char rfile[60];
     char existingfile[30], linkfile[30];
     int irstou;
+    const char* magic_name = "byteorder magic number";
     int magic_number = 362436;
-    int* mptr = &magic_number;
     double version=0.0;
     int isize, nitems;
     int iarray[10];
@@ -259,6 +259,7 @@ Write_Restart(  int* pid,
     int numparts;
     int irank;
     int nprocs;
+    int ione = 1;
 
     //  First, count the number of fields to write and store the result in
     countfieldstowriterestart();
@@ -289,6 +290,12 @@ Write_Restart(  int* pid,
 
     field_flag=0;
 
+    // write the magic number
+    phio_writeheader(f_descriptor, magic_name, (void*)&magic_number, &ione,
+        &ione, "integer", phasta_iotype);
+    phio_writedatablock(f_descriptor, magic_name, (void*)&magic_number,
+        &ione, "integer", phasta_iotype );
+    field_flag++;
 
      int i;
      for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
@@ -339,8 +346,6 @@ Write_Error(  int* pid,
     char fname[255];
     char rfile[60];
     int irstou;
-    int magic_number = 362436;
-    int* mptr = &magic_number;
     double version=0.0;
     int isize, nitems;
     int iarray[10];
@@ -417,8 +422,6 @@ Write_Field(  int *pid,
     fieldlabel[*tagsize] = '\0';
 
     int irstou;
-    int magic_number = 362436;
-    int* mptr = &magic_number;
     double version=0.0;
     int isize, nitems;
     int iarray[10];
@@ -529,8 +532,6 @@ Write_PhAvg2( int* pid,
     }
 
     int irstou;
-    int magic_number = 362436;
-    int* mptr = &magic_number;
     double version=0.0;
     int isize, nitems;
     int iarray[10];
