@@ -69,6 +69,15 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
+int cdToParent() {
+  if( chdir("..") ) {
+    fprintf(stderr,"could not change to the parent directory\n");
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 int phasta(phSolver::Input& ctrl, grstream grs) {
   int size,ierr;
   char inpfilename[100];
@@ -146,10 +155,8 @@ int phasta(phSolver::Input& ctrl, GRStream* grs, RStream* rs) {
   if ( myrank == 0 ) {
     printf("phasta.cc - last call before finalize!\n");
   }
-  if( chdir("..") ) {
-    cerr << "could not change to the parent directory\n";
+  if( cdToParent() )
     return -1;
-  }
   return timdat.lstep;
 }
 
@@ -242,5 +249,7 @@ int phasta( int argc, char *argv[] ) {
     if ( myrank == 0 ) {
       printf("phasta.cc - last call before finalize!\n");
     }
+    if( cdToParent() )
+      return -1;
     return timdat.lstep;
 }

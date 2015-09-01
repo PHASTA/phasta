@@ -11,6 +11,7 @@ c----------------------------------------------------------------------
 c
         use readarrays          ! used to access x, iper, ilwork
         use turbsa          ! used to access d2wall
+        use dtnmod
         include "common.h"
         include "mpif.h"
 c
@@ -205,14 +206,13 @@ CAD        write(6,*) 'Life: ', second(0) - ttim(100)
           deallocate(point2ilwork)
         endif
         deallocate(point2x)
+        deallocate(point2nsons)
+        deallocate(point2ifath)
+        deallocate(uold)
+        deallocate(wnrm)
+        deallocate(otwn)
+        call finalizeDtN
 
-        if((irscale.ge.0).or. ((iLES .lt. 20) .and. (iLES.gt.0))
-     &                   .or. (itwmod.gt.0)  ) then ! don't forget same
-                                                    ! conditional in
-                                                    ! readnblk2.f
-           deallocate(point2nsons)
-           deallocate(point2ifath)
-        endif
         return
         end
 

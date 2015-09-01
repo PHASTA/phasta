@@ -315,6 +315,7 @@ c according to how many surfaces each node has seen so far
             enddo
 c That's all for this surface; move on to the next
          enddo                  ! end loop over surface ID's
+         deallocate( sidmapg )
 
 c     
 c.... complete the averaging, adjust iBC, adjust BCtmp
