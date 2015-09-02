@@ -12,7 +12,9 @@
       subroutine finalizeDtN
       use dtnmod
       include "common.h"
-      deallocate(ifeature)
+      if( allocated(ifeature) ) then
+        deallocate(ifeature)
+      endif
       end
 
       subroutine DtN(iBC,BC,y)
