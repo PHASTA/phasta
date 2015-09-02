@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string>
 #include <sstream>
 #include <phastaIO.h>
@@ -93,6 +94,7 @@ void stream_closefile(phio_fp f) {
   traceEnter(__func__);
   stream_fp sf = (stream_fp) f;
   fclose((FILE*)sf->file);
+  free(f);
   traceExit(__func__);
 }
 

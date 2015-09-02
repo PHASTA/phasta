@@ -22,7 +22,6 @@ void streamio_setup_read(phio_fp* f, GRStream* grs) {
   *f = (phio_fp) malloc(sizeof(struct streamio_file));
   stream_fp sf = (stream_fp) *f;
   sf->ops = &stream_ops;
-  sf->file = (int*) malloc(sizeof(int*));
   sf->mode = 'r';
   sf->grs = grs;
   sf->rs = NULL;
@@ -32,7 +31,6 @@ void streamio_setup_write(phio_fp* f, RStream* rs) {
   *f = (phio_fp) malloc(sizeof(struct streamio_file));
   stream_fp sf = (stream_fp) *f;
   sf->ops = &stream_ops;
-  sf->file = (int*) malloc(sizeof(int*));
   sf->mode = 'w';
   sf->grs = NULL;
   sf->rs = rs;
