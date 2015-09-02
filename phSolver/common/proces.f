@@ -12,6 +12,8 @@ c
         use readarrays          ! used to access x, iper, ilwork
         use turbsa          ! used to access d2wall
         use dtnmod
+        use periodicity
+        use pvsQbi
         include "common.h"
         include "mpif.h"
 c
@@ -212,6 +214,8 @@ CAD        write(6,*) 'Life: ', second(0) - ttim(100)
         deallocate(wnrm)
         deallocate(otwn)
         call finalizeDtN
+        call clearper
+        call finalizeNABI
 
         return
         end
