@@ -38,6 +38,7 @@ extern "C" void proces();
 extern "C" void input();
 extern int input_fform(phSolver::Input&);
 extern void setIOparam(); // For SyncIO
+extern "C" void initPhCommonVars();
 
 int myrank; /* made file global for ease in debugging */
 
@@ -90,6 +91,7 @@ int phasta(phSolver::Input& ctrl, grstream grs) {
   outpar.output_mode = 1; //FIXME magic value for syncio
   streamio_set_gr(grs);
 
+  initPhCommonVars();
   /* Input data  */
   ierr = input_fform(ctrl);
   if(!ierr){
@@ -134,6 +136,7 @@ int phasta(phSolver::Input& ctrl, GRStream* grs, RStream* rs) {
   streamio_set_gr(grs);
   streamio_set_r(rs);
 
+  initPhCommonVars();
   /* Input data  */
   ierr = input_fform(ctrl);
   if(!ierr){
@@ -226,6 +229,7 @@ int phasta( int argc, char *argv[] ) {
     defaultConf.append("/input.config");
     string userConf(inpfilename);
     phSolver::Input ctrl(userConf, defaultConf);
+    initPhCommonVars();
     ierr = input_fform(ctrl);
     if(!ierr){
       sprintf(inpfilename,"%d-procs_case/",size);

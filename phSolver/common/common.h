@@ -233,8 +233,8 @@ c
      &                  prestol,      statsflow(6), statssclr(6),
      &                  iverbose
 c
-        character*8     ccode
-        common /mtimer1/ ccode(13)
+        character(8) :: ccode(13)
+        common /mtimer1/ ccode
 c
         integer       flops,  gbytes, sbytes
         common /mtimer2/ flops,  gbytes, sbytes, iclock, icd,    icode,
