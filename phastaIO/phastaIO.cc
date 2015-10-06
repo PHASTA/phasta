@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <sstream>
 #include "phastaIO.h"
 #include "mpi.h"
 #include "phiotmrc.h"
@@ -83,7 +84,7 @@ using namespace std;
 
 namespace{
 
-	map< int , char* > LastHeaderKey;
+        map<int, std::string> LastHeaderKey;
 	vector< FILE* > fileArray;
 	vector< bool > byte_order;
 	vector< int > header_type;
@@ -809,6 +810,12 @@ void finalizephmpiio( int *fileDescriptor )
 	free ( PhastaIOActiveFiles[i]->read_double_chunk );
 	free ( PhastaIOActiveFiles[i]->read_int_chunk );
 
+        if( PhastaIOActiveFiles[i]->nFiles > 1 && s_assign_local_comm ) { // the comm was split
+          if (PhastaIOActiveFiles[i]->myrank == 0) printf("Freeing subcommunicator\n");
+          s_assign_local_comm = 0;
+          MPI_Comm_free(&(PhastaIOActiveFiles[i]->local_comm));
+        }
+
 	free( PhastaIOActiveFiles[i]);
 
 	endTimer(&timer_end);
@@ -1214,7 +1221,7 @@ void closefile( int* fileDescriptor,
 
 		fclose( fileArray[ *fileDescriptor - 1 ] );
 		free (imode);
-	}
+     	}
 	else {
 		char* imode = StringStripper( mode );
 
@@ -1347,6 +1354,12 @@ void closefile( int* fileDescriptor,
 	printPerf("closefile_", timer_start, timer_end, 0, 0, "");
 }
 
+int readHeader( FILE* f, const char phrase[],
+    int* params, int numParams, const char* iotype) {
+  isBinary(iotype);
+  return readHeader(f,phrase,params,numParams);
+}
+
 void readheader( int* fileDescriptor,
                   const  char keyphrase[],
                   void* valueArray,
@@ -1354,9 +1367,8 @@ void readheader( int* fileDescriptor,
                   const char  datatype[],
                   const char  iotype[] )
 {
-	double timer_start, timer_end;
-	//MPI_Comm_rank(MPI_COMM_WORLD, &irank); //This should not be required if irank is indeed a global variable. irank should be initialized by either query and/or init
-	//if(irank == 0) printf("entering readheader() - %s\n", keyphrase);
+     	double timer_start, timer_end;
+
 	startTimer(&timer_start);
 
 	int i = *fileDescriptor;
@@ -1377,7 +1389,7 @@ void readheader( int* fileDescriptor,
 			return;
 		}
 
-		LastHeaderKey[ filePtr ] = const_cast< char* >( keyphrase );
+                LastHeaderKey[filePtr] = std::string(keyphrase);
 		LastHeaderNotFound = false;
 
 		fileObject = fileArray[ filePtr ] ;
@@ -1405,12 +1417,13 @@ void readheader( int* fileDescriptor,
 		unsigned int skip_size;
 		int* valueListInt;
 		valueListInt = static_cast <int*>(valueArray);
-		char* token;
+		char* token = NULL;
 		bool FOUND = false ;
 		isBinary( iotype );
 
 		MPI_Status read_offset_status;
 		char read_out_tag[MAX_FIELDS_NAME_LENGTH];
+                memset(read_out_tag, '\0', MAX_FIELDS_NAME_LENGTH);
 		char readouttag[MAX_FIELDS_NUMBER][MAX_FIELDS_NAME_LENGTH];
 		int j;
 
@@ -1531,6 +1544,33 @@ void readheader( int* fileDescriptor,
 
 }
 
+void readDataBlock(
+    FILE* fileObject,
+    void* valueArray,
+    int nItems,
+    const char  datatype[],
+    const char  iotype[] )
+{
+  isBinary(iotype);
+  size_t type_size = typeSize( datatype );
+  if ( binary_format ) {
+    char junk = '\0';
+    fread( valueArray, type_size, nItems, fileObject );
+    fread( &junk, sizeof(char), 1 , fileObject );
+    if ( Wrong_Endian ) SwapArrayByteOrder( valueArray, type_size, nItems );
+  } else {
+    char* ts1 = StringStripper( datatype );
+    if ( cscompare( "integer", ts1 ) ) {
+      for( int n=0; n < nItems ; n++ )
+        fscanf(fileObject, "%d\n",(int*)((int*)valueArray+n) );
+    } else if ( cscompare( "double", ts1 ) ) {
+      for( int n=0; n < nItems ; n++ )
+        fscanf(fileObject, "%lf\n",(double*)((double*)valueArray+n) );
+    }
+    free (ts1);
+  }
+}
+
 void readdatablock( int*  fileDescriptor,
                      const char keyphrase[],
                      void* valueArray,
@@ -1538,7 +1578,6 @@ void readdatablock( int*  fileDescriptor,
                      const char  datatype[],
                      const char  iotype[] )
 {
-
 	//if(irank == 0) printf("entering readdatablock()\n");
 	unsigned long long data_size = 0;
 	double timer_start, timer_end;
@@ -1566,9 +1605,9 @@ void readdatablock( int*  fileDescriptor,
 		// since we require that a consistant header always preceed the data block
 		// let us check to see that it is actually the case.
 
-		if ( ! cscompare( LastHeaderKey[ filePtr ], keyphrase ) ) {
+		if ( ! cscompare( LastHeaderKey[ filePtr ].c_str(), keyphrase ) ) {
 			fprintf(stderr, "Header not consistant with data block\n");
-			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ] );
+			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ].c_str() );
 			fprintf(stderr, "DataBlock: %s\n ", keyphrase );
 			fprintf(stderr, "Please recheck read sequence \n");
 			if( Strict_Error ) {
@@ -1586,27 +1625,8 @@ void readdatablock( int*  fileDescriptor,
                 }
 		fileObject = fileArray[ filePtr ];
 		Wrong_Endian = byte_order[ filePtr ];
-
-		size_t type_size = typeSize( datatype );
-		int nUnits = *nItems;
-		isBinary( iotype );
-
-		if ( binary_format ) {
-			fread( valueArray, type_size, nUnits, fileObject );
-			fread( &junk, sizeof(char), 1 , fileObject );
-			if ( Wrong_Endian ) SwapArrayByteOrder( valueArray, type_size, nUnits );
-		} else {
-
-			char* ts1 = StringStripper( datatype );
-			if ( cscompare( "integer", ts1 ) ) {
-				for( int n=0; n < nUnits ; n++ )
-					fscanf(fileObject, "%d\n",(int*)((int*)valueArray+n) );
-			} else if ( cscompare( "double", ts1 ) ) {
-				for( int n=0; n < nUnits ; n++ )
-					fscanf(fileObject, "%lf\n",(double*)((double*)valueArray+n) );
-			}
-			free (ts1);
-		}
+                LastHeaderKey.erase(filePtr);
+                readDataBlock(fileObject,valueArray,*nItems,datatype,iotype);
 
 		//return;
 	}
@@ -1681,6 +1701,27 @@ void readdatablock( int*  fileDescriptor,
 
 }
 
+void writeHeader(FILE* f,
+                 const char keyphrase[],
+                 const void* valueArray,
+                 const int nItems,
+                 const int ndataItems,
+                 const char datatype[],
+                 const char iotype[])
+{
+  isBinary( iotype );
+
+  const int _newline = 
+    ( ndataItems > 0 ) ? sizeof( char ) : 0;
+  int size_of_nextblock =
+    ( binary_format ) ? typeSize(datatype) * ndataItems + _newline : ndataItems;
+
+  fprintf( f, "%s : < %d > ", keyphrase, size_of_nextblock );
+  for( int i = 0; i < nItems; i++ )
+    fprintf( f, "%d ", *((int*)((int*)valueArray+i)));
+  fprintf( f, "\n");
+}
+
 void writeheader(  const int* fileDescriptor,
                     const char keyphrase[],
                     const void* valueArray,
@@ -1700,8 +1741,6 @@ void writeheader(  const int* fileDescriptor,
 
 	if ( PhastaIONextActiveIndex == 0 ) {
 		int filePtr = *fileDescriptor - 1;
-		FILE* fileObject;
-
 		if ( *fileDescriptor < 1 || *fileDescriptor > (int)fileArray.size() ) {
 			fprintf(stderr,"No file associated with Descriptor %d\n",*fileDescriptor);
 			fprintf(stderr,"openfile_ function has to be called before \n") ;
@@ -1712,23 +1751,12 @@ void writeheader(  const int* fileDescriptor,
 			return;
 		}
 
-		LastHeaderKey[ filePtr ] = const_cast< char* >( keyphrase );
+                LastHeaderKey[filePtr] = std::string(keyphrase);
 		DataSize = *ndataItems;
-		fileObject = fileArray[ filePtr ] ;
-		size_t type_size = typeSize( datatype );
-		isBinary( iotype );
-		header_type[ filePtr ] = type_size;
-
-		int _newline = ( *ndataItems > 0 ) ? sizeof( char ) : 0;
-		int size_of_nextblock =
-			( binary_format ) ? type_size*( *ndataItems )+ _newline : *ndataItems ;
-
-		fprintf( fileObject, "%s : < %d > ", keyphrase, size_of_nextblock );
-		for( int i = 0; i < *nItems; i++ )
-			fprintf(fileObject, "%d ", *((int*)((int*)valueArray+i)));
-		fprintf(fileObject, "\n");
-
-		//return ;
+                FILE* fileObject = fileArray[ filePtr ] ;
+                header_type[ filePtr ] = typeSize( datatype );
+                writeHeader(fileObject,keyphrase,valueArray,*nItems,
+                    *ndataItems,datatype,iotype);
 	}
 	else { // else it's parallel I/O
 		DataSize = *ndataItems;
@@ -1878,6 +1906,30 @@ void writeheader(  const int* fileDescriptor,
 	printPerf("writeheader", timer_start, timer_end, 0, 0, "");
 }
 
+void writeDataBlock( FILE* f,
+                     const void* valueArray,
+                     const int   nItems,
+                     const char  datatype[],
+                     const char  iotype[]  )
+{
+  isBinary( iotype );
+  size_t type_size = typeSize( datatype );
+  if ( binary_format ) {
+    fwrite( valueArray, type_size, nItems, f );
+    fprintf( f,"\n");
+  } else {
+    char* ts1 = StringStripper( datatype );
+    if ( cscompare( "integer", ts1 ) ) {
+      for( int n=0; n < nItems ; n++ )
+        fprintf(f,"%d\n",*((int*)((int*)valueArray+n)));
+    } else if ( cscompare( "double", ts1 ) ) {
+      for( int n=0; n < nItems ; n++ )
+        fprintf(f,"%lf\n",*((double*)((double*)valueArray+n)));
+    }
+    free (ts1);
+  }
+}
+
 void writedatablock( const int* fileDescriptor,
                       const char keyphrase[],
                       const void* valueArray,
@@ -1909,9 +1961,9 @@ void writedatablock( const int* fileDescriptor,
 		// since we require that a consistant header always preceed the data block
 		// let us check to see that it is actually the case.
 
-		if ( ! cscompare( LastHeaderKey[ filePtr ], keyphrase ) ) {
+		if ( ! cscompare( LastHeaderKey[ filePtr ].c_str(), keyphrase ) ) {
 			fprintf(stderr, "Header not consistant with data block\n");
-			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ] );
+			fprintf(stderr, "Header: %s\n", LastHeaderKey[ filePtr ].c_str() );
 			fprintf(stderr, "DataBlock: %s\n ", keyphrase );
 			fprintf(stderr, "Please recheck write sequence \n");
 			if( Strict_Error ) {
@@ -1925,6 +1977,8 @@ void writedatablock( const int* fileDescriptor,
 		FILE* fileObject =  fileArray[ filePtr ] ;
 		size_t type_size=typeSize( datatype );
 		isBinary( iotype );
+
+                LastHeaderKey.erase(filePtr);
 
 		if ( header_type[filePtr] != (int)type_size ) {
 			fprintf(stderr,"header and datablock differ on typeof data in the block for\n");
@@ -1949,25 +2003,7 @@ void writedatablock( const int* fileDescriptor,
 				return;
 			}
 		}
-
-		if ( binary_format ) {
-
-			fwrite( valueArray, type_size, nUnits, fileObject );
-			fprintf( fileObject,"\n");
-
-		} else {
-
-			char* ts1 = StringStripper( datatype );
-			if ( cscompare( "integer", ts1 ) ) {
-				for( int n=0; n < nUnits ; n++ )
-					fprintf(fileObject,"%d\n",*((int*)((int*)valueArray+n)));
-			} else if ( cscompare( "double", ts1 ) ) {
-				for( int n=0; n < nUnits ; n++ )
-					fprintf(fileObject,"%lf\n",*((double*)((double*)valueArray+n)));
-			}
-			free (ts1);
-		}
-		//return ;
+                writeDataBlock(fileObject,valueArray,*nItems,datatype,iotype);
 	}
 	else {  // syncIO case
 		MPI_Status write_data_status;

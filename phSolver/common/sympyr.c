@@ -7,7 +7,7 @@ typedef double DARR4[4];
 
 int pyrIntPnt(int,DARR4**,double **);
 
-sympyr(int *n1, double pt[][4], double wt[], int *err)
+void sympyr(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR4 *lpt;

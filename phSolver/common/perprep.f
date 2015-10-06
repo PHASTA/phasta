@@ -13,6 +13,13 @@
        return
        end
 
+       subroutine clearper
+         use periodicity
+         if( allocated(rcount) ) then
+           deallocate(rcount)
+         endif
+       end
+
        subroutine perprep (iBC, iper,nshg)
        
        use periodicity

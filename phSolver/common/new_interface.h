@@ -2,6 +2,7 @@
 #define __NEW_INTERFACE_H__
 
 #include <FCMangle.h>
+#include "phIO.h"
 
 #define igetMinMaxAvg FortranCInterface_GLOBAL_(igetminmaxavg,IGETMINMAXAVG)
 #define rgetMinMaxAvg FortranCInterface_GLOBAL_(rgetminmaxavg,RGETMINMAXAVG)
@@ -12,16 +13,13 @@
 #define Write_Error   FortranCInterface_GLOBAL_(write_error,WRITE_ERROR)
 #define Write_Displ   FortranCInterface_GLOBAL_(write_displ,WRITE_DISPL)
 #define Write_Field   FortranCInterface_GLOBAL_(write_field,WRITE_FIELD)
-//MR CHANGE END
 #define Write_PhAvg   FortranCInterface_GLOBAL_(write_phavg,WRITE_PHAVG)
 #define Write_PhAvg2  FortranCInterface_GLOBAL_(write_phavg2,WRITE_PHAVG2)
-#define Write_d2wall  FortranCInterface_GLOBAL_(write_d2wall,WRITE_D2WALL)
-//MR CHANGE END
 #define read_d2wall FortranCInterface_GLOBAL_(read_d2wall,READ_D2WALL)
 
 extern char phasta_iotype[80];
 extern int field_flag;
-extern int f_descriptor;
+extern phio_fp f_descriptor;
 
 void igetMinMaxAvg(int *ivalue, double *stats, int *statRanks);
 void rgetMinMaxAvg(double *value, double *stats, int *statRanks);
@@ -97,4 +95,4 @@ read_d2wall(  int* pid,
               int* foundd2wall );
 
 
-#endif //header guard
+#endif

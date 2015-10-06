@@ -1,22 +1,40 @@
 file(GLOB SRC_FILES *.cc *.f *.f90 *.c)
-list(REMOVE_ITEM SRC_FILES "main.c")
+list(REMOVE_ITEM SRC_FILES "main.cc")
+find_package(phastaCommon REQUIRED PATHS ${CMAKE_BINARY_DIR})
+set(PHASTAC_LIBS ${CMAKE_THREAD_LIBS_INIT} ${PHASTA_COMMON_LIBS})
+set(PHASTAC_INCLUDE_DIRS
+  ${PHASTA_COMMON_INCLUDE_DIRS}
+  ${PHASTA_BINARY_DIR}
+)
+
 add_library(compressible ${SRC_FILES})
-if(PHASTA_USE_MPI)
-	include_directories(${MPI_INCLUDE_PATH} ${MPI_Fortran_INCLUDE_PATH})
-endif(PHASTA_USE_MPI)
-include_directories(${PHASTA_BINARY_DIR}/include ${PHASTA_BINARY_DIR})
-add_executable(phastaC.exe main.c)
+add_dependencies(compressible common)
+
+add_executable(phastaC.exe main.cc)
+include_directories(${PHASTAC_INCLUDE_DIRS})
 set_target_properties(phastaC.exe PROPERTIES HAS_CXX TRUE)
 set_target_properties(compressible PROPERTIES HAS_CXX TRUE)
 set_target_properties(phastaC.exe PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties(compressible PROPERTIES LINKER_LANGUAGE Fortran)
-if(PHASTA_USE_MPI)
-	target_link_libraries(phastaC.exe ${MPI_LIBRARIES} ${MPI_Fortran_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} common compressible phMetis common phMetis phastaIO)
-endif(PHASTA_USE_MPI)
+#ughhhhh
+set(PHASTAC_LIBS 
+  compressible ${PHASTAC_LIBS} 
+  compressible ${PHASTAC_LIBS} 
+)
+set(PHASTAC_LIBS ${PHASTAC_LIBS} phastaIO)
 if(PHASTA_BUILD_SHAPEFUNCTION)
-	target_link_libraries(phastaC.exe shapeFunction)
+  set(PHASTAC_LIBS ${PHASTAC_LIBS} shapeFunction)
 endif(PHASTA_BUILD_SHAPEFUNCTION)
 if(PHASTA_BUILD_PHSHAPE)
-	target_link_libraries(phastaC.exe phshape)
+  set(PHASTAC_LIBS ${PHASTAC_LIBS} phshape)
 endif(PHASTA_BUILD_PHSHAPE)
-target_link_libraries(phastaC.exe compressible)
+target_link_libraries(phastaC.exe ${PHASTAC_LIBS})
+
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/phastaCConfig.cmake.in"
+  "${CMAKE_BINARY_DIR}/phastaCConfig.cmake"
+)
+
+if(PHASTA_TESTING)
+  add_subdirectory(test)
+endif(PHASTA_TESTING)

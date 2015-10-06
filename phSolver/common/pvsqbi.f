@@ -17,6 +17,19 @@ c-----------------------------------------------------------------------
       
       end module
 
+      subroutine finalizeNABI
+        use pvsQbi
+        if( allocated(NABI) ) then
+          deallocate(NABI)
+        endif
+        if( allocated(NASC) ) then
+          deallocate(NASC)
+        endif
+        if( allocated(ndsurf) ) then
+          deallocate(ndsurf)
+        endif
+      end
+
 c-----------------------------------------------------------------------
 c
 c     Initialize:

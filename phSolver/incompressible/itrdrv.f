@@ -34,6 +34,7 @@ c
 !MR CHANGE
       use turbsa          ! used to access d2wall
 !MR CHANGE END
+      use iso_c_binding
 
 c      use readarrays !reads in uold and acold
       
@@ -1190,15 +1191,13 @@ c
 
          call write_error(myrank, lstep, nshg, 10, rerr )
 
-!MR CHANGE
         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
         if(myrank.eq.0)  then
-          tcormr2 = TMRC()
-          write(6,*) 'Time to write the error fields to the disks',
-     &                tcormr2-tcormr1
+          call writeTimingMessage(
+     &           c_char_"error fields to " // c_null_char,
+     &           output_mode,
+     &           TMRC()-tcormr1)
         endif
-!MR CHANGE END
-
 
       endif
 
@@ -1250,9 +1249,10 @@ c
 
           if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
           if(myrank.eq.0)  then
-              tcormr2 = TMRC()
-              write(6,*) 'Time to write all phase avg to the disks = ',
-     &                        tcormr2-tcormr1
+            call writeTimingMessage(
+     &              c_char_"all phase avg to " // c_null_char,
+     &              output_mode,
+     &              TMRC()-tcormr1)
           endif
           deallocate(yphbar)
         endif
@@ -1300,15 +1300,13 @@ c     &                    elDw,'d',numel,1,lstep)
         call write_field(myrank,'a','dwal',4,d2wall,'d',nshg,1,lstep)
         deallocate(d2wall)
 
-!MR CHANGE
         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
         if(myrank.eq.0)  then
-          tcormr2 = TMRC()
-          write(6,*) 'Time to write dwal to the disks = ',
-     &                tcormr2-tcormr1
+          call writeTimingMessage(
+     &           c_char_"dwal to " // c_null_char,
+     &           output_mode,
+     &           TMRC()-tcormr1)
         endif
-!MR CHANGE END
-
 
       endif
 
@@ -1855,7 +1853,29 @@ c
       return
       end
 
+      subroutine writeTimingMessage(key,iomode,timing)
+      use iso_c_binding
+      use phstr
+      implicit none
 
+      character(len=*) :: key
+      integer :: iomode
+      real*8 :: timing
+      character(len=1024) :: timing_msg
+      character(len=*), parameter ::
+     &  streamModeString = c_char_"stream"//c_null_char,
+     &  fileModeString = c_char_"disk"//c_null_char
 
-
+      timing_msg = c_char_"Time to write "//c_null_char
+      call phstr_appendStr(timing_msg,key)
+      if ( iomode .eq. -1 ) then
+        call phstr_appendStr(timing_msg, streamModeString)
+      else
+        call phstr_appendStr(timing_msg, fileModeString)
+      endif
+      call phstr_appendStr(timing_msg, c_char_' = '//c_null_char)
+      call phstr_appendDbl(timing_msg, timing)
+      write(6,*) trim(timing_msg)
+      return
+      end subroutine
 

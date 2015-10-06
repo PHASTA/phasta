@@ -1,0 +1,3 @@
+SET(PHASTA_LIBS phasta @phastaDepLibs@ )
+SET(PHASTA_INCLUDE_DIRS @phastaIncDirs@ )
+SET(PHASTA_FOUND TRUE )

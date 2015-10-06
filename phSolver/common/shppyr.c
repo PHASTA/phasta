@@ -11,7 +11,7 @@ int PyrShapeAndDrv(int p,double par[3],double N[],double dN[][3]);
    dN[][3]:derivative of shape function
    */
 
-shppyr(int *p, double par[3], double N[], double dN[][3])
+void shppyr(int *p, double par[3], double N[], double dN[][3])
 {
 
   PyrShapeAndDrv(*p,par,N,dN);

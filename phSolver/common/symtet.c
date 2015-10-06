@@ -6,7 +6,7 @@ typedef double DARR4[4];
 int tetIntPnt(int,DARR4**,double **);
 
 
-symtet(int *n1, double pt[][4], double wt[], int *err)
+void symtet(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR4 *lpt;

@@ -422,10 +422,13 @@
 
       fname1="mode number map from partition to global"
       ione=1
-      call readheader(igeom,fname1,map_nshg,ione,"integer",iotype)
+      call readheader(igeom,
+     & 'mode number map from partition to global' // char(0),
+     &  map_nshg,ione,"integer",iotype)
       
-      call readdatablock(igeom,fname1,ncorp_map,map_nshg,
-     &                   "integer",iotype)
+      call readdatablock(igeom,
+     & 'mode number map from partition to global' // char(0),
+     & ncorp_map,map_nshg, "integer",iotype)
 
       call closefile(igeom,"read")
 

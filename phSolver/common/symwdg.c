@@ -5,7 +5,7 @@ typedef double DARR4[4];
 
 int wdgIntPnt(int,DARR4**,double **);
 
-symwdg(int *n1, double pt[][4], double wt[], int *err)
+void symwdg(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR4 *lpt;

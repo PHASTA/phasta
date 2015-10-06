@@ -17,8 +17,8 @@ extern "C" {
   void detectd2wallfiles(int* numd2wallfiles);
 
 #ifdef __cplusplus
-} // end of extern "C".
+}
 
-#endif // __cplusplus
+#endif
 
-#endif // _SETSYNCIOPARAM_H_
+#endif
