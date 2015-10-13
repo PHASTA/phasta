@@ -1,4 +1,4 @@
-      subroutine initphcommonvars() bind(C, name='initPhCommonVars')
+      subroutine initphcommonvars() bind(C, name='initPhastaCommonVars')
       use iso_c_binding
       include "common.h"
 
