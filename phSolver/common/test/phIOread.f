@@ -46,7 +46,7 @@
         ncoords(i) = numpts(1)*numpts(2)
         allocate( coords(i)%ptr(numpts(1),numpts(2)) )
         call phio_readdatablock(handle(i), phrase, 
-     &      c_loc(coords(i)%ptr), ncoords(i), dataDbl, iotype)
+     &      c_loc(coords(i)%ptr(1,1)), ncoords(i), dataDbl, iotype)
         call phio_closefile(handle(i))
         call chdir(c_char_'..'//c_null_char)
       end do
