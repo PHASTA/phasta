@@ -456,8 +456,8 @@ extern "C" {
     int nsynciofieldswriterestart;
     int iv_rankpercore;
     int iv_corepernode; 
-    int input_mode;
-    int output_mode;
+    int input_mode; //FIXME -1:streams, 0:posix, >0:syncio
+    int output_mode; //FIXME -1:streams, 0:posix, >0:syncio
     /*  int iostats; */
 /*      int ipresref; */
   } outpar ;
