@@ -87,9 +87,14 @@ int phasta(phSolver::Input& ctrl, grstream grs) {
 
   workfc.numpe = size;
   workfc.myrank = myrank;
-  outpar.input_mode = -1; //FIXME magic value for streams
-  outpar.output_mode = 1; //FIXME magic value for syncio
-  streamio_set_gr(grs);
+  if( grs ) {
+    outpar.input_mode = -1; //FIXME magic value for streams
+    outpar.output_mode = 1; //FIXME magic value for syncio
+    streamio_set_gr(grs);
+  } else {
+    outpar.input_mode = 0; //FIXME magic value for posix
+    outpar.output_mode = 0; //FIXME magic value for posix
+  }
 
   initPhastaCommonVars();
   /* Input data  */

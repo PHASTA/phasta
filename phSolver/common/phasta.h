@@ -4,7 +4,7 @@
 struct RStream;
 struct GRStream;
 int phasta(int argc, char**argv);
-int phasta(phSolver::Input& ctrl, GRStream* in);
+int phasta(phSolver::Input& ctrl, GRStream* in=NULL);
 int phasta(phSolver::Input& ctrl, RStream* out);
 int phasta(phSolver::Input& ctrl, GRStream* in, RStream* out);
 #endif
