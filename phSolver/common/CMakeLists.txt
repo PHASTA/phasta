@@ -23,7 +23,9 @@ if(PHASTA_CHEF_ENABLED)
   )
 else()
   set(SRC_FILES ${SRC_FILES} phstreamEmpty/phstreamEmpty.cc)
-  set(PHASTA_COMMON_INCLUDE_DIRS ${PHASTA_COMMON_INCLUDE_DIRS} phstreamEmpty)
+  set(PHASTA_COMMON_INCLUDE_DIRS 
+      ${PHASTA_COMMON_INCLUDE_DIRS} 
+      ${CMAKE_CURRENT_SOURCE_DIR}/phstreamEmpty)
 endif()
 
 include_directories(${PHASTA_COMMON_INCLUDE_DIRS})
