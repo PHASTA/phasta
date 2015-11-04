@@ -1,7 +1,7 @@
 #build and test
 
-    wget www.scorec.rpi.edu/~cwsmith/phastaCases.tar.gz .
-    tar xzf phastaCases.tar.gz
+    wget www.scorec.rpi.edu/~cwsmith/phastaChefTests.tar.gz .
+    tar xzf phastaChefTests.tar.gz # use for CASES path below
 
     cmake \
     -DCMAKE_C_COMPILER=gcc \
@@ -12,6 +12,7 @@
     -DPHASTA_COMPRESSIBLE=ON \
     -DACUSOLVE_LIB=/path/to/libles.a \
     -DCASES=/path/to/phastaCases/ \
+    -DPHASTA_TESTING=ON \
     ..
 
     make
