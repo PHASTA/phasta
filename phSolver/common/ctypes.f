@@ -154,3 +154,13 @@ c
 
       return
       end
+
+      subroutine Dctypes(numtask) ! {
+        include "auxmpi.h"
+        integer numtask
+        do itask = 1,numtask
+          do kdof = 1,15
+            call MPI_TYPE_FREE(sevsegtype(itask,kdof), ierr)
+          enddo
+        enddo
+      end !}

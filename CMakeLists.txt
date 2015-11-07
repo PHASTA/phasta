@@ -5,6 +5,15 @@ enable_language(Fortran)
 enable_language(C)
 enable_language(CXX)
 
+enable_testing()
+include(CTest)
+set(MPIRUN "mpirun"
+  CACHE string
+  "the mpirun or srun executable")
+set(MPIRUN_PROCFLAG "-np"
+  CACHE string
+  "the command line flag to give process count to MPIRUN")
+
 list(APPEND CMAKE_MODULE_PATH ${PHASTA_SOURCE_DIR}/CMakeFiles)
 
 #Handle Fortran name mangling
@@ -22,12 +31,12 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES BlueGeneQ-static)
 #SET(CMAKE_Fortran_SOURCE_FILE_EXTENSIONS f90 f F90 F)
 # stuff for C/C++ calls to Fortran -- still needs to be done properly...
 IF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffixed-form -ffixed-line-length-132 -x f95-cpp-input" )
+  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffixed-form -ffixed-line-length-132 -x f95-cpp-input" )
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
 
-SET(CMAKE_Fortran_FLAGS "-g -O3 -W0 -xW -ip -cm -w95 -80 -fpp ${CMAKE_Fortran_FLAGS}" )
+SET(CMAKE_Fortran_FLAGS "-g -O3 -W0 -ip -80 -fpp ${CMAKE_Fortran_FLAGS}" )
 message(STATUS "Found ifort")
 message(STATUS ${CMAKE_Fortran_FLAGS})
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
@@ -61,7 +70,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 
 OPTION(PHASTA_USE_MPI "Build MPI components" ON)
 IF(PHASTA_USE_MPI)
-  ADD_DEFINITIONS( -DPARALLEL -DMPI -DMPICH_SKIP_MPICXX )
+  ADD_DEFINITIONS( -DPARALLEL -DMPI -DMPICH_SKIP_MPICXX -DOMPI_SKIP_MPICXX )
   FIND_PACKAGE(MPI REQUIRED)
 #  SET(CMAKE_MODULE_PATH ${PHASTA_SOURCE_DIR}/CMakeFiles)
   # bug in FIND_PACKAGE for Threads -- ignore for now (bug has been reported)...
@@ -76,12 +85,6 @@ if(PHASTA_BUILD_PHASTAIO)
 	add_subdirectory(phastaIO)
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/phastaIO")
 endif(PHASTA_BUILD_PHASTAIO)
-
-OPTION(PHASTA_BUILD_METIS "Build phMetis" ON)
-if(PHASTA_BUILD_METIS)
-	add_subdirectory(phMetis)
-	add_dependencies(phMetis common) #only for XLF?
-endif(PHASTA_BUILD_METIS)
 
 OPTION(PHASTA_BUILD_SHAPEFUNCTION "Build shapeFunction" ON)
 if(PHASTA_BUILD_SHAPEFUNCTION)
@@ -132,4 +135,6 @@ endif(PHASTA_BUILD_M2NFixBnd)
 if(EXISTS ${PHASTA_SOURCE_DIR}/phNSpre)
 	add_subdirectory(phNSpre)
 endif(EXISTS ${PHASTA_SOURCE_DIR}/phNSpre)
+
+add_subdirectory(checkphasta)
 

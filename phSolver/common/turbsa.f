@@ -228,8 +228,6 @@ c
 !         write (72) d2wall
 !         close (72)
 
-          call write_d2wall(myrank,numnp,d2wall) !See new_interface.c
-
 !MR CHANGE END
 
 c         write(*,*) "make sure to: echo 0 > distcalc.dat"

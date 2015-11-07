@@ -8,10 +8,10 @@
 
 using namespace std;
 
+namespace phSolver{
 class Input {
 public:
   Input(const string &, const string &default_fname = "");
-  Input(const char*, const char* = "");
   ~Input();
 
   // return the entire input map
@@ -24,6 +24,8 @@ public:
   // echo the entire input map
   void EchoInputMap(const ostream &ofile);
 
+  const char* GetUserFileName();
+  const char* GetDefaultFileName();
 private:
 
   void trim_string(string *str);
@@ -37,9 +39,10 @@ private:
   vector<string> *input_text;
   vector<string> *default_text;
 
+  string userConfFileName;
+  string defaultConfFileName;
+
 };
-
-
-
+} //end phSolver namespace
 
 #endif

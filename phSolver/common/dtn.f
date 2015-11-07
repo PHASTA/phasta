@@ -9,6 +9,13 @@
       allocate (ifeature(nshg))
       end
 
+      subroutine finalizeDtN
+      use dtnmod
+      include "common.h"
+      if( allocated(ifeature) ) then
+        deallocate(ifeature)
+      endif
+      end
 
       subroutine DtN(iBC,BC,y)
       use dtnmod

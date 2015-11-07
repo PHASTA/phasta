@@ -9,7 +9,9 @@ c
         dimension shp(MAXTOP,maxsh,MAXQPT),  
      &            shgl(MAXTOP,nsd,maxsh,MAXQPT), 
      &            shpb(MAXTOP,maxsh,MAXQPT),
-     &            shglb(MAXTOP,nsd,maxsh,MAXQPT) 
+     &            shglb(MAXTOP,nsd,maxsh,MAXQPT),
+     &            x(numnp,nsd)
+
 c
         dimension rerrsm(nshg, 10), rerr(nshg,10), rmass(nshg)
 c

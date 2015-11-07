@@ -1,6 +1,4 @@
-//MR CHANGE
 #define OMPI_SKIP_MPICXX 1
-//MR CHANGE END
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,10 +8,13 @@
 #include <sys/stat.h>
 
 #include "common_c.h"
+#include "Input.h"
+#include "phstream.h"
+#include "streamio.h"
 
 #if !(defined IOSTREAMH)
 #include <iostream>
-#include <strstream>
+#include <sstream>
 using namespace std;
 #endif
 
@@ -33,13 +34,11 @@ extern "C" char phasta_iotype[80];
 char phasta_iotype[80];
 
 extern int SONFATH;
-extern void Partition_Problem( int, char[], char[], int );
 extern "C" void proces();
 extern "C" void input();
-extern int input_fform(char inpfname[]);
-//MR CHANGE
+extern int input_fform(phSolver::Input&);
 extern void setIOparam(); // For SyncIO
-//MR CHANGE END
+extern "C" void initPhastaCommonVars();
 
 int myrank; /* made file global for ease in debugging */
 
@@ -71,16 +70,108 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
-extern "C" int 
-phasta( int argc,   
-        char *argv[] ) {
-  
+int cdToParent() {
+  if( chdir("..") ) {
+    fprintf(stderr,"could not change to the parent directory\n");
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int phasta(phSolver::Input& ctrl, grstream grs) {
+  int size,ierr;
+  char inpfilename[100];
+  MPI_Comm_size (MPI_COMM_WORLD, &size);
+  MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+
+  workfc.numpe = size;
+  workfc.myrank = myrank;
+  if( grs ) {
+    outpar.input_mode = -1; //FIXME magic value for streams
+    outpar.output_mode = 1; //FIXME magic value for syncio
+    streamio_set_gr(grs);
+  } else {
+    outpar.input_mode = 0; //FIXME magic value for posix
+    outpar.output_mode = 0; //FIXME magic value for posix
+  }
+
+  initPhastaCommonVars();
+  /* Input data  */
+  ierr = input_fform(ctrl);
+  if(!ierr){
+    sprintf(inpfilename,"%d-procs_case/",size);
+    if( chdir( inpfilename ) ) {
+      cerr << "could not change to the problem directory "
+        << inpfilename << endl;
+      return -1;
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    input();
+    /* now we can start the solver */
+    proces();
+  }
+  else{
+    printf("error during reading ascii input \n");
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  if ( myrank == 0 ) {
+    printf("phasta.cc - last call before finalize!\n");
+  }
+  return timdat.lstep;
+}
+
+int phasta(phSolver::Input& ctrl, RStream* rs) {
+  fprintf(stderr, "HEY! if you see this email Cameron and tell him "
+      "to implement %s(...) on line %d of %s "
+      "... returning an error\n", __func__, __LINE__, __FILE__);
+  return -1;
+}
+
+int phasta(phSolver::Input& ctrl, GRStream* grs, RStream* rs) {
+  int size,ierr;
+  char inpfilename[100];
+  MPI_Comm_size (MPI_COMM_WORLD, &size);
+  MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+
+  workfc.numpe = size;
+  workfc.myrank = myrank;
+  outpar.input_mode = -1; //FIXME magic value for streams
+  outpar.output_mode = -1; //FIXME magic value for streams
+  streamio_set_gr(grs);
+  streamio_set_r(rs);
+
+  initPhastaCommonVars();
+  /* Input data  */
+  ierr = input_fform(ctrl);
+  if(!ierr){
+    sprintf(inpfilename,"%d-procs_case/",size);
+    if( chdir( inpfilename ) ) {
+      cerr << "could not change to the problem directory "
+        << inpfilename << endl;
+      return -1;
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    input();
+    /* now we can start the solver */
+    proces();
+  }
+  else{
+    printf("error during reading ascii input \n");
+  }
+  MPI_Barrier(MPI_COMM_WORLD);
+  if ( myrank == 0 ) {
+    printf("phasta.cc - last call before finalize!\n");
+  }
+  if( cdToParent() )
+    return -1;
+  return timdat.lstep;
+}
+
+int phasta( int argc, char *argv[] ) {
     int size,ierr;
     char inpfilename[100];
     char* pauseDebugger = getenv("catchDebugger");
-    //cout << "pauseDebugger" << pauseDebugger << endl;
-
-    MPI_Init(&argc,&argv);
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
 
@@ -103,7 +194,7 @@ phasta( int argc,
         if( gdb_child == 0 ) {
      
             cout << "Debugger Process initiating" << endl;
-            strstream exec_string;
+            stringstream exec_string;
          
 #if ( defined decalp )
             exec_string <<"xterm -e idb " 
@@ -121,7 +212,8 @@ phasta( int argc,
             exec_string <<"xterm -e dbx " 
                         << " -p "<< parent_pid <<" "<< argv[0] << endl;
 #endif
-            system( exec_string.str() );
+            string s = exec_string.str();
+            system( s.c_str() );
             exit(0);
         }
         catchDebugger();
@@ -135,47 +227,38 @@ phasta( int argc,
     } else {
         strcpy(inpfilename,"solver.inp");
     }
-    ierr = input_fform(inpfilename);
+    string defaultConf = ".";
+    const char* path_to_config = getenv("PHASTA_CONFIG");
+    if(path_to_config) 
+      defaultConf = path_to_config;
+    defaultConf.append("/input.config");
+    string userConf(inpfilename);
+    phSolver::Input ctrl(userConf, defaultConf);
+    initPhastaCommonVars();
+    ierr = input_fform(ctrl);
     if(!ierr){
-
-        /* Preprocess data and run the problem  */
-        /* Partition the problem to the correct number of processors */
-        if( size > 1 ) {
-            if( myrank == 0 ) {
-                 Partition_Problem( size, phasta_iotype, 
-                                    phasta_iotype, SONFATH );
-                 MPI_Barrier(MPI_COMM_WORLD);
-            } else { 
-                 MPI_Barrier(MPI_COMM_WORLD);
-                 sprintf(inpfilename,"%d-procs_case/",size);
-                 if( chdir( inpfilename ) ) {
-                    cerr << "could not change to the problem directory "
-                              << inpfilename << endl;
-                    return 1;
-                 }
-            }
-        }
-
-//MR CHANGE
-        setIOparam();
-//MR CHANGE END
-
-        input();
-        /* now we can start the solver */
-        proces();
+      sprintf(inpfilename,"%d-procs_case/",size);
+      if( chdir( inpfilename ) ) {
+        cerr << "could not change to the problem directory "
+          << inpfilename << endl;
+        return -1;
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+      setIOparam();
+      outpar.input_mode = outpar.nsynciofiles; //FIXME this is awful
+      outpar.output_mode = outpar.nsynciofiles; //FIXME this is awful
+      input();
+      /* now we can start the solver */
+      proces();
     }
     else{
         printf("error during reading ascii input \n");
     }
-   
-//MR CHANGE
-
     MPI_Barrier(MPI_COMM_WORLD);
     if ( myrank == 0 ) {
       printf("phasta.cc - last call before finalize!\n");
     }
-//MR CHANGE
- 
-    MPI_Finalize();
-    return 0;
+    if( cdToParent() )
+      return -1;
+    return timdat.lstep;
 }

@@ -1,25 +1,11 @@
+#include <FCMangle.h>
+
 typedef double DARR2[2];
 
 int lineIntPnt(int, DARR2**,double**);
 
-#ifdef sun4_5
-symline_(int *n1, double pt[][4], double wt[], int *err)
-#endif
-#ifdef LINUX
-symline_(int *n1, double pt[][4], double wt[], int *err)
-#endif
-#ifdef ibm
-symline(int *n1, double pt[][4], double wt[], int *err)
-#endif
-#ifdef sgi
-void symline_(int *n1, double pt[][4], double wt[], int *err)
-#endif
-#ifdef decalp
-void symline_(int *n1, double pt[][4], double wt[], int *err)
-#endif
-#ifdef intel
-void  SYMLINE(int *n1, double pt[][4], double wt[], int *err)
-#endif
+#define symline FortranCInterface_GLOBAL_(symline, SYMLINE)
+void symline(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR2 *lpt;

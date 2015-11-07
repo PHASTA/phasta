@@ -5,7 +5,7 @@ typedef double DARR3[3];
 
 int quadwIntPnt(int,DARR3**,double **);
 
-symquadw(int *n1, double pt[][4], double wt[], int *err)
+void symquadw(int *n1, double pt[][4], double wt[], int *err)
 {
   double *lwt;
   DARR3 *lpt;
