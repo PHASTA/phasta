@@ -6,7 +6,7 @@
 int HexShapeAndDrv(int p,double par[3],double N[],double dN[][3]);
 
 #define shphex FortranCInterface_GLOBAL_(shphex, SHPHEX)
-shphex(int *p, double par[], double N[], double dN[][3])
+void shphex(int *p, double par[], double N[], double dN[][3])
 {
   
   HexShapeAndDrv(*p,par,N,dN);

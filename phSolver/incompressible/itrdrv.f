@@ -34,6 +34,7 @@ c
 !MR CHANGE
       use turbsa          ! used to access d2wall
 !MR CHANGE END
+      use iso_c_binding
 
 c      use readarrays !reads in uold and acold
       
@@ -1287,6 +1288,177 @@ c         call MPI_ABORT(MPI_COMM_WORLD, ierr)
 
  3000 continue
  
+c
+c.... ---------------------->  Post Processing  <----------------------
+c
+c.... print out the last step
+c
+      if ((irs .ge. 1) .and. ((mod(lstep, ntout) .ne. 0) .or.
+     &     (nstp .eq. 0))) then
+         if(
+     &              ((irscale.ge.0).or.(itwmod.gt.0) .or. 
+     &              ((nsonmax.eq.1).and.iLES.gt.0)))
+     &              call rwvelb  ('out ',  velbar  ,ifail)
+      endif
+
+
+         lesId   = numeqns(1)
+
+!MR CHANGE
+          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+          if(myrank.eq.0)  then
+            tcormr1 = TMRC()
+          endif
+!MR CHANGE END
+
+         call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
+     &                        nPermDims )
+
+!MR CHANGE
+        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+        if(myrank.eq.0)  then
+          tcormr2 = TMRC()
+          write(6,*) 'Time to call saveLesRestart for projection and'//
+     &               'pressure projection vectors', tcormr2-tcormr1
+        endif
+!MR CHANGE END
+
+
+      if(ierrcalc.eq.1) then
+c
+c.....smooth the error indicators
+c
+        do i=1,ierrsmooth
+            call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
+        end do
+
+!MR CHANGE
+        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+        if(myrank.eq.0)  then
+          tcormr1 = TMRC()
+        endif
+!MR CHANGE END
+
+         call write_error(myrank, lstep, nshg, 10, rerr )
+
+        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+        if(myrank.eq.0)  then
+          call writeTimingMessage(
+     &           c_char_"error fields to " // c_null_char,
+     &           output_mode,
+     &           TMRC()-tcormr1)
+        endif
+
+      endif
+
+      if(ioybar.eq.1) then
+
+!MR CHANGE
+!        call write_field(myrank,'a','ybar',4,
+!     &                    ybar,'d',nshg,12,lstep)
+         if(ivort == 1) then
+           call write_field(myrank,'a','ybar',4,
+     &                      ybar,'d',nshg,17,lstep)
+         else
+           call write_field(myrank,'a','ybar',4,
+     &                    ybar,'d',nshg,13,lstep)
+         endif
+         deallocate(ybar)
+
+                 
+         if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
+           call write_field(myrank,'a','wssbar',6,
+     &                 wallssVecBar,'d',nshg,3,lstep)
+           deallocate(wallssVecbar)
+         endif
+
+!MR CHANGE END
+        if(nphasesincycle .gt. 0) then
+
+          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+          if(myrank.eq.0)  then
+            tcormr1 = TMRC()
+          endif
+
+          do iphase=1,nphasesincycle
+
+!           call write_phavg(myrank,'w','phase average',13,iphase,
+!     &                      yphbar(:,:,iphase),'d',nshg,5,lstep)
+!           ! ybar field is repeated in files for phase average
+!           call write_phavg(myrank,'a','ybar',4,iphase,
+!     &                      ybar(:,1:5),'d',nshg,5,lstep)
+            if(ivort == 1) then
+              call write_phavg2(myrank,'a','phase_average',13,iphase,
+     &             nphasesincycle,yphbar(:,:,iphase),'d',nshg,15,lstep)
+            else
+              call write_phavg2(myrank,'a','phase_average',13,iphase,
+     &             nphasesincycle,yphbar(:,:,iphase),'d',nshg,11,lstep)
+            endif
+
+          end do
+
+          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+          if(myrank.eq.0)  then
+            call writeTimingMessage(
+     &              c_char_"all phase avg to " // c_null_char,
+     &              output_mode,
+     &              TMRC()-tcormr1)
+          endif
+          deallocate(yphbar)
+        endif
+
+      endif
+
+      if(ivort == 1) then
+         deallocate(strain,vorticity)
+      endif
+
+      if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
+        deallocate(wallssVec) 
+      endif
+
+!MR CHANGE END
+
+      if ( ( ihessian .eq. 1 ) .and. ( numpe < 2 )  )then
+          uhess = zero
+          gradu = zero
+          tf = zero
+
+          do ku=1,nshg
+c           tf(ku,1) = x(ku,1)**2+2*x(ku,1)*x(ku,2)
+            tf(ku,1) = x(ku,1)**3
+          end do
+
+          call hessian( yold, x,     shp,  shgl,   iBC, 
+     &                  shpb, shglb, iper, ilwork, uhess, gradu )
+
+          call write_hessian( uhess, gradu, nshg )
+      endif
+
+c      if(iRANS.lt.0 .and. idistcalc.eq.1) then
+      if(iRANS.lt.0) then
+c         call write_field(myrank,'a','DESd',4,
+c     &                    elDw,'d',numel,1,lstep)
+
+!MR CHANGE
+        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+        if(myrank.eq.0)  then
+           tcormr1 = TMRC()
+        endif
+!MR CHANGE END
+
+        call write_field(myrank,'a','dwal',4,d2wall,'d',nshg,1,lstep)
+        deallocate(d2wall)
+
+        if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+        if(myrank.eq.0)  then
+          call writeTimingMessage(
+     &           c_char_"dwal to " // c_null_char,
+     &           output_mode,
+     &           TMRC()-tcormr1)
+        endif
+
+      endif
 
 c
 c.... close history and aerodynamic forces files
@@ -1831,7 +2003,29 @@ c
       return
       end
 
+      subroutine writeTimingMessage(key,iomode,timing)
+      use iso_c_binding
+      use phstr
+      implicit none
 
+      character(len=*) :: key
+      integer :: iomode
+      real*8 :: timing
+      character(len=1024) :: timing_msg
+      character(len=*), parameter ::
+     &  streamModeString = c_char_"stream"//c_null_char,
+     &  fileModeString = c_char_"disk"//c_null_char
 
-
+      timing_msg = c_char_"Time to write "//c_null_char
+      call phstr_appendStr(timing_msg,key)
+      if ( iomode .eq. -1 ) then
+        call phstr_appendStr(timing_msg, streamModeString)
+      else
+        call phstr_appendStr(timing_msg, fileModeString)
+      endif
+      call phstr_appendStr(timing_msg, c_char_' = '//c_null_char)
+      call phstr_appendDbl(timing_msg, timing)
+      write(6,*) trim(timing_msg)
+      return
+      end subroutine
 

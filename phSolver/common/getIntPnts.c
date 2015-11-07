@@ -2,6 +2,7 @@
 /* Interpolation points for a tet based on the Chen - Babuska paper.  */
 /**********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <FCMangle.h>
 

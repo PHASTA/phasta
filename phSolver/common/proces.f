@@ -11,6 +11,9 @@ c----------------------------------------------------------------------
 c
         use readarrays          ! used to access x, iper, ilwork
         use turbsa          ! used to access d2wall
+        use dtnmod
+        use periodicity
+        use pvsQbi
         include "common.h"
         include "mpif.h"
 c
@@ -200,16 +203,20 @@ c.... end of the program
 c
 CAD        write(6,*) 'Life: ', second(0) - ttim(100)
         deallocate(point2iper)
-        if(numpe.gt.1) deallocate(point2ilwork)
-        deallocate(point2x)
-
-        if((irscale.ge.0).or. ((iLES .lt. 20) .and. (iLES.gt.0))
-     &                   .or. (itwmod.gt.0)  ) then ! don't forget same
-                                                    ! conditional in
-                                                    ! readnblk2.f
-           deallocate(point2nsons)
-           deallocate(point2ifath)
+        if(numpe.gt.1) then
+          call Dctypes(point2ilwork(1))
+          deallocate(point2ilwork)
         endif
+        deallocate(point2x)
+        deallocate(point2nsons)
+        deallocate(point2ifath)
+        deallocate(uold)
+        deallocate(wnrm)
+        deallocate(otwn)
+        call finalizeDtN
+        call clearper
+        call finalizeNABI
+
         return
         end
 

@@ -79,37 +79,29 @@ double *ValType::get_double_array(string str)
 
 vector<double> ValType::get_vector(string str)
 {
-  char *strTok = strtok((char *)str.c_str()," ");
+  char* s = (char*) malloc(str.size()+1);
+  strcpy(s,str.c_str());
+  char *strTok = strtok(s," ");
   vector<double> vec;
   while(strTok) {
     vec.push_back(atof(strTok));
     strTok = strtok(NULL," ");
   } 
-
-  //istrstream ist(str.c_str(),str.length());
-  //vector<double> vec;
-  //double v;
-  //while ( ist >> v ) {
-  //  vec.push_back(v);
-  //}
+  free(s);
   return vec;
 }
 
 vector<int> ValType::get_ivector(string str)
 {
-  char *strTok = strtok((char *)str.c_str()," ");
+  char* s = (char*) malloc(str.size()+1);
+  strcpy(s,str.c_str());
+  char *strTok = strtok(s," ");
   vector<int> vec;
   while(strTok) {
     vec.push_back(atoi(strTok));
     strTok = strtok(NULL," ");
   }
-
-  //istrstream ist(str.c_str(),str.length());
-  //vector<int> vec;
-  //double v;
-  //while ( ist >> v ) {
-  //  vec.push_back(v);
-  //}
+  free(s);
   return vec;
 }
 

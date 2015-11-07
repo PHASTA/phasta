@@ -113,6 +113,12 @@ c
 c
         common /mbndnod/ mnodeb(9,8,3)
 c
+	integer, target :: numnp,  numel,  numelb, numpbc, nen,    nfaces,
+     &                  numflx, ndof,   nelblk, nelblb,ntopsh, nlwork,
+     &                  nedof,
+     &                  nshg,   nnz,    nflow,
+     &                  nfath
+
         common /conpar/ numnp,  numel,  numelb, numpbc, nen,    nfaces,
      &                  numflx, ndof,   iALE,   icoord, navier,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
@@ -192,20 +198,16 @@ c
         logical         mexist
         common /matdat/ datmat(3,7,MAXTS),      matflg(6,MAXTS),
      &                  nummat,                 mexist
-c
-cMR CHANGE
-c         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
-c      &                  ioform, iowflux, iofieldv, iotype, ioybar,
-c      &                  nstepsincycle, nphasesincycle, ncycles_startphaseavg
+
+        integer input_mode, output_mode
         common /outpar/ ro,     vel,    temper, press,  entrop, ntout,
      &                  ioform, iowflux, iofieldv, iotype, ioybar,
      &                  nstepsincycle, nphasesincycle, 
      &                  ncycles_startphaseavg, ivort, icomputevort,
      &                  nsynciofiles, nsynciofieldswriterestart, 
-     &                  iv_rankpercore, iv_corepernode 
-cMR CHANGE END
+     &                  iv_rankpercore, iv_corepernode, 
+     &                  input_mode, output_mode
 
-c
         common /point / mbeg,   mend,   mprec
 c
         common /precis/ epsM,   iabres
@@ -231,8 +233,8 @@ c
      &                  prestol,      statsflow(6), statssclr(6),
      &                  iverbose
 c
-        character*8     ccode
-        common /mtimer1/ ccode(13)
+        character(8) :: ccode(13)
+        common /mtimer1/ ccode
 c
         integer       flops,  gbytes, sbytes
         common /mtimer2/ flops,  gbytes, sbytes, iclock, icd,    icode,

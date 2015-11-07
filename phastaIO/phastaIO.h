@@ -71,6 +71,14 @@ extern "C" {
     closefile( int* fileDescriptor,
                 const char mode[] );
 
+
+    int
+    readHeader( FILE*       fileObject,
+                const char  phrase[],
+                int*        params,
+                int         numParams,
+                const char   iotype[] );
+
     void
     readheader( int*   fileDescriptor,
                  const char  keyphrase[],
@@ -78,6 +86,15 @@ extern "C" {
                  int*   nItems,
                  const char   datatype[],
                  const char   iotype[] );
+
+    void 
+    writeHeader( FILE* f,
+                 const char keyphrase[],
+                 const void* valueArray,
+                 const int nItems,
+                 const int ndataItems,
+                 const char datatype[],
+                 const char iotype[]);
 
     void
     writeheader( const int*  fileDescriptor,
@@ -89,6 +106,13 @@ extern "C" {
                   const char  iotype[] );
 
     void
+    readDataBlock( FILE* fileObject,
+                   void* valueArray,
+                   int nItems,
+                   const char  datatype[],
+                   const char  iotype[] );
+
+    void
     readdatablock( int*  fileDescriptor,
                     const char keyphrase[],
                     void* valueArray,
@@ -96,6 +120,12 @@ extern "C" {
                     const char  datatype[],
                     const char  iotype[] );
 
+    void
+    writeDataBlock( FILE* f,
+                    const void* valueArray,
+                    const int   nItems,
+                    const char  datatype[],
+                    const char  iotype[]  );
 
     void
     writedatablock( const int*   fileDescriptor,
@@ -118,7 +148,7 @@ extern "C" {
   int computeColor( int myrank, int numprocs, int nfiles);
 
 #ifdef __cplusplus
-} // end of extern "C".
+} /* end of extern "C".*/
 
 #include <string>
 
@@ -171,8 +201,8 @@ write_header( const int  fileDescriptor,
 }
 
 
-} // namespace PHASTA
+} /* namespace PHASTA */
 
-#endif // __cplusplus
+#endif /* __cplusplus */
 
-#endif // _PHASTAIO_H_
+#endif /* _PHASTAIO_H_ */

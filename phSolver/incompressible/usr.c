@@ -8,17 +8,17 @@
 #include <stdlib.h>
 #include "les.h"
 #include "usr.h"
-//mr change
-// #include "common_c.h" //not needed here any more because added in new_interface.c
-//mr change end
 #include "common_c.h"
 #include "phastaIO.h"
+#include "phIO.h"
+#include "phString.h"
+#include "syncio.h"
+#include "posixio.h"
+#include "streamio.h"
 #include "new_interface.h"
 #include <FCMangle.h>
 
 extern char phasta_iotype[80];
-extern int field_flag; //new_interface.c //TODO: figure out where these
-extern int f_descriptor; //new_interface.c // should be
 
 /*===========================================================================
  *
@@ -246,14 +246,10 @@ savelesrestart( Integer* lesId,
     int nPrjs, PrjSrcId;
     int nPresPrjs, PresPrjSrcId;
     char filename[255];
-    int fileHandle=0;
     int iarray[3];
     int size, nitems;
     double* projVec;
     int i, j, count;
-
-//     sprintf( filename,"restart.%d.%d", *lstep, *myrank+1 );
-//     openfile_( filename, "append", &fileHandle );
 
     nPrjs = (Integer) lesGetPar( lesArray[ *lesId ], LES_ACT_PRJS );
     PrjSrcId = (Integer) lesGetPar( lesArray[ *lesId ], LES_PRJ_VEC_ID );
@@ -269,8 +265,6 @@ savelesrestart( Integer* lesId,
         }
     }
 
-    //printf("Savelessrestart, nPrjs is %d\n",nPrjs);
-
     iarray[ 0 ] = *nshg;
     iarray[ 1 ] = nPrjs;
     nitems = 2;
@@ -280,14 +274,7 @@ savelesrestart( Integer* lesId,
     name_length = 18;
     Write_Field(myrank,"a","projection vectors",&name_length, (void *)projVec,"d", nshg, &nPrjs, lstep);
 
-    //writeheader_( &fileHandle, "projection vectors ", (void*)iarray,
-    //              &nitems, &size, "double", phasta_iotype );
-    //nitems = size;
-    //writedatablock_( &fileHandle, "projection vectors ", (void*)projVec,
-    //                 &nitems, "double", phasta_iotype );
     free(projVec);
-
-    /*************************************************************************/
 
     nPresPrjs = (Integer) lesGetPar( lesArray[ *lesId ], LES_ACT_PRES_PRJS );
     PresPrjSrcId =(Integer)lesGetPar( lesArray[ *lesId ], LES_PRES_PRJ_VEC_ID );
@@ -310,15 +297,7 @@ savelesrestart( Integer* lesId,
     name_length = 27;
     Write_Field(myrank,"a","pressure projection vectors",&name_length, projVec,"d", nshg, &nPresPrjs, lstep);
 
-//writeheader_( &fileHandle, "pressure projection vectors ", (void*)iarray,
-//                  &nitems, &size, "double", phasta_iotype );
-//    nitems = size;
-
-//writedatablock_( &fileHandle, "pressure projection vectors ",
-//                     (void*)projVec, &nitems, "double", phasta_iotype );
     free( projVec);
-
-//closefile_( &fileHandle, "append" );
 }
 
 void
@@ -332,64 +311,42 @@ readlesrestart( Integer* lesId,
     int nPrjs, PrjSrcId;
     int nPresPrjs, PresPrjSrcId;
     char filename[255];
-    int fileHandle=0;
+    phio_fp fileHandle = NULL;
     int iarray[3]={-1,-1,-1};
     int size, nitems;
     int itwo=2;
     int lnshg;
     double* projVec;
     int i,j,count;
-
-//MR CHANGE
-//    sprintf( filename,"restart.%d.%d", *lstep, *myrank+1 );
-
-//     int nfiles=2;
-//     int numParts=8;
-//     int nfields=6;
-    int nfiles;
     int nfields;
     int numParts;
     int nprocs;
     int nppf;
 
-    nfiles = outpar.nsynciofiles;
-//    nfields = outpar.nsynciofieldsreadrestart;
     numParts = workfc.numpe;
     nprocs = workfc.numpe;
-//MR CHANGE END
-
-//    int nppf = numParts/nfiles;
-    char fieldname[255];
-
-//      MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     // Calculate number of parts each proc deal with and where it start and end ...
     int nppp = numParts/nprocs;        // nppp : Number of parts per proc ...
     int startpart = *myrank * nppp +1;    // Part id from which I (myrank) start ...
     int endpart = startpart + nppp - 1;  // Part id to which I (myrank) end ...
 
-    sprintf( filename,"restart-dat.%d.%d",*lstep,((int)(*myrank/(numParts/nfiles))+1));
-    queryphmpiio(filename, &nfields, &nppf);
-    initphmpiio(&nfields, &nppf, &nfiles,&fileHandle,"read");
-//MR CHANGE END
+    if( outpar.input_mode == -1 )
+      streamio_setup_read(&fileHandle, streamio_get_gr());
+    else if( outpar.input_mode == 0 )
+      posixio_setup(&fileHandle, 'r');
+    else if( outpar.input_mode > 0 )
+      syncio_setup_read(outpar.nsynciofiles, &fileHandle);
+    phio_constructName(fileHandle,"restart",filename);
+    phstr_appendInt(filename, *lstep);
+    phstr_appendStr(filename, ".");
+    phio_openfile(filename, fileHandle);
 
-    openfile( filename, "read", &fileHandle );
-
-
-//        if ( fileHandle == 0 ) return;
-    if ( fileHandle < 0 ) return; // See phastaIO.cc for error fileHandle
-//     for (  i = 0; i < nppp; i++  ) // If one day several parts per file
-//     {
-    bzero((void*)fieldname,255);
-    sprintf(fieldname,"projection vectors@%d",startpart);
-//     readheader_( &fileHandle, "projection vectors", (void*)iarray,
-//                  &itwo, "integer", phasta_iotype );
-    readheader( &fileHandle, fieldname, (void*)iarray,
-                &itwo, "integer", phasta_iotype );
-//       }
-//MR CHANGE END
+    if ( !fileHandle ) return; // See phastaIO.cc for error fileHandle
+    phio_readheader(fileHandle, "projection vectors", (void*)iarray,
+                &itwo, "integer", phasta_iotype);
 
     if ( iarray[0] != *nshg ) {
-        closefile( &fileHandle, "read" );
+        phio_closefile(fileHandle);
         if(workfc.myrank==workfc.master)
           printf("projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -401,12 +358,8 @@ readlesrestart( Integer* lesId,
     size = (*nshg)*nPrjs;
     projVec = (double*)malloc( size * sizeof( double ));
 
-//MR CHANGE
-//     readdatablock_( &fileHandle, "projection vectors", (void*)projVec,
-//                         &size, "double", phasta_iotype );
-    readdatablock( &fileHandle, fieldname, (void*)projVec,
+    phio_readdatablock(fileHandle, "projection vectors", (void*)projVec,
                     &size, "double", phasta_iotype );
-//MR CHANGE END
 
     lesSetPar( lesArray[ *lesId ], LES_ACT_PRJS, (Real) nPrjs );
     PrjSrcId = (Integer) lesGetPar( lesArray[ *lesId ], LES_PRJ_VEC_ID );
@@ -421,26 +374,16 @@ readlesrestart( Integer* lesId,
 
     free( projVec );
 
-    /************************************************************************/
-
     iarray[0] = -1; iarray[1] = -1; iarray[2] = -1;
 
-//MR CHANGE
-
-    bzero((void*)fieldname,255);
-    sprintf(fieldname,"pressure projection vectors@%d",startpart);
-
-//MR CHANGE END
-
-
-    readheader( &fileHandle, fieldname, (void*)iarray,
+    phio_readheader(fileHandle, "pressure projection vectors", (void*)iarray,
                  &itwo, "integer", phasta_iotype );
 
     lnshg = iarray[ 0 ] ;
     nPresPrjs = iarray[ 1 ] ;
 
     if ( lnshg != *nshg )  {
-        closefile( &fileHandle, "read" );
+        phio_closefile(fileHandle);
         if(workfc.myrank==workfc.master)
           printf("pressure projection vectors are being initialized to zero (SAFE)\n");
         return;
@@ -449,7 +392,7 @@ readlesrestart( Integer* lesId,
     size = (*nshg)*nPresPrjs;
     projVec = (double*)malloc( size * sizeof( double ));
 
-    readdatablock( &fileHandle, fieldname, (void*)projVec,
+    phio_readdatablock(fileHandle, "pressure projection vectors", (void*)projVec,
                     &size, "double", phasta_iotype );
 
     lesSetPar( lesArray[ *lesId ], LES_ACT_PRES_PRJS, (Real) nPresPrjs );
@@ -465,12 +408,7 @@ readlesrestart( Integer* lesId,
 
     free( projVec );
 
-    closefile( &fileHandle, "read" );
-
-//MR CHANGE
-    finalizephmpiio(&fileHandle);
-//MR CHANGE END
-
+    phio_closefile(fileHandle);
 }
 
 void  myflessolve( Integer* lesId,
@@ -491,10 +429,7 @@ int solverlicenseserver(char key[]){
           fprintf(stderr,"environment variable LES_LICENSE_SERVER not defined \n");
           fprintf(stderr,"using wesley as default \n");
         }
-//MR CHANGE
-//        strcpy(key, "wesley.scorec.rpi.edu");
         strcpy(key, "acusim.license.scorec.rpi.edu");
-//MR CHANGE END
     }
 #endif
     return 1;

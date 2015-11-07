@@ -54,6 +54,9 @@ void setIOparam()
   outpar.nsynciofiles = count;
   if(workfc.myrank == 0) {
     printf("Number of geombc-dat and restart-dat files to read: %d\n", count);
+    if(count==0) {
+      printf("since zero assuming you planned to run posix 1PPF \n");
+    }
   }
 
 }

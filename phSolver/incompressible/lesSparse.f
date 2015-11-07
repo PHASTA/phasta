@@ -258,7 +258,7 @@ c
 c	implicit none
         use pvsQbi
         include "common.h"
-	integer	nNodes, nnz_tot
+	integer	nNodes
 	integer	col(nNodes+1),	row(nnz_tot)
 	real*8	kLhs(9,nnz_tot),	pLhs(4,nnz_tot)
         real*8 	p(nNodes,4),	q(nNodes,3)
