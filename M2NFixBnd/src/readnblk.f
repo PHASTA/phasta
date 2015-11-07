@@ -186,6 +186,7 @@ c
       call readheader(igeom,fname2//char(0),numnp,ione,
      & 'integer'//char(0), iotype)
 
+
       write (temp1,"('(''number of modes@'',i',i1,',A1)')") itmp
       write (fname2,temp1) (myrank+1),'?'
       call readheader(igeom,fname2//char(0),nshg,ione,
@@ -575,9 +576,12 @@ c
           write(*,*) 'Number of fields in geombcRed-dat: ',nfields
           write(*,*) 'Number of parts per file geombcRed-dat: ',nppf
         endif
+        write(*,*) 'before init'
         call initphmpiio( nfields, nppf, nfiles, igeom,
      &       'read'//char(0))
+        write(*,*) 'after init'
         call openfile( fnamer, 'read'//char(0), igeom )
+        write(*,*) 'after openfile'
 
         write (temp1,"('(''size of ilwork array@'',i',i1,',A1)')") itmp
         write (fname2,temp1) (myrank+1),'?'
@@ -596,6 +600,7 @@ c
 
         point2ilwork = ilworkread
         deallocate(ilworkread)
+        write(*,*) 'after readilwork'
 
         call closefile( igeom, "read"//char(0) )
         call finalizephmpiio( igeom )

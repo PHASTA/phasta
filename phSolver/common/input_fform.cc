@@ -343,6 +343,8 @@ int input_fform(char inpfname[])
     matdat.nummat = levlset.iLSet+1;
     if((string)inp.GetValue("Shear Law") == "Constant Viscosity") 
       for(i=0; i < levlset.iLSet+1; i++) matdat.matflg[i][1] = 0;
+    if((string)inp.GetValue("Shear Law") == "Sutherland Viscosity") 
+      for(i=0; i < levlset.iLSet+1; i++) matdat.matflg[i][1] = 1;
 
     if((string)inp.GetValue("Bulk Viscosity Law") == "Constant Bulk Viscosity") 
       for(i=0; i < levlset.iLSet+1; i++) matdat.matflg[i][2] = 0;

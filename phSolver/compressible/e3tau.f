@@ -322,7 +322,8 @@ c
      &            rLyi(npro,nflow),
      &            rLymi(npro,nflow),         dVdY(npro,15), 
      &            rTLS(npro),                raLS(npro),
-     &            rLyitemp(npro,nflow),      detgijI(npro)
+     &            rLyitemp(npro,nflow),      detgijI(npro),
+     &            denom(npro)
 c
       dimension   rmu(npro),	 cv(npro),
      &		  gijd(npro,6),  
@@ -692,13 +693,16 @@ c
            gijdu(:,6)=gijd(:,5)
 c     
 c     
-           detgijI = one/(
+                     denom = (
      &          gijdu(:,1) * gijdu(:,2) * gijdu(:,3)
      &          - gijdu(:,1) * gijdu(:,6) * gijdu(:,6)
      &          - gijdu(:,4) * gijdu(:,4) * gijdu(:,3)
      &          + gijdu(:,4) * gijdu(:,5) * gijdu(:,6) * two
      &          - gijdu(:,5) * gijdu(:,5) * gijdu(:,2) 
      &          )
+           where(abs(denom).lt.1.0e-20) denom= 1.0e12  !hack until we
+can figure out why Kyle's mesh is getting zero denom
+           detgijI = one/denom
            giju(:,1) = detgijI * (gijdu(:,2)*gijdu(:,3) 
      &               - gijdu(:,6)**2)
            giju(:,2) = detgijI * (gijdu(:,1)*gijdu(:,3) 

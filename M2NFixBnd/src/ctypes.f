@@ -1,6 +1,6 @@
       subroutine ctypes (ilwork)
 
-      parameter (maxseg = 60000)
+      parameter (maxseg = 300000)
 
       include "commonM2NFixBnd.h"
       include "mpif.h"

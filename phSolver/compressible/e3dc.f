@@ -295,7 +295,7 @@ c
      &            + epsM  )
          
 c
-	    DC(:,intp) = two * rtLS * gnorm
+	    DC(:,intp) = two * rtLS * gnorm * 4.0
 c
 c.... flop count
 c
@@ -610,7 +610,7 @@ c
      &            + epsM  )
          
 c
-	    DCt(:,intp) = two * rtLSt * gnormt
+	    DCt(:,intp) = two * rtLSt * gnormt * 4.0
 c
 c.... flop count
 c

@@ -131,8 +131,9 @@ c
 c     
 c.... generalized Sutherland viscosity
 c     
-         rmu = datmat(1,2,1) * (T/datmat(2,2,1))*sqrt(T/datmat(2,2,1))
-     &        * ( datmat(2,2,1) + datmat(3,2,1) ) / (T + datmat(3,2,1))
+         rmu = 1.458e-6*T*sqrt(T)/(T+110.4)
+c         rmu = datmat(1,2,1) * (T/datmat(2,2,1))*sqrt(T/datmat(2,2,1))
+c     &        * ( datmat(2,2,1) + datmat(3,2,1) ) / (T + datmat(3,2,1))
 c     
       endif
 c     
@@ -299,8 +300,9 @@ c
 c
 c.... generalized Sutherland viscosity
 c
-          rmu = datmat(1,2,1) * (T/datmat(2,2,1))*sqrt(T/datmat(2,2,1))
-     &        * ( datmat(2,2,1) + datmat(3,2,1) ) / (T + datmat(3,2,1))
+         rmu = 1.458e-6*T*sqrt(T)/(T+110.4)
+!          rmu = datmat(1,2,1) * (T/datmat(2,2,1))*sqrt(T/datmat(2,2,1))
+!     &        * ( datmat(2,2,1) + datmat(3,2,1) ) / (T + datmat(3,2,1))
 c
         endif
 c
