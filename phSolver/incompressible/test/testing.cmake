@@ -1,94 +1,62 @@
+macro(ic_parallel_test name procs dir exe)
+  set(tname incompressible_${name})
+  add_test(
+    NAME ${tname}
+    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} ${procs} ${exe} ${ARGN}
+    WORKING_DIRECTORY ${dir} )
+  set_tests_properties(${tname} PROPERTIES LABELS "phsolver_incompressible")
+endmacro(ic_parallel_test)
+
+macro(ic_serial_test name exe)
+  set(tname incompressible_${name})
+  add_test( NAME ${tname} COMMAND ${exe} ${ARGN} )
+  set_tests_properties(${tname} PROPERTIES LABELS "phsolver_incompressible")
+endmacro(ic_serial_test)
+
 set(CDIR ${CASES}/incompressible)
-add_test(copyInpCfg
+ic_serial_test(copyInpCfg
   cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
-add_test(linkProcsDir-sync
+ic_serial_test(linkProcsDir-sync
   ln -snf ${CDIR}/4-procs_case-SyncIO-2 ${CDIR}/4-procs_case)
 if(HAS_VALGRIND)
-  add_test(incompressibleResetNumStartValgrind-sync
+  ic_serial_test(resetNumStartValgrind-sync
     cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
-  set(vgcmd
-    valgrind 
-    --leak-check=yes 
-    --log-file=icSyncValgrind.%p 
-    ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  )
-  add_test(
-    NAME incompressibleValgrind-sync
-    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${vgcmd}
-    WORKING_DIRECTORY ${CDIR}
-  )
+  ic_parallel_test(valgrind-sync 4 ${CDIR}
+    valgrind --leak-check=yes --log-file=icSyncValgrind.%p
+    ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
 endif(HAS_VALGRIND)
-add_test(incompressibleResetNumStart-sync
+ic_serial_test(resetNumStart-sync
   cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
-add_test(
-  NAME incompressible-sync
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CDIR}
-)
-set(cmd 
-  ${PHASTA_BINARY_DIR}/bin/checkphasta 
+ic_parallel_test(sync 4 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
+set(compareArgs
   ${CDIR}/4-procs_case-SyncIO-2/ 
   ${CDIR}/4-procs_case-SyncIO-2_ref/ 
   2 1e-6)
-add_test(
-  NAME compareIncompressible-sync
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
-  WORKING_DIRECTORY ${CDIR}
-)
-add_test(
-  NAME incompressibleRestart-sync
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CDIR}
-)
-add_test(
-  NAME compareIncompressibleRestart-sync
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
-  WORKING_DIRECTORY ${CDIR}
-)
+ic_parallel_test(compare-sync 4 ${CDIR}
+  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
+ic_parallel_test(restart-sync 4 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
+ic_parallel_test(compareRestart-sync 4 ${CDIR}
+  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
 
-add_test(linkProcsDir-posix
+ic_serial_test(linkProcsDir-posix
   ln -snf ${CDIR}/4-procs_case-Posix ${CDIR}/4-procs_case)
 if(HAS_VALGRIND)
-  add_test(incompressibleResetNumStartValgrind-posix
+  ic_serial_test(resetNumStartValgrind-posix
     cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
-  set(vgcmd
-    valgrind 
-    --leak-check=yes 
-    --log-file=icPosixValgrind.%p 
-    ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  )
-  add_test(
-    NAME incompressibleValgrind-posix
-    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${vgcmd}
-    WORKING_DIRECTORY ${CDIR}
-  )
+  ic_parallel_test(valgrind-posix 4 ${CDIR}
+    valgrind --leak-check=yes --log-file=icPosixValgrind.%p
+    ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
 endif(HAS_VALGRIND)
-add_test(incompressibleResetNumStart-posix
+ic_serial_test(resetNumStart-posix
   cp ${CDIR}/numstart.dat ${CDIR}/4-procs_case/numstart.dat)
-add_test(
-  NAME incompressible-posix
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CDIR}
-)
-set(cmd 
-  ${PHASTA_BINARY_DIR}/bin/checkphasta 
+ic_parallel_test(posix 4 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
+set(compareArgs 
   ${CDIR}/4-procs_case-Posix/ 
   ${CDIR}/4-procs_case-Posix_ref/ 
   0 1e-6)
-add_test(
-  NAME compareIncompressible-posix
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
-  WORKING_DIRECTORY ${CDIR}
-)
-add_test(
-  NAME incompressibleRestart-posix
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phastaIC.exe
-  WORKING_DIRECTORY ${CDIR}
-)
-add_test(
-  NAME compareIncompressibleRestart-posix
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${cmd}
-  WORKING_DIRECTORY ${CDIR}
-)
-add_test(unlinkProcsDir-incompressible
-  rm ${CDIR}/4-procs_case)
+ic_parallel_test(compare-posix 4 ${CDIR}
+  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
+ic_parallel_test(restart-posix 4 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
+ic_parallel_test(compareRestart-posix 4 ${CDIR}
+  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
+ic_serial_test(unlinkProcsDir rm ${CDIR}/4-procs_case)
