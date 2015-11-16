@@ -121,8 +121,8 @@ int main(int argc, char *argv[]) {
   char **fieldNameD, **fileTypeD, **dataTypeD, **headerTypeD;
   char **fieldNameI, **fileTypeI, **dataTypeI, **headerTypeI;
 
-  int WriteLockD[N_geombc_double];
-  int WriteLockI[N_geombc_integer];
+  int* WriteLockD = new int[N_geombc_double];
+  int* WriteLockI = new int[N_geombc_integer];
 
   int nppp = N_parts/N_procs;
   int startpart = myrank * nppp +1;
@@ -187,8 +187,11 @@ int main(int argc, char *argv[]) {
   paraI = new int**[nppp];
   /////////////////////////////////////
 
-  int interiorMark[nppp], boundaryMark[nppp], codesMark[nppp], valuesMark[nppp];
-  int numVariables[nppp];
+  int* interiorMark = new int[nppp];
+  int* boundaryMark = new int[nppp];
+  int* codesMark = new int[nppp];
+  int* valuesMark = new int[nppp];
+  int* numVariables = new int[nppp];
 //  int numBoundaryFields[nppp], numInteriorFields[nppp];
 
   if(myrank==0){
@@ -1244,6 +1247,14 @@ int main(int argc, char *argv[]) {
   delete [] dataTypeI;
   delete [] headerTypeI;
 
+  delete [] WriteLockD;
+  delete [] WriteLockI;
+
+  delete [] interiorMark;
+  delete [] boundaryMark;
+  delete [] codesMark;
+  delete [] valuesMark;
+  delete [] numVariables;
 
   if (myrank==0)
     {
