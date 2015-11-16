@@ -94,8 +94,8 @@ int main(int argc, char *argv[]) {
   char **fieldNameD, **fileTypeD, **dataTypeD, **headerTypeD;
   char **fieldNameI, **fileTypeI, **dataTypeI, **headerTypeI;
 
-  int WriteLockD[N_restart_double];
-  int WriteLockI[N_restart_integer];
+  int* WriteLockD = new int[N_restart_double];
+  int* WriteLockI = new int[N_restart_integer];
 
   int nppp = N_parts/N_procs;
   int startpart = myrank * nppp +1;
@@ -501,6 +501,9 @@ int main(int argc, char *argv[]) {
   delete [] fileTypeI;
   delete [] dataTypeI;
   delete [] headerTypeI;
+
+  delete [] WriteLockD;
+  delete [] WriteLockI;
 
   fclose(pFile);
 
