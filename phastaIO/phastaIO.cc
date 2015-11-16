@@ -535,7 +535,15 @@ int computeMHSize(int nfields, int nppf, int version) {
 		else {
 			mhsize = DefaultMHSize;
 		}
-	}
+	} else {
+          int rank = 0;
+          MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+          if(!rank) {
+            fprintf(stderr,
+                "ERROR invalid version passed to %s... exiting\n", __func__);
+            exit(EXIT_FAILURE);
+          }
+        }
 	return mhsize;
 }
 
