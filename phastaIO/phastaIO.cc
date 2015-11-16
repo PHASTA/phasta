@@ -51,9 +51,6 @@ static MPI_Comm s_local_comm;
 static int s_local_size = -1;
 static int s_local_rank = -1;
 
-//unsigned long long pool_align = 8;
-//unsigned long long mem_address;
-
 // the following defines are for debug printf
 #define PHASTAIO_PREFIX "phastaIO debug: "
 #define PHASTAIO_DEBUG 0 //default to not print any debugging info
@@ -139,12 +136,7 @@ namespace{
 
 	typedef struct
 	{
-		//unsigned long long my_offset;
-		//unsigned long long **offset_table;
-		//int fileID;
 		int nppf, nfields;
-		//int GPid;
-		//int read_field_count;
 		char * masterHeader;
 	}serial_file;
 
@@ -159,15 +151,7 @@ namespace{
 
 			int length = strlen( istring );
 
-			//char* dest = new char [ length + 1 ];
 			char* dest = (char *)malloc( length + 1 );
-
-			//char * dest;
-			//dest = (char *)malloc( length + 1 + pool_align );
-			//if (dest & 0x0F != 0) printf("not aligned!!!!\n");
-			//mem_address = (long long )dest;
-			//if( mem_address & (pool_align -1) )
-			//  dest += pool_align - (mem_address & (pool_align -1));
 
 			strcpy( dest, istring );
 			dest[ length ] = '\0';
@@ -252,12 +236,7 @@ namespace{
 
 			while( !FOUND  && ( rewind_count < 2 ) )  {
 				if ( ( Line[0] != '\n' ) && ( real_length = strcspn( Line, "#" )) ){
-					//text_header = new char [ real_length + 1 ];
 					text_header = (char *)malloc( real_length + 1 );
-					//text_header = (char *)malloc( real_length + 1 + pool_align );
-					//mem_address = (long long )text_header;
-					//if( mem_address & (pool_align -1) )
-					//  text_header += pool_align - (mem_address & (pool_align -1));
 
 					strncpy( text_header, Line, real_length );
 					text_header[ real_length ] =static_cast<char>(NULL);
@@ -323,7 +302,6 @@ namespace{
 /**
  * This function takes a long long pointer and assign (start) phiotmrc value to it
  */
-//void startTimer(unsigned long long* start) {
 void startTimer(double* start) {
 
         if( !PRINT_PERF ) return;
@@ -424,21 +402,8 @@ void queryphmpiio(const char filename[],int *nfields, int *nppf)
 		}
 		else {
 			SerialFile =(serial_file *)calloc( 1,  sizeof( serial_file) );
-			//SerialFile = (serial_file *)malloc( sizeof( serial_file ) + pool_align );
-			//mem_address = (long long )SerialFile;
-			//if( mem_address & (pool_align -1) )
-			//	SerialFile += pool_align - (mem_address & (pool_align -1));
-
-			//SerialFile->masterHeader = (char *)malloc(MasterHeaderSize);
-			//int meta_size_limit = 4*ONE_MEGABYTE;
-			//int meta_size_limit = (4+ MAX_FIELDS_NUMBER ) * MAX_FIELDS_NAME_LENGTH;
 			int meta_size_limit = VERSION_INFO_HEADER_SIZE;
 			SerialFile->masterHeader = (char *)malloc( meta_size_limit );
-			//SerialFile->masterHeader = (char *)malloc( meta_size_limit + pool_align );
-			//mem_address = (long long )SerialFile;
-			//if( mem_address & (pool_align -1) )
-			//	SerialFile->masterHeader += pool_align - (mem_address & (pool_align -1));
-
 			fread(SerialFile->masterHeader, 1, meta_size_limit, fileHandle);
 
 			char read_out_tag[MAX_FIELDS_NAME_LENGTH];
@@ -638,10 +603,6 @@ int initphmpiio( int *nfields, int *nppf, int *nfiles, int *filehandle, const ch
 
 
 	PhastaIOActiveFiles[PhastaIONextActiveIndex] = (phastaio_file_t *)calloc( 1,  sizeof( phastaio_file_t) );
-	//PhastaIOActiveFiles[PhastaIONextActiveIndex] = ( phastaio_file_t *)calloc( 1 + 1, sizeof( phastaio_file_t ) );
-	//mem_address = (long long )PhastaIOActiveFiles[PhastaIONextActiveIndex];
-	//if( mem_address & (pool_align -1) )
-	//	PhastaIOActiveFiles[PhastaIONextActiveIndex] += pool_align - (mem_address & (pool_align -1));
 
 	i = PhastaIONextActiveIndex;
 	PhastaIONextActiveIndex++;
@@ -706,33 +667,17 @@ int initphmpiio( int *nfields, int *nppf, int *nfiles, int *filehandle, const ch
 
 	PhastaIOActiveFiles[i]->my_offset_table =
 		( unsigned long ** ) calloc( MAX_FIELDS_NUMBER , sizeof( unsigned long *) );
-	//( unsigned long long **)calloc( MAX_FIELDS_NUMBER + pool_align, sizeof(unsigned long long *) );
-	//mem_address = (long long )PhastaIOActiveFiles[i]->my_offset_table;
-	//if( mem_address & (pool_align -1) )
-	//	PhastaIOActiveFiles[i]->my_offset_table += pool_align - (mem_address & (pool_align -1));
 
 	PhastaIOActiveFiles[i]->my_read_table =
 		( unsigned long ** ) calloc( MAX_FIELDS_NUMBER , sizeof( unsigned long *) );
-	//( unsigned long long **)calloc( MAX_FIELDS_NUMBER + pool_align, sizeof( unsigned long long *) );
-	//mem_address = (long long )PhastaIOActiveFiles[i]->my_read_table;
-	//if( mem_address & (pool_align -1) )
-	//	PhastaIOActiveFiles[i]->my_read_table += pool_align - (mem_address & (pool_align -1));
 
 	for (j=0; j<*nfields; j++)
 	{
 		PhastaIOActiveFiles[i]->my_offset_table[j] =
 			( unsigned long * ) calloc( PhastaIOActiveFiles[i]->nppp , sizeof( unsigned long) );
-		//( unsigned long long * ) calloc( PhastaIOActiveFiles[i]->nppp + pool_align, sizeof( unsigned long long)  );
-		//mem_address = (long long )PhastaIOActiveFiles[i]->my_offset_table[j];
-		//if( mem_address & (pool_align -1) )
-		//	PhastaIOActiveFiles[i]->my_offset_table[j] += pool_align - (mem_address & (pool_align -1));
 
 		PhastaIOActiveFiles[i]->my_read_table[j] =
 			( unsigned long * ) calloc( PhastaIOActiveFiles[i]->nppp , sizeof( unsigned long) );
-		//( unsigned long long * ) calloc( PhastaIOActiveFiles[i]->nppp , sizeof( unsigned long long) + pool_align );
-		//mem_address = (long long )PhastaIOActiveFiles[i]->my_read_table[j];
-		//if( mem_address & (pool_align -1) )
-		//	PhastaIOActiveFiles[i]->my_read_table[j] += pool_align - (mem_address & (pool_align -1));
 	}
 	*filehandle = i;
 
@@ -741,38 +686,6 @@ int initphmpiio( int *nfields, int *nppf, int *nfiles, int *filehandle, const ch
 	PhastaIOActiveFiles[i]->int_chunk = (int *)calloc(1,sizeof( int ));
 	PhastaIOActiveFiles[i]->read_double_chunk = (double *)calloc(1,sizeof( double ));
 	PhastaIOActiveFiles[i]->read_int_chunk = (int *)calloc(1,sizeof( int ));
-
-	/*
-		 PhastaIOActiveFiles[i]->master_header =
-		 ( char * ) calloc( MasterHeaderSize + pool_align, sizeof( char )  );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->master_header;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->master_header += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->double_chunk =
-		 ( double * ) calloc( 1 + pool_align , sizeof( double ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->double_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->double_chunk += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->int_chunk =
-		 ( int * ) calloc( 1 + pool_align , sizeof( int ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->int_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->int_chunk += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->read_double_chunk =
-		 ( double * ) calloc( 1 + pool_align , sizeof( double ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->read_double_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->read_double_chunk += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->read_int_chunk =
-		 ( int * ) calloc( 1 + pool_align , sizeof( int ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->read_int_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->read_int_chunk += pool_align - (mem_address & (pool_align -1));
-		 */
 
 	// Time monitoring
 	endTimer(&timer_end);
@@ -881,10 +794,6 @@ int initphmpiiosub( int *nfields, int *nppf, int *nfiles, int *filehandle, const
 
 
 	PhastaIOActiveFiles[PhastaIONextActiveIndex] = (phastaio_file_t *)calloc( 1,  sizeof( phastaio_file_t) );
-	//PhastaIOActiveFiles[PhastaIONextActiveIndex] = ( phastaio_file_t *)calloc( 1 + 1, sizeof( phastaio_file_t ) );
-	//mem_address = (long long )PhastaIOActiveFiles[PhastaIONextActiveIndex];
-	//if( mem_address & (pool_align -1) )
-	//	PhastaIOActiveFiles[PhastaIONextActiveIndex] += pool_align - (mem_address & (pool_align -1));
 
 	i = PhastaIONextActiveIndex;
 	PhastaIONextActiveIndex++;
@@ -919,33 +828,17 @@ int initphmpiiosub( int *nfields, int *nppf, int *nfiles, int *filehandle, const
 
 	PhastaIOActiveFiles[i]->my_offset_table =
 		( unsigned long ** ) calloc( MAX_FIELDS_NUMBER , sizeof( unsigned long *) );
-	//( unsigned long long **)calloc( MAX_FIELDS_NUMBER + pool_align, sizeof(unsigned long long *) );
-	//mem_address = (long long )PhastaIOActiveFiles[i]->my_offset_table;
-	//if( mem_address & (pool_align -1) )
-	//	PhastaIOActiveFiles[i]->my_offset_table += pool_align - (mem_address & (pool_align -1));
 
 	PhastaIOActiveFiles[i]->my_read_table =
 		( unsigned long ** ) calloc( MAX_FIELDS_NUMBER , sizeof( unsigned long *) );
-	//( unsigned long long **)calloc( MAX_FIELDS_NUMBER + pool_align, sizeof( unsigned long long *) );
-	//mem_address = (long long )PhastaIOActiveFiles[i]->my_read_table;
-	//if( mem_address & (pool_align -1) )
-	//	PhastaIOActiveFiles[i]->my_read_table += pool_align - (mem_address & (pool_align -1));
 
 	for (j=0; j<*nfields; j++)
 	{
 		PhastaIOActiveFiles[i]->my_offset_table[j] =
 			( unsigned long * ) calloc( PhastaIOActiveFiles[i]->nppp , sizeof( unsigned long) );
-		//( unsigned long long * ) calloc( PhastaIOActiveFiles[i]->nppp + pool_align, sizeof( unsigned long long)  );
-		//mem_address = (long long )PhastaIOActiveFiles[i]->my_offset_table[j];
-		//if( mem_address & (pool_align -1) )
-		//	PhastaIOActiveFiles[i]->my_offset_table[j] += pool_align - (mem_address & (pool_align -1));
 
 		PhastaIOActiveFiles[i]->my_read_table[j] =
 			( unsigned long * ) calloc( PhastaIOActiveFiles[i]->nppp , sizeof( unsigned long) );
-		//( unsigned long long * ) calloc( PhastaIOActiveFiles[i]->nppp , sizeof( unsigned long long) + pool_align );
-		//mem_address = (long long )PhastaIOActiveFiles[i]->my_read_table[j];
-		//if( mem_address & (pool_align -1) )
-		//	PhastaIOActiveFiles[i]->my_read_table[j] += pool_align - (mem_address & (pool_align -1));
 	}
 	*filehandle = i;
 
@@ -954,38 +847,6 @@ int initphmpiiosub( int *nfields, int *nppf, int *nfiles, int *filehandle, const
 	PhastaIOActiveFiles[i]->int_chunk = (int *)calloc(1,sizeof( int ));
 	PhastaIOActiveFiles[i]->read_double_chunk = (double *)calloc(1,sizeof( double ));
 	PhastaIOActiveFiles[i]->read_int_chunk = (int *)calloc(1,sizeof( int ));
-
-	/*
-		 PhastaIOActiveFiles[i]->master_header =
-		 ( char * ) calloc( MasterHeaderSize + pool_align, sizeof( char )  );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->master_header;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->master_header += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->double_chunk =
-		 ( double * ) calloc( 1 + pool_align , sizeof( double ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->double_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->double_chunk += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->int_chunk =
-		 ( int * ) calloc( 1 + pool_align , sizeof( int ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->int_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->int_chunk += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->read_double_chunk =
-		 ( double * ) calloc( 1 + pool_align , sizeof( double ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->read_double_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->read_double_chunk += pool_align - (mem_address & (pool_align -1));
-
-		 PhastaIOActiveFiles[i]->read_int_chunk =
-		 ( int * ) calloc( 1 + pool_align , sizeof( int ) );
-		 mem_address = (long long )PhastaIOActiveFiles[i]->read_int_chunk;
-		 if( mem_address & (pool_align -1) )
-		 PhastaIOActiveFiles[i]->read_int_chunk += pool_align - (mem_address & (pool_align -1));
-		 */
 
 	// Time monitoring
 	endTimer(&timer_end);
@@ -1114,18 +975,10 @@ void openfile(const char filename[],
 
 				unsigned long **header_table;
 				header_table = ( unsigned long ** )calloc(PhastaIOActiveFiles[i]->nFields, sizeof(unsigned long *));
-				//header_table = ( unsigned long long ** ) calloc( PhastaIOActiveFiles[i]->nFields  + pool_align, sizeof(unsigned long long *));
-				//mem_address = (long long )header_table;
-				//if( mem_address & (pool_align -1) )
-				//	header_table += pool_align - (mem_address & (pool_align -1));
 
 				for ( j = 0; j < PhastaIOActiveFiles[i]->nFields; j++ )
 				{
 					header_table[j]=( unsigned long * ) calloc( PhastaIOActiveFiles[i]->nPPF , sizeof( unsigned long));
-					//header_table[j]=( unsigned long long * ) calloc( PhastaIOActiveFiles[i]->nPPF + pool_align, sizeof(unsigned long long *));
-					//mem_address = (long long )header_table[j];
-					//if( mem_address & (pool_align -1) )
-					//	header_table[j] += pool_align - (mem_address & (pool_align -1));
 				}
 
 				// Read in the offset table ...
@@ -1292,17 +1145,9 @@ void closefile( int* fileDescriptor,
 			int j = 0;
 			unsigned long **header_table;
 			header_table = ( unsigned long ** )calloc(PhastaIOActiveFiles[i]->nFields, sizeof(unsigned long *));
-			//header_table = ( unsigned long long ** ) calloc( PhastaIOActiveFiles[i]->nFields  + pool_align, sizeof(unsigned long long *));
-			//mem_address = (long long )header_table;
-			//if( mem_address & (pool_align -1) )
-			//	header_table += pool_align - (mem_address & (pool_align -1));
 
 			for ( j = 0; j < PhastaIOActiveFiles[i]->nFields; j++ ) {
 				header_table[j]=( unsigned long * ) calloc( PhastaIOActiveFiles[i]->nPPF , sizeof( unsigned long));
-				//header_table[j]=( unsigned long long * ) calloc( PhastaIOActiveFiles[i]->nPPF + pool_align, sizeof (unsigned long long *));
-				//mem_address = (long long )header_table[j];
-				//if( mem_address & (pool_align -1) )
-				//	header_table[j] += pool_align - (mem_address & (pool_align - 1));
 			}
 
 			//if( irank == 0 ) printf("gonna mpi_gather, myrank = %d\n", irank);
@@ -1429,10 +1274,6 @@ void readheader( int* fileDescriptor,
 
 		int string_length = strlen( keyphrase );
 		char* buffer = (char*) malloc ( string_length+1 );
-		//char* buffer = ( char * ) malloc( string_length + 1 + pool_align );
-		//mem_address = (long long )buffer;
-		//if( mem_address & (pool_align -1) )
-		//  buffer += pool_align - (mem_address & (pool_align -1));
 
 		strcpy ( buffer, keyphrase );
 		buffer[ string_length ] = '\0';
@@ -1766,10 +1607,6 @@ void writeheader(  const int* fileDescriptor,
 
 		int string_length = strlen( keyphrase );
 		char* buffer = (char*) malloc ( string_length+1 );
-		//char* buffer = ( char * ) malloc( string_length + 1 + pool_align );
-		//mem_address = (long long )buffer;
-		//if( mem_address & (pool_align -1) )
-		// buffer += pool_align - (mem_address & (pool_align -1));
 
 		strcpy ( buffer, keyphrase);
 		buffer[ string_length ] = '\0';
@@ -1853,10 +1690,6 @@ void writeheader(  const int* fileDescriptor,
 		{
 			free ( PhastaIOActiveFiles[i]->double_chunk );
 			PhastaIOActiveFiles[i]->double_chunk = ( double * )malloc( (sizeof( double )*number_of_items+ DB_HEADER_SIZE));
-			//PhastaIOActiveFiles[i]->double_chunk = ( double * ) malloc( sizeof( double )*number_of_items+ DB_HEADER_SIZE + pool_align );
-			//mem_address = (long long )PhastaIOActiveFiles[i]->double_chunk;
-			//if( mem_address & (pool_align -1) )
-			// PhastaIOActiveFiles[i]->double_chunk += pool_align - (mem_address & (pool_align -1));
 
 			double * aa = ( double * )datablock_header;
 			memcpy(PhastaIOActiveFiles[i]->double_chunk, aa, DB_HEADER_SIZE);
@@ -1868,10 +1701,6 @@ void writeheader(  const int* fileDescriptor,
 		{
 			free ( PhastaIOActiveFiles[i]->int_chunk );
 			PhastaIOActiveFiles[i]->int_chunk = ( int * )malloc( (sizeof( int )*number_of_items+ DB_HEADER_SIZE));
-			//PhastaIOActiveFiles[i]->int_chunk = ( int * ) malloc( sizeof( int )*number_of_items+ DB_HEADER_SIZE + pool_align );
-			//mem_address = (long long )PhastaIOActiveFiles[i]->int_chunk;
-			//if( mem_address & (pool_align -1) )
-			// PhastaIOActiveFiles[i]->int_chunk += pool_align - (mem_address & ( pool_align -1));
 
 			int * aa = ( int * )datablock_header;
 			memcpy(PhastaIOActiveFiles[i]->int_chunk, aa, DB_HEADER_SIZE);
