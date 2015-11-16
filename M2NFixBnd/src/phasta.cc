@@ -11,11 +11,9 @@
 
 #include "commonM2NFixBnd_c.h"
 
-#if !(defined IOSTREAMH)
 #include <iostream>
-#include <strstream>
+#include <sstream>
 using namespace std;
-#endif
 
 #include <FCMangle.h>
 #define input FortranCInterface_GLOBAL_(input,INPUT)
@@ -98,7 +96,7 @@ phasta( int argc,
         if( gdb_child == 0 ) {
      
             cout << "Debugger Process initiating" << endl;
-            strstream exec_string;
+            std::stringstream exec_string;
          
 #if ( defined decalp )
             exec_string <<"xterm -e idb " 
@@ -116,7 +114,8 @@ phasta( int argc,
             exec_string <<"xterm -e dbx " 
                         << " -p "<< parent_pid <<" "<< argv[0] << endl;
 #endif
-            system( exec_string.str() );
+            std::string s = exec_string.str();
+            system( s.c_str() );
             exit(0);
         }
         catchDebugger();
