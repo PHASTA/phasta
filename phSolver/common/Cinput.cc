@@ -128,21 +128,20 @@ void phSolver::Input::build_map(map<string,string> *inmap,
 		      vector<string>     *intext)
 {
   // iterate through input_text of text and separate at :'s
-  for (int i = 0 ; i < intext->size(); i++) {
+  for (unsigned i = 0 ; i < intext->size(); i++) {
     string textlineALL = (*intext)[i];
     string textline;
-    int pos  = 0;
      
     // modification introduced so that comments starting midway in a file 
     // can be handled.
-
-    if ( (pos = textlineALL.find_first_of( '#',pos)) != string::npos) {
+    size_t pos = textlineALL.find_first_of( '#',0);
+    if ( pos != string::npos) {
       textline = textlineALL.substr(0,pos);
     }else {
       textline = textlineALL;
     }
-    pos = 0;
-    if ( (pos = textline.find_first_of( ':',pos)) != string::npos) {
+    pos = textline.find_first_of( ':', 0);
+    if ( pos != string::npos) {
       
       // get the keyphrase
       string keywd = textline.substr(0,pos);
