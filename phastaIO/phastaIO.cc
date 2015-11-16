@@ -1004,7 +1004,7 @@ void openfile(const char filename[],
 					// Swap byte order if endianess is different ...
 					if ( PhastaIOActiveFiles[i]->Wrong_Endian ) {
 						SwapArrayByteOrder( PhastaIOActiveFiles[i]->my_read_table[j],
-								sizeof(long long int),
+								sizeof(unsigned long),
 								PhastaIOActiveFiles[i]->nppp );
 					}
 				}
