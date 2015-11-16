@@ -52,21 +52,33 @@ static int s_local_size = -1;
 static int s_local_rank = -1;
 
 // the following defines are for debug printf
-#define PHASTAIO_PREFIX "phastaIO debug: "
 #define PHASTAIO_DEBUG 0 //default to not print any debugging info
 
+void phprintf(const char* fmt, ...) {
 #if PHASTAIO_DEBUG
-#define phprintf( s, arg...) printf(PHASTAIO_PREFIX s "\n", ##arg)
-#define phprintf_0( s, arg...) do{ \
-	MPI_Comm_rank(MPI_COMM_WORLD, &irank); \
-	if(irank == 0){ \
-		printf(PHASTAIO_PREFIX "irank=0: " s "\n", ##arg); \
-	} \
-} while(0)
-#else
-#define phprintf( s, arg...)
-#define phprintf_0( s, arg...)
+  char format[1024];
+  snprintf(format, sizeof(format), "phastaIO debug: %s", fmt);
+  va_list ap;
+  va_start(ap,fmt);
+  vprintf(format,ap)
+  va_end(ap);
 #endif
+}
+
+void phprintf_0(const char* fmt, ...) {
+#if PHASTAIO_DEBUG
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if(rank == 0){
+    char format[1024];
+    snprintf(format, sizeof(format), "phastaIO debug: irank=0 %s", fmt);
+    va_list ap;
+    va_start(ap,s);
+    vprintf(format, ap);
+    va_end(ap);
+  }
+#endif
+}
 
 enum PhastaIO_Errors
 {
