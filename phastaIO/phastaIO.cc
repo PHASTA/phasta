@@ -86,7 +86,7 @@ enum PhastaIO_Errors
 	UNABLE_TO_OPEN_FILE = -2,
 	NOT_A_MPI_FILE = -3,
 	GPID_EXCEEDED = -4,
-	DATA_TYPE_ILLEGAL = -5,
+	DATA_TYPE_ILLEGAL = -5
 };
 
 using namespace std;
@@ -522,7 +522,7 @@ void queryphmpiio(const char filename[],int *nfields, int *nppf)
  * This is only needed for file format version 1 in "write" mode.
  */
 int computeMHSize(int nfields, int nppf, int version) {
-	int mhsize;
+	int mhsize=0;
 	if(version == 1) {
 		//int meta_info_size = (2+nfields+1) * MAX_FIELDS_NAME_LENGTH; // 2 is MPI_IO_TAG and nFields, the others 1 is nppf
 		int meta_info_size = VERSION_INFO_HEADER_SIZE;
