@@ -7,8 +7,8 @@ int triIntPntPyr(int, DARR3**,double**);
 
 void symtripyr(int *n1, double pt[][4], double wt[], int *err)
 {
-  double *lwt;
-  DARR3 *lpt;
+  double *lwt = 0;
+  DARR3 *lpt = 0;
   int i,j;
   *err = triIntPntPyr(*n1, &lpt, &lwt);
   for(i=0; i < *n1; i++){
