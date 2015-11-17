@@ -16,4 +16,6 @@ void  bzero(void* ptr, size_t sz) {
     }
     return;
 }
+#else
+void dontComplain() {}
 #endif
