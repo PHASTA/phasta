@@ -101,8 +101,7 @@ int main(int argc, char *argv[]) {
   int startpart = myrank * nppp +1;
   int endpart = startpart + nppp - 1;
   char gfname[64], numTemp[128];
-  int iarray[10], igeom;
-  long  isize;
+  int iarray[10], igeom, isize;
 
 
   if (N_parts != N_procs) {

@@ -196,7 +196,7 @@ void countfieldstowriterestart()
     nfields++; //instantaneous wss in bflux.f
   }
 
-  if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
+// Save every step  if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
 
     //projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)
     if(matdat.matflg[0][0] ==-1) {
