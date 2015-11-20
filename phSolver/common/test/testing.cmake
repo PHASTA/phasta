@@ -1,51 +1,30 @@
-add_test(
-  NAME readHeader
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOreadheader 2
-  WORKING_DIRECTORY ${CASES}/incompressible
-)
-add_test(
-  NAME readDatablock
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOreaddatablock 2
-  WORKING_DIRECTORY ${CASES}/incompressible
-)
-add_test(
-  NAME write
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOwrite 2
-  WORKING_DIRECTORY ${CASES}
-)
-add_test(
-  NAME readFtn
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOreadFtn
-  WORKING_DIRECTORY ${CASES}/incompressible/
-)
-if(HAS_VALGRIND)
-  set(vgcmd
-    valgrind
-    --log-file=vg.%p
-    --leak-check=yes
-    ${PHASTA_BINARY_DIR}/bin/phIOreadFtn
-  )
+macro(common_parallel_test name procs dir exe)
+  set(tname common_${name})
   add_test(
-    NAME readFtnVG
-    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${vgcmd}
-    WORKING_DIRECTORY ${CASES}/incompressible/
-  )
+    NAME ${tname}
+    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} ${procs} ${exe} ${ARGN}
+    WORKING_DIRECTORY ${dir} )
+  set_tests_properties(${tname} PROPERTIES LABELS "phsolver_common")
+endmacro(common_parallel_test)
+
+common_parallel_test(readHeader 4 ${CASES}/incompressible
+  ${PHASTA_BINARY_DIR}/bin/phIOreadheader 2)
+common_parallel_test(readDatablock 4 ${CASES}/incompressible
+  ${PHASTA_BINARY_DIR}/bin/phIOreaddatablock 2)
+common_parallel_test(write 4 ${CASES}
+  ${PHASTA_BINARY_DIR}/bin/phIOwrite 2)
+common_parallel_test(readFtn 4 ${CASES}/incompressible/
+  ${PHASTA_BINARY_DIR}/bin/phIOreadFtn)
+if(HAS_VALGRIND)
+  common_parallel_test(readFtnVG 4 ${CASES}/incompressible/
+    valgrind --log-file=vg.%p --leak-check=yes
+    ${PHASTA_BINARY_DIR}/bin/phIOreadFtn)
 endif(HAS_VALGRIND)
-add_test(
-  NAME writeFtn
-  COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn
-  WORKING_DIRECTORY ${CASES}/
-)
+common_parallel_test(writeFtn 4 ${CASES}
+  ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn)
 if(HAS_VALGRIND)
-  set(vgcmd
-    valgrind
-    --log-file=vg.%p
-    --leak-check=yes
-    ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn
-  )
-  add_test(
-    NAME writeFtnVG
-    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} 4 ${vgcmd}
-    WORKING_DIRECTORY ${CASES}/incompressible/
-  )
+  common_parallel_test(
+    writeFtnVG 4 ${CASES}/incompressible
+    valgrind --log-file=vg.%p --leak-check=yes
+    ${PHASTA_BINARY_DIR}/bin/phIOwriteFtn)
 endif(HAS_VALGRIND)

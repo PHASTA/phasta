@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <cassert>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -70,55 +71,64 @@ piarray( void* iarray , int start, int end ) {
     }
 }
 
-int cdToParent() {
-  if( chdir("..") ) {
-    fprintf(stderr,"could not change to the parent directory\n");
-    return 1;
-  } else {
-    return 0;
+namespace {
+  int cdToParent() {
+    if( chdir("..") ) {
+      fprintf(stderr,"could not change to the parent directory\n");
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+  int run(phSolver::Input& ctrl) {
+    int size,ierr;
+    char inpfilename[100];
+    MPI_Comm_size (MPI_COMM_WORLD, &size);
+    MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+
+    workfc.numpe = size;
+    workfc.myrank = myrank;
+
+    initPhastaCommonVars();
+    /* Input data  */
+    ierr = input_fform(ctrl);
+    if(!ierr){
+      sprintf(inpfilename,"%d-procs_case/",size);
+      if( chdir( inpfilename ) ) {
+        cerr << "could not change to the problem directory "
+          << inpfilename << endl;
+        return -1;
+      }
+      MPI_Barrier(MPI_COMM_WORLD);
+      input();
+      /* now we can start the solver */
+      proces();
+    }
+    else{
+      printf("error during reading ascii input \n");
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    if ( myrank == 0 ) {
+      printf("phasta.cc - last call before finalize!\n");
+    }
+    if( cdToParent() )
+      return -1;
+    return timdat.lstep;
   }
 }
 
+int phasta(phSolver::Input& ctrl) {
+  outpar.input_mode = 0; //FIXME magic value for posix
+  outpar.output_mode = 0; //FIXME magic value for posix
+  return run(ctrl);
+}
+
 int phasta(phSolver::Input& ctrl, grstream grs) {
-  int size,ierr;
-  char inpfilename[100];
-  MPI_Comm_size (MPI_COMM_WORLD, &size);
-  MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
-
-  workfc.numpe = size;
-  workfc.myrank = myrank;
-  if( grs ) {
-    outpar.input_mode = -1; //FIXME magic value for streams
-    outpar.output_mode = 1; //FIXME magic value for syncio
-    streamio_set_gr(grs);
-  } else {
-    outpar.input_mode = 0; //FIXME magic value for posix
-    outpar.output_mode = 0; //FIXME magic value for posix
-  }
-
-  initPhastaCommonVars();
-  /* Input data  */
-  ierr = input_fform(ctrl);
-  if(!ierr){
-    sprintf(inpfilename,"%d-procs_case/",size);
-    if( chdir( inpfilename ) ) {
-      cerr << "could not change to the problem directory "
-        << inpfilename << endl;
-      return -1;
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
-    input();
-    /* now we can start the solver */
-    proces();
-  }
-  else{
-    printf("error during reading ascii input \n");
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-  if ( myrank == 0 ) {
-    printf("phasta.cc - last call before finalize!\n");
-  }
-  return timdat.lstep;
+  assert(grs);
+  outpar.input_mode = -1; //FIXME magic value for streams
+  outpar.output_mode = 1; //FIXME magic value for syncio
+  streamio_set_gr(grs);
+  return run(ctrl);
 }
 
 int phasta(phSolver::Input& ctrl, RStream* rs) {
@@ -129,43 +139,13 @@ int phasta(phSolver::Input& ctrl, RStream* rs) {
 }
 
 int phasta(phSolver::Input& ctrl, GRStream* grs, RStream* rs) {
-  int size,ierr;
-  char inpfilename[100];
-  MPI_Comm_size (MPI_COMM_WORLD, &size);
-  MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
-
-  workfc.numpe = size;
-  workfc.myrank = myrank;
   outpar.input_mode = -1; //FIXME magic value for streams
   outpar.output_mode = -1; //FIXME magic value for streams
+  assert(grs);
+  assert(rs);
   streamio_set_gr(grs);
   streamio_set_r(rs);
-
-  initPhastaCommonVars();
-  /* Input data  */
-  ierr = input_fform(ctrl);
-  if(!ierr){
-    sprintf(inpfilename,"%d-procs_case/",size);
-    if( chdir( inpfilename ) ) {
-      cerr << "could not change to the problem directory "
-        << inpfilename << endl;
-      return -1;
-    }
-    MPI_Barrier(MPI_COMM_WORLD);
-    input();
-    /* now we can start the solver */
-    proces();
-  }
-  else{
-    printf("error during reading ascii input \n");
-  }
-  MPI_Barrier(MPI_COMM_WORLD);
-  if ( myrank == 0 ) {
-    printf("phasta.cc - last call before finalize!\n");
-  }
-  if( cdToParent() )
-    return -1;
-  return timdat.lstep;
+  return run(ctrl);
 }
 
 int phasta( int argc, char *argv[] ) {
