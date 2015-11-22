@@ -23,8 +23,8 @@ if(PHASTA_CHEF_ENABLED)
   )
 else()
   set(SRC_FILES ${SRC_FILES} phstreamEmpty/phstreamEmpty.cc)
-  set(PHASTA_COMMON_INCLUDE_DIRS 
-      ${PHASTA_COMMON_INCLUDE_DIRS} 
+  set(PHASTA_COMMON_INCLUDE_DIRS
+      ${PHASTA_COMMON_INCLUDE_DIRS}
       ${CMAKE_CURRENT_SOURCE_DIR}/phstreamEmpty)
 endif()
 
@@ -36,6 +36,19 @@ TARGET_LINK_LIBRARIES(common ${PHASTA_COMMON_LIBS})
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/phastaCommonConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/phastaCommonConfig.cmake"
+)
+
+execute_process(
+  COMMAND git rev-parse HEAD
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE git_hash
+)
+set(git_hash_string "# git hash ${git_hash}")
+execute_process(
+  COMMAND echo -n ${git_hash_string}
+  COMMAND cat - input.config
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_FILE ${CMAKE_BINARY_DIR}/input.config
 )
 
 if(PHASTA_TESTING)
