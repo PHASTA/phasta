@@ -22,6 +22,7 @@
 #include "streamio.h"
 #include "common_c.h"
 #include "tmrc.h"
+#include "phString.h"
 
 #ifdef intel
 #include <winsock2.h>
@@ -31,7 +32,6 @@
 #endif
 
 void igetMinMaxAvg(int *ivalue, double *stats, int *statRanks) {
-  int isThisRank;
   double *value = (double*)malloc(sizeof(double));
   *value = 1.0*(*ivalue);
   rgetMinMaxAvg(value,stats,statRanks);
@@ -40,6 +40,7 @@ void igetMinMaxAvg(int *ivalue, double *stats, int *statRanks) {
 
 void rgetMinMaxAvg(double *value, double *stats, int *statRanks) {
   int isThisRank;
+  double sqValue = 0., sqValueAvg = 0.;
 
   MPI_Allreduce(value,&stats[0],1,MPI_DOUBLE,MPI_MIN,MPI_COMM_WORLD);
   isThisRank=workfc.numpe+1;
@@ -56,7 +57,7 @@ void rgetMinMaxAvg(double *value, double *stats, int *statRanks) {
   MPI_Allreduce(value,&stats[2],1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   stats[2] /= workfc.numpe;
 
-  double sqValue = (*value)*(*value), sqValueAvg = 0.;
+  sqValue = (*value)*(*value);
   MPI_Allreduce(&sqValue,&sqValueAvg,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
   sqValueAvg /= workfc.numpe;
 
@@ -65,7 +66,7 @@ void rgetMinMaxAvg(double *value, double *stats, int *statRanks) {
 
 void print_mesh_stats(void) {
   int statRanks[2];
-  double iStats[4], rStats[4];
+  double iStats[4];
 
   igetMinMaxAvg(&conpar.nshg,iStats,statRanks);
   if(workfc.myrank==workfc.master)
@@ -153,7 +154,7 @@ void print_mpi_stats(void) {
 
 void print_system_stats(double *tcorecp, double *tcorecpscal) {
   int statRanks[2];
-  double iStats[4], rStats[4];
+  double rStats[4];
   double syst_assembly, syst_solve;
 
 /* NS equations */
@@ -197,38 +198,34 @@ void countfieldstowriterestart()
     nfields++; /*instantaneous wss in bflux.f */
   }
 
-/* Save every step  if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ */ /*Last time step of the computation*/
+  /*projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)*/
+  if(matdat.matflg[0][0] ==-1) {
+    nfields = nfields +2;
+  }
 
-    /*projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)*/
-    if(matdat.matflg[0][0] ==-1) {
-        nfields = nfields +2;
+  /*if Print Error Indicators = true (call write_error in itrdrv)*/
+  if(turbvar.ierrcalc == 1){
+    nfields++;
+  }
+
+  /*if Print ybar = True (call write_field(myrank,'a','ybar',4,... in itrdrv)*/
+  if(outpar.ioybar == 1){
+    nfields++;  /*ybar*/
+
+    /*phase average fields*/
+    if(outpar.nphasesincycle >0) {
+      nfields = nfields + outpar.nphasesincycle;
     }
 
-    /*if Print Error Indicators = true (call write_error in itrdrv)*/
-    if(turbvar.ierrcalc == 1){
-      nfields++;
+    if(abs(turbvar.itwmod) != 1 && outpar.iowflux == 1) { 
+      nfields++; /*wssbar*/
     }
 
-    /*if Print ybar = True (call write_field(myrank,'a','ybar',4,... in itrdrv)*/
-    if(outpar.ioybar == 1){
-      nfields++;  /*ybar*/
+  }
 
-      /*phase average fields*/
-      if(outpar.nphasesincycle >0) {
-        nfields = nfields + outpar.nphasesincycle;
-      }
-
-      if(abs(turbvar.itwmod) != 1 && outpar.iowflux == 1) { 
-        nfields++; /*wssbar*/
-      }
-
-    }
-
-    if(turbvari.irans < 0) {
-      nfields++; /*dwal*/
-    }
-
-/*  }*/
+  if(turbvari.irans < 0) {
+    nfields++; /*dwal*/
+  }
 
   outpar.nsynciofieldswriterestart = nfields;
 
@@ -246,22 +243,17 @@ Write_Restart(  int* pid,
                 double* array1,
                 double* array2 ) {
 
-    char fname[255];
-    char rfile[60];
-    char existingfile[30], linkfile[30];
-    int irstou;
     const char* magic_name = "byteorder magic number";
     int magic_number = 362436;
-    double version=0.0;
     int isize, nitems;
     int iarray[10];
     int nfiles;
     int nfields;
     int numparts;
-    int irank;
     int nprocs;
     int ione = 1;
     double iotime = 0;
+    char filename[255];
 
     /*  First, count the number of fields to write and store the result in*/
     countfieldstowriterestart();
@@ -270,11 +262,9 @@ Write_Restart(  int* pid,
     nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
-    int nppp = numparts/nprocs;   /* always 1 for PHASTA*/
-    int descriptor;
-    char filename[255];
+    assert(numparts/nprocs == 1);/* Number of parts per proc ...*/
+
     bzero((void*)filename,255);
 
     iotime = TMRC();
@@ -300,36 +290,31 @@ Write_Restart(  int* pid,
         &ione, "integer", phasta_iotype );
     field_flag++;
 
-     int i;
-     for ( i = 0; i < nppp; i++) { /*This loop is useful only if several parts per processor*/
-        /* Write solution field ...*/
-        isize = (*nshg)*(*numVars);
-        nitems = 3;
-        iarray[ 0 ] = (*nshg);
-        iarray[ 1 ] = (*numVars);
-        iarray[ 2 ] = (*stepno);
+    /* Write solution field ...*/
+    isize = (*nshg)*(*numVars);
+    nitems = 3;
+    iarray[ 0 ] = (*nshg);
+    iarray[ 1 ] = (*numVars);
+    iarray[ 2 ] = (*stepno);
 
-        phio_writeheader(f_descriptor, "solution", (void*)iarray, &nitems,
-            &isize, "double", phasta_iotype);
-        nitems = (*nshg)*(*numVars);
-        phio_writedatablock(f_descriptor, "solution", (void*)(array1),
-            &isize, "double", phasta_iotype );
-    }
+    phio_writeheader(f_descriptor, "solution", (void*)iarray, &nitems,
+        &isize, "double", phasta_iotype);
+    nitems = (*nshg)*(*numVars);
+    phio_writedatablock(f_descriptor, "solution", (void*)(array1),
+        &isize, "double", phasta_iotype );
     field_flag++;
 
-    for ( i = 0; i < nppp; i++) {
-        /* Write solution field ...*/
-        isize = (*nshg)*(*numVars);
-        nitems = 3;
-        iarray[ 0 ] = (*nshg);
-        iarray[ 1 ] = (*numVars);
-        iarray[ 2 ] = (*stepno);
-        phio_writeheader(f_descriptor, "time derivative of solution",
-            (void*)iarray, &nitems, &isize, "double", phasta_iotype);
-        nitems = (*nshg)*(*numVars);
-        phio_writedatablock(f_descriptor, "time derivative of solution",
-            (void*)(array2), &isize, "double", phasta_iotype );
-    }
+    /* Write solution field ...*/
+    isize = (*nshg)*(*numVars);
+    nitems = 3;
+    iarray[ 0 ] = (*nshg);
+    iarray[ 1 ] = (*numVars);
+    iarray[ 2 ] = (*stepno);
+    phio_writeheader(f_descriptor, "time derivative of solution",
+        (void*)iarray, &nitems, &isize, "double", phasta_iotype);
+    nitems = (*nshg)*(*numVars);
+    phio_writedatablock(f_descriptor, "time derivative of solution",
+        (void*)(array2), &isize, "double", phasta_iotype );
     field_flag++;
 
     if (field_flag==nfields){
@@ -349,51 +334,39 @@ Write_Error(  int* pid,
               int* nshg,
               int* numVars,
               double* array1 ) {
-    char fname[255];
-    char rfile[60];
-    int irstou;
-    double version=0.0;
     int isize, nitems;
     int iarray[10];
-    int nfiles;
     int nfields;
     int numparts;
-    int irank;
     int nprocs;
 
-    nfiles = outpar.nsynciofiles;
+    (void)*pid; /*silence compiler warning*/
+
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
 
-    /* Calculate number of parts each  proc deal with and where it start and end ...*/
-    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ...*/
-    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ...*/
-    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ...*/
+    assert(numparts/nprocs == 1);/* Number of parts per proc ...*/
 
     field_flag++;
 
-    int i;
-    for ( i = 0; i < nppp; i++  ) {
-
-        if(*pid==0) {
-          printf("\n");
-          printf("The %d/%d th field to be written is 'errors'\n",field_flag,nfields);
-        }
-
-        isize = (*nshg)*(*numVars);
-        nitems = 3;
-        iarray[ 0 ] = (*nshg);
-        iarray[ 1 ] = (*numVars);
-        iarray[ 2 ] = (*stepno);
-
-        phio_writeheader(f_descriptor, "errors", (void*)iarray, &nitems,
-            &isize, "double", phasta_iotype);
-
-        phio_writedatablock(f_descriptor, "errors", (void*)array1, &isize,
-            "double", phasta_iotype );
+    if(*pid==0) {
+      printf("\n");
+      printf("The %d/%d th field to be written is 'errors'\n",field_flag,nfields);
     }
+
+    isize = (*nshg)*(*numVars);
+    nitems = 3;
+    iarray[ 0 ] = (*nshg);
+    iarray[ 1 ] = (*numVars);
+    iarray[ 2 ] = (*stepno);
+
+    phio_writeheader(f_descriptor, "errors", (void*)iarray, &nitems,
+        &isize, "double", phasta_iotype);
+
+    phio_writedatablock(f_descriptor, "errors", (void*)array1, &isize,
+        "double", phasta_iotype );
+
     if (field_flag==nfields){
       phio_closefile(f_descriptor);
       if (*pid==0) {
@@ -413,45 +386,32 @@ Write_Field(  int *pid,
               int* nshg,
               int* numvars,
               int* stepno) {
-    char *fieldlabel = (char *)malloc((*tagsize+1)*sizeof(char));
-    strncpy(fieldlabel, fieldtag, *tagsize);
-    fieldlabel[*tagsize] = '\0';
+    char *fieldlabel = NULL;
 
-    int irstou;
-    double version=0.0;
     int isize, nitems;
     int iarray[10];
-
-    char fmode[10];
-    if(!strncmp(filemode,"w",1))
-      strcpy(fmode,"write");
-    else /* default is append*/
-      strcpy(fmode,"append");
-
     char datatype[10];
+
+    int nfields;
+    int numparts;
+    int nprocs;
+
+    (void)*filemode; /*silence compiler warning*/
+
     if(!strncmp(arraytype,"i",1))
       strcpy(datatype,"int");
     else /* default is double*/
       strcpy(datatype,"double");
 
-    int nfiles;
-    int nfields;
-    int numparts;
-    int irank;
-    int nprocs;
-
-    nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
 
-    /* Calculate number of parts each  proc deal with and where it start and end ...*/
-    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ...*/
-    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ...*/
-    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ...*/
+    assert(numparts/nprocs == 1);/* Number of parts per proc ...*/
 
+    fieldlabel = (char *)malloc((*tagsize+1)*sizeof(char));
     strncpy(fieldlabel, fieldtag, *tagsize);
+    fieldlabel[*tagsize] = '\0';
 
     field_flag++;
     if(*pid==0) {
@@ -459,21 +419,19 @@ Write_Field(  int *pid,
       printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldlabel);
     }
 
-    int i;
-    for ( i = 0; i < nppp; i++  ) {
-        /* Write solution field ...*/
-        isize = (*nshg)*(*numvars);
-        nitems = 3;
-        iarray[ 0 ] = (*nshg);
-        iarray[ 1 ] = (*numvars);
-        iarray[ 2 ] = (*stepno);
+    /* Write solution field ...*/
+    isize = (*nshg)*(*numvars);
+    nitems = 3;
+    iarray[ 0 ] = (*nshg);
+    iarray[ 1 ] = (*numvars);
+    iarray[ 2 ] = (*stepno);
 
-        phio_writeheader(f_descriptor, fieldlabel, (void*)iarray, &nitems,
-            &isize, datatype, phasta_iotype);
-        nitems = (*nshg)*(*numvars);
-        phio_writedatablock(f_descriptor, fieldlabel, array, &isize,
-            datatype, phasta_iotype );
-    }
+    phio_writeheader(f_descriptor, fieldlabel, (void*)iarray, &nitems,
+        &isize, datatype, phasta_iotype);
+    nitems = (*nshg)*(*numvars);
+    phio_writedatablock(f_descriptor, fieldlabel, array, &isize,
+        datatype, phasta_iotype );
+
     if (field_flag==nfields){
       phio_closefile(f_descriptor);
       if (*pid==0) {
@@ -497,6 +455,19 @@ Write_PhAvg2( int* pid,
               int* numvars,
               int* stepno) {
     int addtagsize=0; /* phase number is added to the name of the field*/
+    int tagsize2 = 0;
+    char *fieldlabel = NULL;
+    char straddtagsize[10] = "\0";
+    int isize, nitems;
+    int iarray[10];
+    char datatype[10];
+    int nfields;
+    int numparts;
+    int nprocs;
+
+    (void)*filemode; /*silence compiler warning*/
+    (void)*nphasesincycle; /*silence compiler warning*/
+
     if(*iphase<10)
       addtagsize=1;
     else if(*iphase<100)
@@ -504,14 +475,12 @@ Write_PhAvg2( int* pid,
     else if(*iphase<1000)
       addtagsize=3;
 
-    int tagsize2;
     tagsize2=*tagsize+addtagsize;
 
-    char *fieldlabel = (char *)malloc((tagsize2+1)*sizeof(char));
+    fieldlabel = (char *)malloc((tagsize2+1)*sizeof(char));
     strncpy(fieldlabel, fieldtag, *tagsize);
     fieldlabel[tagsize2] = '\0';
 
-    char straddtagsize[10];
     sprintf(straddtagsize,"%d",*iphase);
 
     if(*iphase<10) {
@@ -527,39 +496,16 @@ Write_PhAvg2( int* pid,
       fieldlabel[tagsize2-1]=straddtagsize[2];
     }
 
-    int irstou;
-    double version=0.0;
-    int isize, nitems;
-    int iarray[10];
-
-    char fmode[10];
-    if(!strncmp(filemode,"w",1))
-      strcpy(fmode,"write");
-    else /* default is append*/
-      strcpy(fmode,"append");
-
-    char datatype[10];
     if(!strncmp(arraytype,"i",1))
       strcpy(datatype,"int");
     else /* default is double*/
       strcpy(datatype,"double");
 
-    int nfiles;
-    int nfields;
-    int numparts;
-    int irank;
-    int nprocs;
-
-    nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
 
-    /* Calculate number of parts each  proc deal with and where it start and end ...*/
-    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ...*/
-    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ...*/
-    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ...*/
+    assert(numparts/nprocs == 1);/* Number of parts per proc ...*/
 
     field_flag++;
     if(*pid==0) {
@@ -567,20 +513,17 @@ Write_PhAvg2( int* pid,
       printf("The %d/%d th field to be written is '%s'\n",field_flag,nfields,fieldlabel);
     }
 
-    int i;
-    for ( i = 0; i < nppp; i++  ) {
-        /* Write solution field ...*/
-        isize = (*nshg)*(*numvars);
-        nitems = 3;
-        iarray[ 0 ] = (*nshg);
-        iarray[ 1 ] = (*numvars);
-        iarray[ 2 ] = (*stepno);
-        phio_writeheader(f_descriptor, fieldlabel, (void*)iarray, &nitems,
-            &isize, "double", phasta_iotype);
-        nitems = (*nshg)*(*numvars);
-        phio_writedatablock(f_descriptor, fieldlabel, array, &isize,
-            "double", phasta_iotype );
-    }
+    /* Write solution field ...*/
+    isize = (*nshg)*(*numvars);
+    nitems = 3;
+    iarray[ 0 ] = (*nshg);
+    iarray[ 1 ] = (*numvars);
+    iarray[ 2 ] = (*stepno);
+    phio_writeheader(f_descriptor, fieldlabel, (void*)iarray, &nitems,
+        &isize, "double", phasta_iotype);
+    nitems = (*nshg)*(*numvars);
+    phio_writedatablock(f_descriptor, fieldlabel, array, &isize,
+        "double", phasta_iotype );
     if (field_flag==nfields){
       phio_closefile(f_descriptor);
       if (*pid==0) {
