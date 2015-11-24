@@ -1,6 +1,4 @@
-#include <FCMangle.h>
-#define TMRC FortranCInterface_GLOBAL_(tmrc, TMRC)
-
+#include "tmrc.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
@@ -41,7 +39,3 @@ double TMRC (void)
 
   return t1;
 }
-
-
-
-

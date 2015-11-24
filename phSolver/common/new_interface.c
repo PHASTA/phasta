@@ -21,6 +21,7 @@
 #include "posixio.h"
 #include "streamio.h"
 #include "common_c.h"
+#include "tmrc.h"
 
 #ifdef intel
 #include <winsock2.h>
@@ -260,6 +261,7 @@ Write_Restart(  int* pid,
     int irank;
     int nprocs;
     int ione = 1;
+    double iotime = 0;
 
     //  First, count the number of fields to write and store the result in
     countfieldstowriterestart();
@@ -275,6 +277,7 @@ Write_Restart(  int* pid,
     char filename[255];
     bzero((void*)filename,255);
 
+    iotime = TMRC();
     if(outpar.output_mode == -1 )
       streamio_setup_write(&f_descriptor, streamio_get_r());
     else if(outpar.output_mode == 0 )
@@ -335,6 +338,9 @@ Write_Restart(  int* pid,
         printf("\n");
       }
     }
+    iotime = TMRC() - iotime;
+    if (workfc.master == workfc.myrank)
+      printf("time to write restart (seconds) %f\n",iotime);
 }
 
 void
