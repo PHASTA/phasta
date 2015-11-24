@@ -87,7 +87,7 @@ void print_mpi_stats(void) {
   int statRanks[2];
   double iStats[4], rStats[4];
 
-// NS equations
+/* NS equations*/
   igetMinMaxAvg(&mpistats.iISend,iStats,statRanks);
   if(workfc.myrank==workfc.master)
     printf("iISend : min [%d,%d], max[%d,%d] and avg[.,%d] (rms=%d)\n",statRanks[0],(int)iStats[0],statRanks[1],(int)iStats[1],(int)iStats[2],(int)iStats[3]);
@@ -118,7 +118,7 @@ void print_mpi_stats(void) {
     printf("rAllR  : min [%d,%2.5f], max[%d,%2.5f] and avg[.,%2.5f] (rms=%2.5f)\n",statRanks[0],rStats[0],statRanks[1],rStats[1],rStats[2],rStats[3]);
     printf("\n");
   }
-// Scalars
+/* Scalars*/
   igetMinMaxAvg(&mpistats.iISendScal,iStats,statRanks);
   if(workfc.myrank==workfc.master)
     printf("iISendScal : min [%d,%d], max[%d,%d] and avg[.,%d] (rms=%d)\n",statRanks[0],(int)iStats[0],statRanks[1],(int)iStats[1],(int)iStats[2],(int)iStats[3]);
@@ -156,7 +156,7 @@ void print_system_stats(double *tcorecp, double *tcorecpscal) {
   double iStats[4], rStats[4];
   double syst_assembly, syst_solve;
 
-// NS equations
+/* NS equations */
   syst_assembly = tcorecp[0];
   syst_solve = tcorecp[1];
 
@@ -168,7 +168,7 @@ void print_system_stats(double *tcorecp, double *tcorecpscal) {
   if(workfc.myrank==workfc.master)
     printf("Lin. alg. sol : min [%d,%2.5f], max[%d,%2.5f] and avg[.,%2.5f] (rms=%2.5f)\n",statRanks[0],rStats[0],statRanks[1],rStats[1],rStats[2],rStats[3]);
 
-// Scalars
+/* Scalars */
   syst_assembly = tcorecpscal[0];
   syst_solve = tcorecpscal[1];
 
@@ -187,48 +187,48 @@ void print_system_stats(double *tcorecp, double *tcorecpscal) {
 
 void countfieldstowriterestart()
 {
-  int nfields = 3; //magic number, solution, time derivatives
+  int nfields = 3; /*magic number, solution, time derivatives*/
 
   if(outpar.ivort == 1){
-    nfields++; //vorticity
+    nfields++; /*vorticity*/
   }
 
   if(abs(turbvar.itwmod) != 1 && outpar.iowflux == 1) { 
-    nfields++; //instantaneous wss in bflux.f
+    nfields++; /*instantaneous wss in bflux.f */
   }
 
-// Save every step  if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ //Last time step of the computation
+/* Save every step  if(timdat.istep == inpdat.nstep[timdat.itseq-1]){ */ /*Last time step of the computation*/
 
-    //projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)
+    /*projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)*/
     if(matdat.matflg[0][0] ==-1) {
         nfields = nfields +2;
     }
 
-    //if Print Error Indicators = true (call write_error in itrdrv)
+    /*if Print Error Indicators = true (call write_error in itrdrv)*/
     if(turbvar.ierrcalc == 1){
       nfields++;
     }
 
-    //if Print ybar = True (call write_field(myrank,'a','ybar',4,... in itrdrv)
+    /*if Print ybar = True (call write_field(myrank,'a','ybar',4,... in itrdrv)*/
     if(outpar.ioybar == 1){
-      nfields++;  //ybar
+      nfields++;  /*ybar*/
 
-      //phase average fields
+      /*phase average fields*/
       if(outpar.nphasesincycle >0) {
         nfields = nfields + outpar.nphasesincycle;
       }
 
       if(abs(turbvar.itwmod) != 1 && outpar.iowflux == 1) { 
-        nfields++; //wssbar
+        nfields++; /*wssbar*/
       }
 
     }
 
     if(turbvari.irans < 0) {
-      nfields++; //dwal
+      nfields++; /*dwal*/
     }
 
-//  }
+/*  }*/
 
   outpar.nsynciofieldswriterestart = nfields;
 
@@ -263,16 +263,16 @@ Write_Restart(  int* pid,
     int ione = 1;
     double iotime = 0;
 
-    //  First, count the number of fields to write and store the result in
+    /*  First, count the number of fields to write and store the result in*/
     countfieldstowriterestart();
 
-    //  Retrieve and compute the parameters required for SyncIO
+    /*  Retrieve and compute the parameters required for SyncIO*/
     nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; //workfc.myrank;
+    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
-    int nppp = numparts/nprocs;   // always 1 for PHASTA
+    int nppp = numparts/nprocs;   /* always 1 for PHASTA*/
     int descriptor;
     char filename[255];
     bzero((void*)filename,255);
@@ -293,7 +293,7 @@ Write_Restart(  int* pid,
 
     field_flag=0;
 
-    // write the magic number
+    /* write the magic number*/
     phio_writeheader(f_descriptor, magic_name, (void*)&magic_number, &ione,
         &ione, "integer", phasta_iotype);
     phio_writedatablock(f_descriptor, magic_name, (void*)&magic_number,
@@ -301,8 +301,8 @@ Write_Restart(  int* pid,
     field_flag++;
 
      int i;
-     for ( i = 0; i < nppp; i++) { //This loop is useful only if several parts per processor
-        // Write solution field ...
+     for ( i = 0; i < nppp; i++) { /*This loop is useful only if several parts per processor*/
+        /* Write solution field ...*/
         isize = (*nshg)*(*numVars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
@@ -318,7 +318,7 @@ Write_Restart(  int* pid,
     field_flag++;
 
     for ( i = 0; i < nppp; i++) {
-        // Write solution field ...
+        /* Write solution field ...*/
         isize = (*nshg)*(*numVars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
@@ -364,13 +364,13 @@ Write_Error(  int* pid,
     nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; //workfc.myrank;
+    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
 
-    // Calculate number of parts each  proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
+    /* Calculate number of parts each  proc deal with and where it start and end ...*/
+    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ...*/
+    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ...*/
+    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ...*/
 
     field_flag++;
 
@@ -435,13 +435,13 @@ Write_Field(  int *pid,
     char fmode[10];
     if(!strncmp(filemode,"w",1))
       strcpy(fmode,"write");
-    else // default is append
+    else /* default is append*/
       strcpy(fmode,"append");
 
     char datatype[10];
     if(!strncmp(arraytype,"i",1))
       strcpy(datatype,"int");
-    else // default is double
+    else /* default is double*/
       strcpy(datatype,"double");
 
     int nfiles;
@@ -453,13 +453,13 @@ Write_Field(  int *pid,
     nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; //workfc.myrank;
+    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
 
-    // Calculate number of parts each  proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
+    /* Calculate number of parts each  proc deal with and where it start and end ...*/
+    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ...*/
+    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ...*/
+    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ...*/
 
     strncpy(fieldlabel, fieldtag, *tagsize);
 
@@ -471,7 +471,7 @@ Write_Field(  int *pid,
 
     int i;
     for ( i = 0; i < nppp; i++  ) {
-        // Write solution field ...
+        /* Write solution field ...*/
         isize = (*nshg)*(*numvars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
@@ -506,7 +506,7 @@ Write_PhAvg2( int* pid,
               int* nshg,
               int* numvars,
               int* stepno) {
-    int addtagsize=0; // phase number is added to the name of the field
+    int addtagsize=0; /* phase number is added to the name of the field*/
     if(*iphase<10)
       addtagsize=1;
     else if(*iphase<100)
@@ -545,13 +545,13 @@ Write_PhAvg2( int* pid,
     char fmode[10];
     if(!strncmp(filemode,"w",1))
       strcpy(fmode,"write");
-    else // default is append
+    else /* default is append*/
       strcpy(fmode,"append");
 
     char datatype[10];
     if(!strncmp(arraytype,"i",1))
       strcpy(datatype,"int");
-    else // default is double
+    else /* default is double*/
       strcpy(datatype,"double");
 
     int nfiles;
@@ -563,13 +563,13 @@ Write_PhAvg2( int* pid,
     nfiles = outpar.nsynciofiles;
     nfields = outpar.nsynciofieldswriterestart;
     numparts = workfc.numpe;
-    irank = *pid; //workfc.myrank;
+    irank = *pid; /*workfc.myrank;*/
     nprocs = workfc.numpe;
 
-    // Calculate number of parts each  proc deal with and where it start and end ...
-    int nppp = numparts/nprocs;// nppp : Number of parts per proc ...
-    int startpart = irank * nppp +1;// Part id from which I (myrank) start ...
-    int endpart = startpart + nppp - 1;// Part id to which I (myrank) end ...
+    /* Calculate number of parts each  proc deal with and where it start and end ...*/
+    int nppp = numparts/nprocs;/* nppp : Number of parts per proc ...*/
+    int startpart = irank * nppp +1;/* Part id from which I (myrank) start ...*/
+    int endpart = startpart + nppp - 1;/* Part id to which I (myrank) end ...*/
 
     field_flag++;
     if(*pid==0) {
@@ -579,7 +579,7 @@ Write_PhAvg2( int* pid,
 
     int i;
     for ( i = 0; i < nppp; i++  ) {
-        // Write solution field ...
+        /* Write solution field ...*/
         isize = (*nshg)*(*numvars);
         nitems = 3;
         iarray[ 0 ] = (*nshg);
