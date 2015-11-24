@@ -38,6 +38,7 @@ c
       real*8, target, allocatable :: xread(:,:), qread(:,:), acread(:,:)
       real*8, target, allocatable :: uread(:,:)
       real*8, target, allocatable :: BCinpread(:,:)
+      real*8 :: iotime
       integer, target, allocatable :: iperread(:), iBCtmpread(:)
       integer, target, allocatable :: ilworkread(:), nBCread(:)
       character*10 cname2
@@ -85,6 +86,7 @@ c
       ieleven=11
       itmp = int(log10(float(myrank+1)))+1
 
+      iotime = TMRC()
       if( input_mode .eq. -1 ) then
         call streamio_setup_read(fhandle, geomRestartStream)
       else if( input_mode .eq. 0 ) then
@@ -367,7 +369,13 @@ c
       endif
 
       call phio_closefile(fhandle);
+      iotime = TMRC() - iotime
+      if (myrank.eq.master) then
+        write(*,*) 'time to read geombc (seconds)', iotime
+      endif
+
 c.... Read restart files
+      iotime = TMRC()
       if( input_mode .eq. -1 ) then
         call streamio_setup_read(fhandle, geomRestartStream)
       else if( input_mode .eq. 0 ) then
@@ -492,6 +500,10 @@ c
 c.... close c-binary files
 c
       call phio_closefile(fhandle)
+      iotime = TMRC() - iotime
+      if (myrank.eq.master) then
+        write(*,*) 'time to read restart (seconds)', iotime
+      endif
 
       deallocate(xread)
       if ( numpbc > 0 )  then
