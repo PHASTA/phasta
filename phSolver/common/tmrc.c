@@ -39,20 +39,6 @@ double TMRC (void)
 #endif
 
   return t1;
-
-
-  // Old stuff
-  /*
-  struct rusage cputimePoints;
-  getrusage(RUSAGE_SELF,&cputimePoints);
-  double t1=((cputimePoints.ru_utime).tv_sec+(cputimePoints.ru_stime).tv_sec);
-  t1+=((cputimePoints.ru_utime).tv_usec+(cputimePoints.ru_stime).tv_usec)/1000000.0;
-  */
-
-   /* double t1=rts_get_timebase()/( 2500000000.0); */
-
-   /* return time(NULL); */
-   /* return clock()/CLOCKS_PER_SEC; */
 }
 
 
