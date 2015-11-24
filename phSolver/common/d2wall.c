@@ -12,6 +12,7 @@
 #include "posixio.h"
 #include "streamio.h"
 #include "setsyncioparam.h"
+#include "tmrc.h"
 
 void
 read_d2wall(  int* pid,
@@ -21,6 +22,7 @@ read_d2wall(  int* pid,
     int isize, nitems;
     int iarray[10];
     int j;
+    double iotime = 0;
     for ( j = 0; j < 10; j++) { 
        /*Initialize iarray to 0 so that we can assess the result of readheader*/
        iarray[j] = 0;
@@ -48,6 +50,7 @@ read_d2wall(  int* pid,
     *foundd2wall = 0;
     /* First we try to read dwal from the restart files. */
 
+    iotime = TMRC();
     if( outpar.input_mode == -1 )
       streamio_setup_read(&handle, streamio_get_gr());
     else if( outpar.input_mode == 0 )
@@ -80,8 +83,9 @@ read_d2wall(  int* pid,
       }
     }
     phio_closefile(handle);
-
+    iotime = TMRC() - iotime;
     if (irank==0) {
+      printf("time to read d2wall (seconds) %f\n",iotime);
       printf("\n");
     }
 }
