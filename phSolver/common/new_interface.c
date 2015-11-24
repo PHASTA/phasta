@@ -404,16 +404,6 @@ Write_Error(  int* pid,
 }
 
 void
-Write_Displ(  int* pid,
-              int* stepno,
-              int* nshg,
-              int* numVars,
-              double* array1 ) {
-  fprintf(stderr, "This function is dead...exiting\n");
-  exit(1);
-}
-
-void
 Write_Field(  int *pid,
               char* filemode,
               char* fieldtag,

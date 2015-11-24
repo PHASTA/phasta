@@ -772,7 +772,10 @@ c
 
            call restar ('out ',  yold  ,ac)
            if(ideformwall == 1) then
-              call write_displ(myrank, lstep, nshg, 3, uold )
+             if(myrank.eq.master) then
+               write(*,*) 'ideformwall is 1 and is a dead code path... exiting'
+             endif
+             stop
            endif
 
            if(ivort == 1) then 
