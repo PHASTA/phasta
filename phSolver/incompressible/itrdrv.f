@@ -232,7 +232,7 @@ c
 c.... open history and aerodynamic forces files
 c
         if (myrank .eq. master) then
-!           open (unit=ihist,  file=fhist,  status='unknown')
+           open (unit=ihist,  file=fhist,  status='unknown')
            open (unit=iforce, file=fforce, status='unknown')
            open (unit=76, file="fort.76", status='unknown')
            if(numImpSrfs.gt.0 .or. numRCRSrfs.gt.0) then
@@ -1139,13 +1139,15 @@ c
           if(myrank.eq.0)  then
             tcormr1 = TMRC()
           endif
-          call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
+          if(nsolflow.eq.1) then
+           call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
      &                    nPermDims )
-          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-          if(myrank.eq.0)  then
+           if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+           if(myrank.eq.0)  then
             tcormr2 = TMRC()
             write(6,*) 'call saveLesRestart for projection and'//
      &           'pressure projection vectors', tcormr2-tcormr1
+           endif
           endif
 
           if(ierrcalc.eq.1) then
