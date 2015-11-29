@@ -41,6 +41,7 @@ c      use readarrays !reads in uold and acold
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
+        include "svLS.h"
 c
 
         
@@ -76,7 +77,7 @@ c
 
         dimension wallubar(2),walltot(2)
 c     
-c.... For Farzin's Library
+c.... For linear solver Library
 c
         integer eqnType, prjFlag, presPrjFlag, verbose
 c
@@ -116,6 +117,16 @@ c
         integer :: iv_rankpernode, iv_totnodes, iv_totcores
         integer :: iv_node, iv_core, iv_thread
 !MR CHANGE 
+!--------------------------------------------------------------------
+!     Setting up svLS
+      INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
+      INTEGER, ALLOCATABLE :: ltg(:), gNodes(:)
+      REAL*8, ALLOCATABLE :: sV(:,:)
+
+      CHARACTER*128 fileName
+      TYPE(svLS_commuType) communicator
+      TYPE(svLS_lhsType) svLS_lhs
+      TYPE(svLS_lsType) svLS_ls
 
         impistat = 0
         impistat2 = 0
@@ -145,7 +156,39 @@ c  hack SA variable
 c
 cHack        BC(:,7)=BC(:,7)*0.001
 cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
+!--------------------------------------------------------------------
+!     Setting up svLS
+
+ 
+      IF (svLSFlag .EQ. 1) THEN
+         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
+     2      relTol=epstol(8), relTolIn=(/epstol(1),epstol(7)/), 
+     3      maxItr=maxNSIters, 
+     4      maxItrIn=(/maxMomentumIters,maxContinuityIters/))
+
+         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
+ 
+         IF (numpe .GT. 1) THEN
+            WRITE(fileName,*) myrank
+            fileName = "ltg.dat."//ADJUSTL(TRIM(fileName))
+            OPEN(1,FILE=fileName)
+            READ(1,*) gnNo
+            READ(1,*) nNo
+            ALLOCATE(ltg(nNo))
+            READ(1,*) ltg
+            CLOSE(1)
+         ELSE
+            gnNo = nshg
+            nNo = nshg
+            ALLOCATE(ltg(nNo))
+            DO i=1, nNo
+               ltg(i) = i
+            END DO
+         END IF
+      ELSE
+!--------------------------------------------------------------------
         call SolverLicenseServer(servername)
+      ENDIF
 c
 c only master should be verbose
 c
@@ -295,7 +338,7 @@ c
         endif
 
 c
-c.... ---------------> initialize Farzin's Library <---------------
+c.... ---------------> initialize LesLib Library <---------------
 c
 c.... assign parameter values
 c     
@@ -322,7 +365,7 @@ c
       nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
       
 c
-c.... Now, call Farzin's lesNew routine to initialize
+c.... Now, call lesNew routine to initialize
 c     memory space
 c
       call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
@@ -334,6 +377,90 @@ c
          lesId   = numeqns(1)
          eqnType = 1
          nDofs   = 4
+
+!--------------------------------------------------------------------
+!     Rest of configuration of svLS is added here, where we have LHS
+!     pointers
+
+         nPermDims = 1
+         nTmpDims = 1
+
+         allocate (lhsP(4,nnz_tot))
+         allocate (lhsK(9,nnz_tot))
+
+         IF (svLSFlag .EQ. 1) THEN
+            IF  (ipvsq .GE. 2) THEN
+
+#if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 0))
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 0)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs
+#else
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs
+#endif
+
+            ELSE
+               svLS_nFaces = 1
+            END IF
+
+            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            
+            faIn = 1
+            facenNo = 0
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0)  facenNo = facenNo + 1
+            END DO
+            ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
+            sV = 0D0
+            j = 0
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0) THEN
+                  j = j + 1
+                  gNodes(j) = i
+                  IF (.NOT.BTEST(iBC(i),3)) sV(1,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
+               END IF
+            END DO
+            CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
+     2         nsd, BC_TYPE_Dir, gNodes, sV)
+
+            IF  (ipvsq .GE. 2) THEN
+               DO k = 1, numResistSrfs
+                  faIn = faIn + 1
+                  CALL AddNeumannBCTosvLS(nsrflistResist(k), faIn)
+               END DO
+
+#if(VER_CLOSEDLOOP == 1)
+               DO k = numDirichletSrfs+1, numCoupledSrfs
+                  faIn = faIn + 1
+                  CALL AddNeumannBCTosvLS(nsrflistCoupled(k), faIn)
+               END DO
+#endif
+               DO k = 1, numImpSrfs
+                  faIn = faIn + 1
+                  CALL AddNeumannBCTosvLS(nsrflistImp(k), faIn)
+               END DO
+               DO k = 1, numRCRSrfs
+                  faIn = faIn + 1
+                  CALL AddNeumannBCTosvLS(nsrflistRCR(k), faIn)
+               END DO
+#if(VER_CORONARY == 1)
+               DO k = 1, numCORSrfs
+                  faIn = faIn + 1
+                  CALL AddNeumannBCTosvLS(nsrflistCOR(k), faIn)
+               END DO
+#endif
+            END IF
+         ELSE
+!--------------------------------------------------------------------
          call myfLesNew( lesId,   41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
@@ -342,13 +469,13 @@ c
      &                 prestol,        verbose,        statsflow,
      &                 nPermDims,      nTmpDims,      servername  )
          
+         END IF
          allocate (aperm(nshg,nPermDims))
          allocate (atemp(nshg,nTmpDims))
-         allocate (lhsP(4,nnz_tot))
-         allocate (lhsK(9,nnz_tot))
-
-         call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
+         IF (svLSFlag .NE. 1) THEN
+           call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
+         ENDIF
 
       else
          nPermDims = 0
@@ -606,7 +733,8 @@ c
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsK,      lhsP,
      &                         solinc,        rerr,      tcorecp,
-     &                         GradV)
+     &                         GradV,      sumtime,
+     &                         svLS_lhs,     svLS_ls,  svLS_nFaces)
                   
                   else          ! scalar type solve
                      if (icode.eq.5) then ! Solve for Temperature
@@ -1353,8 +1481,10 @@ c
       if(nsolflow.eq.1) then
          deallocate (lhsK)
          deallocate (lhsP)
+         IF (svLSFlag .NE. 1) THEN
          deallocate (aperm)
          deallocate (atemp)
+         ENDIF
       endif
       if(nsclrsol.gt.0) then
          deallocate (lhsS)

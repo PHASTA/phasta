@@ -57,6 +57,7 @@ c
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
+!              write (fname2,"('connectivity interior?')") 
             endif
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
@@ -82,6 +83,7 @@ c
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
+!              write (fname2,"('connectivity interior?')") 
             endif
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
