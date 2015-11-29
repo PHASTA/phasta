@@ -164,8 +164,7 @@ c####################################################################
 !     Here calling svLS
 
       ALLOCATE(faceRes(svLS_nFaces), incL(svLS_nFaces))
-      CALL AddElmpvsQForsvLS(faceRes, svLS_nFaces)
-
+      faceRes=zero  ! function to compute this left out at this time but would be needed to enable adnvanced p vs. Q BC's
       incL = 1
       dof = 4
       IF (.NOT.ALLOCATED(Res4)) THEN

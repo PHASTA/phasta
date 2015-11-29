@@ -159,7 +159,8 @@ cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
 !--------------------------------------------------------------------
 !     Setting up svLS
 
- 
+      svLSFlag=1  !hardcode for now while testing 
+      svLSFlag=3  !hardcode for now while testing 
       IF (svLSFlag .EQ. 1) THEN
          CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
      2      relTol=epstol(8), relTolIn=(/epstol(1),epstol(7)/), 
@@ -432,33 +433,6 @@ c
             CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
      2         nsd, BC_TYPE_Dir, gNodes, sV)
 
-            IF  (ipvsq .GE. 2) THEN
-               DO k = 1, numResistSrfs
-                  faIn = faIn + 1
-                  CALL AddNeumannBCTosvLS(nsrflistResist(k), faIn)
-               END DO
-
-#if(VER_CLOSEDLOOP == 1)
-               DO k = numDirichletSrfs+1, numCoupledSrfs
-                  faIn = faIn + 1
-                  CALL AddNeumannBCTosvLS(nsrflistCoupled(k), faIn)
-               END DO
-#endif
-               DO k = 1, numImpSrfs
-                  faIn = faIn + 1
-                  CALL AddNeumannBCTosvLS(nsrflistImp(k), faIn)
-               END DO
-               DO k = 1, numRCRSrfs
-                  faIn = faIn + 1
-                  CALL AddNeumannBCTosvLS(nsrflistRCR(k), faIn)
-               END DO
-#if(VER_CORONARY == 1)
-               DO k = 1, numCORSrfs
-                  faIn = faIn + 1
-                  CALL AddNeumannBCTosvLS(nsrflistCOR(k), faIn)
-               END DO
-#endif
-            END IF
          ELSE
 !--------------------------------------------------------------------
          call myfLesNew( lesId,   41994,

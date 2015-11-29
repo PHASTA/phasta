@@ -164,7 +164,8 @@ c
         common /inpdat/ epstol(6),  Delt(MAXTS),    CFLfl(MAXTS),
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),
      &                  impl(MAXTS),    rhoinf(MAXTS),
-     &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2)
+     &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2), 
+     &                  svLSFlag,   svLSType
 c
         common /intdat/ intg(2,MAXTS),  intpt(3),       intptb(3)
 c
