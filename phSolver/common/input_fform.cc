@@ -444,6 +444,9 @@ int input_fform(phSolver::Input& inp)
 
 
     //Linear Solver parameters
+      incomp.iprjFlag = 0; incomp.ipresPrjFlag=0; inpdat.svLSFlag=0;
+    if( (string)inp.GetValue("Solver Type") =="svLS" ){
+      inpdat.svLSFlag = 1; }
     if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
     else if ( (string)inp.GetValue("Solver Type") =="ACUSIM" ){

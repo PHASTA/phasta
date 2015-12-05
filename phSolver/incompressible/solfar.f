@@ -79,8 +79,8 @@ C
 C
       REAL*8                rdtmp
 C    
-      TYPE(svLS_lhsType) svLS_lhs
-      TYPE(svLS_lsType) svLS_ls
+      TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
+      TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
        
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -198,6 +198,9 @@ c####################################################################
       CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res4, Val4, incL, 
      2   faceRes)
       
+      write(*,*) 'svLS outer iterations', svLS_ls%RI%itr
+      statsflow(1)=1.0*svLS_ls%GM%itr
+      statsflow(4)=1.0*svLS_ls%CG%itr
       DO i=1, nshg
          solinc(i,1:dof) = Res4(1:dof,i)
       END DO

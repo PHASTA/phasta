@@ -159,13 +159,28 @@ cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
 !--------------------------------------------------------------------
 !     Setting up svLS
 
-      svLSFlag=1  !hardcode for now while testing 
-      svLSFlag=3  !hardcode for now while testing 
+!      if(ipresPrjFlag.eq.1) then
+!        svLSFlag=0
+!      else
+!        svLSFlag=1  !hardcode for now while testing 
+!        svLSType=3  !hardcode for now while testing 
+!      endif
       IF (svLSFlag .EQ. 1) THEN
+         svLSType=3 !NS solver
+!         svLSType=2 !GMRES
+! need to get a switch to handle the above two lines soon
+!  reltol for the NSSOLVE is the stop criterion on the outer loop
+!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
+!  for now we are using 
+!  Tolerance on ACUSIM Pressure Projection for CG and
+!  Tolerance on Momentum Equations for GMRES
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         eps_outer=40.0*epstol(1)  !following papers soggestion for now
          CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
-     2      relTol=epstol(8), relTolIn=(/epstol(1),epstol(7)/), 
-     3      maxItr=maxNSIters, 
-     4      maxItrIn=(/maxMomentumIters,maxContinuityIters/))
+     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
+     3      maxItr=maxIters, 
+     4      maxItrIn=(/maxIters,maxIters/))
 
          CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
  
@@ -1241,7 +1256,7 @@ c
           if(myrank.eq.0)  then
             tcormr1 = TMRC()
           endif
-          if(nsolflow.eq.1) then
+          if((nsolflow.eq.1).and.(ipresPrjFlag.eq.1)) then
            call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
      &                    nPermDims )
            if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)

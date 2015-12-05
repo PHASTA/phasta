@@ -161,6 +161,7 @@ c
      &                  istretchOutlet, iremoveStabTimeTerm
 
 c
+        integer :: svLSType, svLSFlag
         common /inpdat/ epstol(6),  Delt(MAXTS),    CFLfl(MAXTS),
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),
      &                  impl(MAXTS),    rhoinf(MAXTS),
