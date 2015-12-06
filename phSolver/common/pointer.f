@@ -28,6 +28,10 @@ c
            integer, pointer :: p(:,:)
          end type
 c
+         type i2d64
+           integer*8, pointer :: p(:,:)
+         end type
+c
          type i3d
            integer, pointer :: p(:,:,:)
          end type
@@ -36,6 +40,7 @@ c.... pointer declarations
 c
          type (i1d), dimension(MAXBLK2) ::  mmat,  mmatb
          type (i2d), dimension(MAXBLK2) ::  mien
+         type (i2d64), dimension(MAXBLK2) ::  mienG
          type (i2d), dimension(MAXBLK2) ::  mienb,  miBCB
          type (r2d), dimension(MAXBLK2) ::  mxmudmi
          type (r3d), dimension(MAXBLK2) ::  mBCB

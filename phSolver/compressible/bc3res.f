@@ -170,6 +170,7 @@ c              res(i,:) = res(iper(i),:)
 c           endif
 c        enddo       
        if(numpe.gt.1) then
+       if(usingPETSc.eq.0) then !kill this code for petsc
 c
 c.... nodes treated on another processor are eliminated
 c
@@ -193,6 +194,7 @@ c
           itkbeg = itkbeg + 4 + 2*numseg
 
         enddo
+        endif
         endif
 c
 c.... return

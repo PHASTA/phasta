@@ -26,9 +26,9 @@ c
      &            qres(nshg,idflx)
 
 c
-        dimension ycl(npro,nshl,ndofl),       acl(npro,nshl,ndof),
-     &            xl(npro,nenl,nsd),          ytargetl(npro,nshl,nflow),
-     &            rl(npro,nshl,nflow),       rml(npro,nshl,nflow),
+        dimension ycl(npro,nshl,ndofl),     acl(npro,nshl,ndof),
+     &            xl(npro,nenl,nsd),        ytargetl(npro,nshl,nflow),
+     &            rl(npro,nshl,nflow),      rml(npro,nshl,nflow),
      &            BDiagl(npro,nshl,nflow,nflow),
      &            ql(npro,nshl,idflx)
 c        

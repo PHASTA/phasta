@@ -5,7 +5,7 @@ c This routine computes and assembles the Au product for the
 c GMRES solver.
 c
 c input:
-c     ien    (npro,nshape)       : nodal connectivity
+c     ien    (npro,nshl)       : nodal connectivity
 c     EGmass (npro,nedof,nedof)  : element mass matrix
 c     uBrg   (nshg,nflow)         : u_i before product
 c
@@ -103,7 +103,7 @@ c
        dimension ien(npro,nshl),   EGmass(npro,nshape,nshape),
      &           uBrg(nshg),       uBtmp(nshg)
 c     
-       dimension uBrgl(npro,nshape), ubBgl(npro,nshape)
+       dimension uBrgl(npro,nshl), ubBgl(npro,nshl)
 c
 c.... localize this K-vector for the EBE product
 c

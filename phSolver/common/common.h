@@ -22,15 +22,16 @@ c                                         4= Wedge (quad-first) 5=pyramid
 c
 c  The two types of face topology are  1= tri, 2=quad
 c
-        parameter     ( MAXTOP = 6, MAXSURF=30 )
+        parameter     ( MAXTOP = 6, MAXSURF=1000 )
  
 c the common block nomodule holds all the things which have been removed
 c from different modules
      
-        integer seqsize, stepseq
+        integer seqsize, stepseq, usingpetsc
         integer consrv_sclr_conv_vel
         integer spongecontinuity, spongemomentum1, spongemomentum2
         integer spongeenergy, spongemomentum3
+        integer*8 nshgt,minowned, maxowned
 	common /amgvarr/strong_eps,ramg_eps,ramg_relax,ramg_trunc,
      &              ramg_chebyratio
 	common /amgvari/irun_amg,irun_amg_prec,
@@ -51,7 +52,7 @@ c from different modules
         common /sequence/ seqsize, stepseq(100)
 	common /workfc/ master, numpe, myrank
 	common /fronts/ maxfront, nlwork
-	common /newdim/ numper, nshgt, nshg0
+	common /newdim/ nshgt, minowned,maxowned, numper, nshg0
 	common /timer4/ birth, death, comtim
         common /extrat/ ttim(100)
         common /spongevar/ zoutSponge, radSponge, zinSponge,
@@ -117,20 +118,49 @@ c
      &                  numflx, ndof,   nelblk, nelblb,ntopsh, nlwork,
      &                  nedof,
      &                  nshg,   nnz,    nflow,
-     &                  nfath
+     &                  nfath, ncorpsize, iownnodes, usingpetsc
 
         common /conpar/ numnp,  numel,  numelb, numpbc, nen,    nfaces,
      &                  numflx, ndof,   iALE,   icoord, navier,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
-     &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn
+     &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
+     &                  ncorpsize, iownnodes, usingpetsc
 
 c...........................................................................
         common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial
-
+        
+        common /Ductvari/  BlowingVelDuct,
+     &                    BlowingIniMdotDuct,
+     &                    BlowingFnlMdotDuct,
+     &                    suctionVbottom, 
+     &                    suctionVside_lower,
+     &                    suctionVside_upper, 
+     &                    suctionVtop, 
+     &                    blowerVelocity, 
+     &                    blowerTemperature, 
+     &                    blowerEV,
+     &                    isetOutletID, 
+     &                    isetInitial_Duct,
+     &                    isetInlet_Duct, 
+     &                    isetSuctionID_Duct,
+     &                    isetBlowerID_Duct,  
+     &                    iDuctgeometryType, 
+     &                    iStraightPrint,
+     &                    isetEV_IC_BC,
+     &                    isetEVramp,
+     &                    isetBlowing_Duct,
+     &                    ifixBlowingVel_Duct, 
+     &                    nBlowingStepsDuct
         real*8 inletVelX
         common /ctrlvar/  inletVelX,   outPres1, 
      &                    xvel_ini,    yvel_ini,    zvel_ini,
      &                    temp_ini,    pres_ini,    evis_ini
+
+        common /Ductvar/   evis_IC_BC,
+     &                    EVrampXmin, 
+     &                    EVrampXmax,
+     &                    EVrampMin,
+     &                    EVrampMax
 c...........................................................................
 
 c
@@ -158,7 +188,7 @@ c
      &                  idiff,  lhs,    itau,   ipord,  ipred,  lstres,
      &                  iepstm, dtsfct, taucfct, ibksiz, iabc, isurf,
      &                  idflx,  Bo,     EntropyPressure, irampViscOutlet,
-     &                  istretchOutlet, iremoveStabTimeTerm
+     &                  istretchOutlet, iremoveStabTimeTerm, iLHScond
 
 c
         integer :: svLSType, svLSFlag
@@ -186,7 +216,7 @@ c /*         common /andres/ fwr1,ngaussf,idim,nlist */
      &                  frstin, frstou, fhist,  ferror, ftable, fforce,
      &                  fgraph, ftime
 c
-        common /itrpar/ eGMRES, lGMRES, iKs,    ntotGM
+        common /itrpar/ eGMRES, lGMRES, lGMRESs, iKs, iKss,    ntotGM, ntotGMs
 c
         common /itrpnt/ mHBrg,  meBrg,  myBrg,  mRcos,  mRsin
 c
@@ -216,7 +246,7 @@ c
 c
         common /propar/ npro
 c
-        common /resdat/ resfrt
+        common /resdat/ resfrt, resfrts
 c
         common /solpar/ imap,   ivart,  iDC,    iPcond, Kspace, nGMRES,
      &                  iconvflow, iconvsclr, idcsclr(2)
@@ -401,6 +431,8 @@ c ibound        : boundary element flag
 c idiff         : diffusive flux vector flag
 c                 ( = 0 not used; = 1 global reconstruction )
 c itau          : type of tau to be used
+c iLHScond      : add contributiosn from the heat flux BC to the LHS 
+c                 tangency matrix. 
 c
 c----------------------------------------------------------------------
 c

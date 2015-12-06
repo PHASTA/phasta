@@ -15,6 +15,7 @@ c
         use readarrays          ! used to acess nBC
         use dtnmod
         use pointer_data
+        use wallData            ! give access to wnorm, findWallNOrm
         include "common.h"
         include "mpif.h"
 
@@ -38,7 +39,17 @@ c
 c  stuff for dynamic model s.w.avg and wall model
 c
         dimension ifath(numnp),    velbar(nfath,nflow), nsons(nfath) 
-c
+
+! Hack to get suction right on part boundaries
+!       dimension BC3(numnp,5)
+
+c... Duct
+        integer iTurbWall(nshg)
+        integer nTopNodes
+        integer TopSurface(nshg)
+
+c...
+
 c.... start the timer
 c
         
@@ -49,6 +60,11 @@ c  put a barrier here so that all of the files are done reading
 c  This SHOULD shield any mpi_profile information from io bottlenecks
 c
         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
+
+c... updated, truly useful things for Duct.........
+         if(isetInitial_Duct.gt.0)then
+            call setInitial_Duct(x)    ! in INIprofile.f
+         endif
 
 c
 c.... ---------------------------->  Nodes  <--------------------------
@@ -95,6 +111,46 @@ c
         call genBC  (iBC,   BC,   point2x,
      &               point2ilwork, point2iper)
         deallocate(nBC)
+
+c=========================================================================================
+c Yi Chen 
+c Duct geometry8
+c... updated, truly useful things.........
+
+
+c===== specify outlet pressure
+         if(isetOutletID .gt. 0)then
+           call SetUniOutPres(BC)     ! in BCprofile2.f
+         endif
+
+c==== specify inlet boundary conditions
+c         if(isetInlet_Duct.gt.0)then
+c           call setInlet_Duct(x,BC,iTurbWall) ! in BCprofile2.f
+c         endif
+
+c==== specify blowing conditions 
+         if(isetBlowing_Duct.gt.0)then
+            if (ifixBlowingVel_Duct.eq.0)then
+              call setBlowing_Duct(BC,iTurbWall)
+            else
+              call setBlowing_Duct3(x,BC,iTurbWall) ! in setBlowing_Duct3.f, fixed jet inlet velocity
+            endif
+         endif
+
+c====== specify wall conditions 
+         call findTurbWall(iTurbWall)
+
+c==== apply suction patch on sides
+c suction is applied at the end so it will overwrite the velocity at any nodes shared by the no-slip walls
+         call findWallNorm(x,iBC,ilwork,iper)
+         if(isetSuctionID_Duct.gt.0)then
+            call setSuction_Duct3(x, BC, y, ilwork)
+         endif
+
+c==== 
+         call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+c.... Yi Chen
+c==========================================================================================
 c
 c.... ---------------------->  Boundary Elements  <--------------------
 c
@@ -159,8 +215,8 @@ c
 c        call genpzero(iBC,iper)
 c
       if((myrank.eq.master).and.(irscale.ge.0)) then
-         call setSPEBC(numnp,nsd) 	 
-	 call eqn_plane(point2x, iBC)
+         call setSPEBC(numnp,nsd) 
+         call eqn_plane(point2x, iBC)
       endif
 c
 c.... --------------------->  Initial Conditions  <--------------------

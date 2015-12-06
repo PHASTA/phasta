@@ -45,18 +45,18 @@ c-----------------------------------------------------------------------
       include "common.h"
       include "mpif.h"
       
-      character*20 fname1,  fmt1
+      character(len=20) fname1,  fmt1
       real*8   x(numnp,nsd)
       integer  nwall(numpe),      idisp(numpe)
-      character*5  cname      
+      character(len=5)  cname      
       real*8, allocatable :: xwi(:,:,:), xw(:,:,:)
 
 !MR CHANGE
       integer :: ierr
       integer :: numparts, nfile, itmp2, id2wall, itwo, ifoundd2wall
       integer iarray(10)
-      character*255 :: fnamer, fname2, temp2
-      character*64 :: temp1
+      character(len=255) :: fnamer, fname2, temp2
+      character(len=64) :: temp1
 !MR CHANGE END
 
       allocate ( d2wall(numnp) )

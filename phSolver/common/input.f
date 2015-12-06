@@ -188,6 +188,7 @@ c
         enddo
 c
         Rgas  = one / ( xN2 / Rs(1) + xO2 / Rs(2) ) 
+        if(myrank.eq.0) write(*,*) 'input.f computes Rgas to be', Rgas
 c        Rgas  = 0.4*716.5
 c        Rgas = 8314/28.95
         yN2   = xN2 * Rgas / Rs(1)
@@ -203,7 +204,7 @@ cc
 c..dumping common (useful for checking differences with
 c        old format input
 c
-        if(myrank.eq.master) then
+        if(myrank.eq.-1) then
         mxats=1
         open (unit=23,   file="dumpnew.dat",   status='unknown')
         write (23,*)" master, numpe, myrank"

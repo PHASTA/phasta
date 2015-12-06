@@ -349,7 +349,7 @@ c
      &            rmtl(npro,nshl),          Diagl(npro,nshl),
      &            EGmasst(npro,nshape,nshape),
      &            dist2w(npro),             sgn(npro,nshl),   
-     &            vort(npro),               
+     &            vort(npro),               gVnrm(npro),               
      &            rmu(npro),                con(npro),
      &            T(npro),                  cp(npro),
      &            g1yti(npro),              acti(npro),
@@ -414,7 +414,7 @@ c
      &                  shape,           shdrv,      xl,
      &                  T,               cp,
      &                  dxidx,           Sclr,        
-     &                  Wdetj,           vort,
+     &                  Wdetj,           vort,       gVnrm,
      &                  g1yti,           g2yti,      g3yti,
      &                  rho,             rmu,        con,
      &                  rk,              u1,         u2,
@@ -427,7 +427,7 @@ c.... calculate the source term contribution
 c
         if(nosource.ne.1) 
      &  call e3sourceSclr (Sclr,    rho,    rmu,
-     &                     dist2w,  vort,   con,
+     &                     dist2w,  vort,   gVnrm,   con,
      &                     g1yti,  g2yti,   g3yti,
      &                     rti,    rLyti,   srcp,
      &                     ycl,     shape,   u1,
