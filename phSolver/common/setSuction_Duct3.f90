@@ -5,7 +5,6 @@ c========================================================================
         subroutine setSuction_Duct3(x,BC,y, ilwork)
 
         use wallData ! wnorm
-        use timedata
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"

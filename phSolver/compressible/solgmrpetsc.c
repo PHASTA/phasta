@@ -1,3 +1,4 @@
+#ifdef HAVE_PETSC
 #include <stdio.h>
 
 #include "petscsys.h"
@@ -718,4 +719,4 @@ void     SolGMRpSclr(double* y,         double* ac,
 // .... end
 //     
 }
-
+#endif

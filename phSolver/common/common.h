@@ -27,7 +27,7 @@ c
 c the common block nomodule holds all the things which have been removed
 c from different modules
      
-        integer seqsize, stepseq, usingpetsc
+        integer seqsize, stepseq
         integer consrv_sclr_conv_vel
         integer spongecontinuity, spongemomentum1, spongemomentum2
         integer spongeenergy, spongemomentum3

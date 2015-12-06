@@ -1,3 +1,4 @@
+#ifdef HAVE_PETSC
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -67,3 +68,5 @@ void fillsparsecpetscc(gcorp_t* ieng, double* EGmass, Mat* lhsP)
         free(mb);
 	free(locat);
 }
+#endif
+

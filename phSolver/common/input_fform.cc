@@ -29,7 +29,7 @@ int input_fform(phSolver::Input& inp)
 {
 
   int ierr = 0 ;
-  int i,j;
+  int i,j, n_tmp;
 
   try {
     if(workfc.myrank==workfc.master) {

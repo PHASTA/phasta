@@ -96,7 +96,7 @@
         !subroutine. 
         
         use MachControl
-        use TimeData
+        use timedata
         include "common.h"
         include "mpif.h"
         

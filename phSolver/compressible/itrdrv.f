@@ -422,6 +422,7 @@ c
                         nedof = nflow*nshape
 c                        write(*,*) 'lhs=',lhs
                     if(usingpetsc.eq.1) then
+#if (HAVE_PETSC)
                call SolGMRp (y,             ac,            yold,
      &                       x,
      &                       iBC,           BC,
@@ -432,6 +433,10 @@ c                        write(*,*) 'lhs=',lhs
      &                       shp,           shgl,
      &                       shpb,          shglb,         solinc,
      &                       rerr,          fncorp )
+#else
+                     write(*,*) 'exiting because run time input asked for PETSc, not linked in exec'
+                     call error('itrdrv  ','noPETSc',usingpetsc)
+#endif
                      else
                       call SolGMRs (y,             ac,            yold,
      &                       acold,         x,
@@ -517,6 +522,7 @@ c
                      iprec = lhs
                      istop=0
                  if(usingPETSc.eq.1) then
+#if (HAVE_PETSC)
                      call SolGMRpSclr(y,             ac,  
      &                    x,             elDw,
      &                    iBC,           BC,          
@@ -525,7 +531,10 @@ c
      &                    shp,           shgl,
      &                    shpb,          shglb,     rest,
      &                    solinc(1,isclr+5),fncorp)
-
+#else
+                     write(*,*) 'exiting because run time input asked for PETSc, not linked in exec'
+                     call error('itrdrv  ','noPETSc',usingpetsc)
+#endif
                  else
                      call SolGMRSclr(y,             ac,         yold,
      &                    acold,         EGmasst(1,isclr),

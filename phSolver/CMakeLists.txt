@@ -7,6 +7,16 @@ set(CASES "/path/to/test/cases/"
   "path to the test cases")
 option(PHASTA_TESTING "enable tests" OFF)
 
+option(PHASTA_USE_PETSC "Use PETSc GMRES Solver" OFF)
+if(PHASTA_USE_PETSC)
+find_package(PETSc REQUIRED)
+find_path(PETSC_INC petscsys.h HINTS /usr/include ${PETSC_PACKAGE_INCLUDES})
+find_path(PETSC_LIB libpetsc.a HINTS /usr/lib ${PETSC_PACKAGE_INCLUDES}../lib)
+include_directories(${PETSC_PACKAGE_INCLUDES} ${PETSC_INC})
+link_directories(${PETSC_LIB})
+add_definitions(-DHAVE_PETSC)
+endif(PHASTA_USE_PETSC)
+
 add_subdirectory(common)
 option(PHASTA_INCOMPRESSIBLE "Build the incompressible solver" OFF)
 option(PHASTA_COMPRESSIBLE "Build the compressible solver" ON)

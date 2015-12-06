@@ -18,6 +18,8 @@ c
       real*8, allocatable :: BCinp(:,:)
 
       integer, allocatable :: point2ilwork(:)
+!      integer, allocatable :: fncorp(:)
+      integer, allocatable :: twodncorp(:,:)
       integer, allocatable :: nBC(:)
       integer, allocatable :: point2iper(:)
       integer, target, allocatable :: point2ifath(:)
@@ -28,6 +30,7 @@ c
       subroutine readnblk
       use iso_c_binding 
       use readarrays
+      use fncorpmod
       use phio
       use phstr
       use syncio
