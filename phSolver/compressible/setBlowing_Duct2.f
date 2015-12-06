@@ -6,7 +6,7 @@ c ===============================================================
         subroutine setBlowing_Duct2(x,BC,y,iTurbWall,istp)
 
         use blowingDuct ! njetinlet, jetinletf 
-        use timedata ! varts data
+        use timedataC ! varts data
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"

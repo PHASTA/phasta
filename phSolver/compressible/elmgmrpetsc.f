@@ -21,7 +21,7 @@ c Chris Whiting, Winter 1998.     (Matrix EBE-GMRES)
 c----------------------------------------------------------------------
 c
         use pointer_data
-        use timedata
+        use timedataC
 c
         include "common.h"
         include "mpif.h"

@@ -69,7 +69,6 @@ mods  := spebc.f pointer.f \
         perprep.f local_mass.f \
         filtprep.f  pvsqbi.f \
         dtn.f bardmc.f \
-        timedata.f \
         turbke.f\
         bctint.f readnblk.f\
         mod_slpw.f

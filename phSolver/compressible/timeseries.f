@@ -1,7 +1,7 @@
 
       subroutine timeseries(ycl, xl, ien, sgn)
 
-      use timedata
+      use timedataC
       include "common.h"
 
       dimension shape(nshl), ycl(npro,nshl,ndofl),

@@ -110,7 +110,7 @@ endif
 
 
 dirs := .
-mods  := stats.f
+mods  := timedata.f stats.f
 DEPS := $(DEPS) phasta/phSolver/$(VERSION)/phSolver phasta/phastaIO phasta/phMetis\
         phasta/shapeFunction LIBLES/1.5 
 LIBS := $(LIBS) common phastaIO metis shapeFunction les

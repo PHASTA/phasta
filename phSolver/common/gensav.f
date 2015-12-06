@@ -1,4 +1,4 @@
-        subroutine gensav (ientmp, mattmp, ien,    mater)
+        subroutine gensav (ientmp, mattmp, ien,    ienG, mater)
 c
 c----------------------------------------------------------------------
 c

@@ -48,7 +48,10 @@ if(PHASTA_BUILD_PHSHAPE)
   set(PHASTAIC_LIBS ${PHASTAIC_LIBS} phshape)
 endif(PHASTA_BUILD_PHSHAPE)
 target_link_libraries(phastaIC.exe ${PHASTAIC_LIBS})
-
+if(PHASTA_USE_PETSC)
+	#target_link_libraries(phastaC.exe ${PETSC_LIB}/libpetsc.a ${PETSC_PACKAGE_LIBS})
+	target_link_libraries(phastaIC.exe petsc ${PETSC_PACKAGE_LIBS} ${PHASTAIC_LIBS})
+endif()
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/phastaICConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/phastaICConfig.cmake"

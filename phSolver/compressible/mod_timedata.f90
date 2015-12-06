@@ -1,4 +1,4 @@
-      module timedata
+      module timedataC
             
         integer ntspts, freq, iterat, varcod, nbuff
         integer iblkts

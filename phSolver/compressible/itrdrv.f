@@ -30,7 +30,7 @@ c----------------------------------------------------------------------
 c
       use pvsQbi        !gives us splag (the spmass at the end of this run 
       use specialBC     !gives us itvn
-      use timedata      !allows collection of time series
+      use timedataC      !allows collection of time series
       use MachControl   !PID to control the inlet velocity. 
       use blowerControl !gives us BC_enable 
       use turbSA

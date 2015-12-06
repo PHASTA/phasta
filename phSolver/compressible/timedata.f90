@@ -4,13 +4,13 @@
       subroutine initProbePoints()
         !Tests if the probe point file xyzts.dat exists, loads probe
         !point locations, initializes a number of arrays used by
-        !timedata, and writes the initial header for the output file. 
+        !timedataC, and writes the initial header for the output file. 
         !
         ! Rewritten by:             Nicholas Mati  2014-04-18
         ! Revision history:
         !  2014-04-18   Code moved from itrdrv to here
 
-        use timedata
+        use timedataC
         include "common.h"
         include "mpif.h"
 
@@ -81,7 +81,7 @@
         ! zero, the number of time steps between restarts, ntout, is
         ! used. 
 
-        use timedata
+        use timedataC
         include "common.h"
         include "mpif.h"
       
@@ -135,7 +135,7 @@
         !Creates the file fvarts and writes the data header.  
         !fvarts:    Name The file to create
         
-        use timedata
+        use timedataC
         include "common.h"
 
         character(len=*) fvarts
@@ -180,7 +180,7 @@
       !------------------------
       subroutine TD_bufferData()
 
-        use timedata
+        use timedataC
         include "common.h"
         include "mpif.h"
 
@@ -259,7 +259,7 @@
         !buffer is full or when DT_writeData is called with forceFlush
         !set to true. Also note that TD_writeHeader must be called prior
         !to calling DT_writeData. 
-        use timedata
+        use timedataC
         include "common.h"
 
         character(len=*) :: fvarts
@@ -327,7 +327,7 @@
 
 
       subroutine TD_finalize()
-       use timedata
+       use timedataC
          
         deallocate(ivarts)
         deallocate(ivartsg)
@@ -349,7 +349,7 @@
         !in itrdrv and ??
         !Subroutine is Depricated. 
        
-       use timedata
+       use timedataC
         include "common.h"
   
         allocate (statptts(ntspts,2))
@@ -365,7 +365,7 @@
       !-------------------
       subroutine dTD 
         !Deallocates ptts and varts
-       use timedata
+       use timedataC
   
         deallocate (ptts)
         deallocate (varts)

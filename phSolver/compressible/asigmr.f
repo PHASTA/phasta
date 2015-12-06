@@ -12,7 +12,7 @@ c Zdenek Johan, Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
 c
         use rlssave     ! Use the resolved Leonard stresses at the nodes.
-        use timedata    ! time series
+        use timedataC    ! time series
         use specialBC    ! get ytarget to localize and send down
         include "common.h"
 c

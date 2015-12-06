@@ -91,7 +91,7 @@ c
 
         subroutine BCprofileScale(vbc_prof,BC,yold)
         use rampBC
-        use timedata
+        use timedataC
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
