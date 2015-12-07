@@ -198,7 +198,7 @@ c####################################################################
       CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res4, Val4, incL, 
      2   faceRes)
       
-      write(*,*) 'svLS outer iterations', svLS_ls%RI%itr
+      if(myrank.eq.master) write(*,*) 'svLS outer iterations', svLS_ls%RI%itr
       statsflow(1)=1.0*svLS_ls%GM%itr
       statsflow(4)=1.0*svLS_ls%CG%itr
       DO i=1, nshg
@@ -441,7 +441,7 @@ c####################################################################
 !     Here calling svLS
 
       ALLOCATE(faceRes(svLS_nFaces), incL(svLS_nFaces))
-      faceRes=zero  ! function to compute this left out at this time but would be needed to enable adnvanced p vs. Q BC's
+      faceRes=zero  
       incL = 1
       dof = 1
       IF (.NOT.ALLOCATED(Res1)) THEN

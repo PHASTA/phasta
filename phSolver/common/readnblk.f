@@ -184,7 +184,7 @@ c
          point2ilwork = ilworkread
          call ctypes (point2ilwork)
 
-       if(usingPETSc.eq.1) then
+       if((usingPETSc.eq.1).or.(svLSFlag.eq.1)) then
          fncorpsize = nshg
          allocate(fncorp(fncorpsize))
          call gen_ncorp(fncorp, ilworkread, nlwork, fncorpsize)
@@ -205,11 +205,20 @@ c
          call commuInt(fncorp, point2ilwork, 1, 'out')
          ncorpsize = fncorpsize 
        endif
+       if(svLSFlag.eq.1) then
+         allocate(ltg(ncorpsize))
+         ltg(:)=fncorp(:)
+       endif
       else
+           allocate(ltg(nshg))
+           do i =1,nshg
+             ltg(i)=i
+           enddo
            nlwork=1
            allocate( point2ilwork(1))
            nshg0 = nshg
       endif
+
 
       itwo=2
 

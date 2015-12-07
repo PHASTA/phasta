@@ -34,6 +34,7 @@ c
 !MR CHANGE
       use turbsa          ! used to access d2wall
 !MR CHANGE END
+      use fncorpmod
       use iso_c_binding
 
 c      use readarrays !reads in uold and acold
@@ -120,15 +121,13 @@ c
 !--------------------------------------------------------------------
 !     Setting up svLS
       INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
-      INTEGER, ALLOCATABLE :: ltg(:), gNodes(:)
+      INTEGER, ALLOCATABLE :: gNodes(:)
       REAL*8, ALLOCATABLE :: sV(:,:)
 
-      CHARACTER*128 fileName
       TYPE(svLS_commuType) communicator
       TYPE(svLS_lhsType) svLS_lhs
       TYPE(svLS_lsType) svLS_ls
-! repeat for scalar solve would like to make this an array if possible to handle multiphase better
-! but lets get one working first
+! repeat for scalar solves (up to 4 at this time which is consistent with rest of PHASTA)
       TYPE(svLS_commuType) communicator_S(4)
       TYPE(svLS_lhsType) svLS_lhs_S(4)
       TYPE(svLS_lsType) svLS_ls_S(4)
@@ -388,29 +387,8 @@ c
      4      maxItrIn=(/maxIters,maxIters/))
 
          CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
- 
-!  next stuff should is computed for PETSc in this version of code but for 64 bit integers
-!  so have to decide to either change their code to use that (as will be necessary for large 
-!  problems) or create it for 32 bit.  Leaving old code until then.
-!
-         IF (numpe .GT. 1) THEN
-            WRITE(fileName,*) myrank
-            fileName = "ltg.dat."//ADJUSTL(TRIM(fileName))
-            OPEN(1,FILE=fileName)
-            READ(1,*) gnNo
-            READ(1,*) nNo
-            ALLOCATE(ltg(nNo))
-            READ(1,*) ltg
-            CLOSE(1)
-         ELSE
-            gnNo = nshg
-            nNo = nshg
-            ALLOCATE(ltg(nNo))
-            DO i=1, nNo
-               ltg(i) = i
-            END DO
-         END IF
-c
+            nNo=nshg
+            gnNo=nshgt
             IF  (ipvsq .GE. 2) THEN
 
 #if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
