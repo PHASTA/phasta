@@ -129,9 +129,9 @@ c
       TYPE(svLS_lsType) svLS_ls
 ! repeat for scalar solve would like to make this an array if possible to handle multiphase better
 ! but lets get one working first
-      TYPE(svLS_commuType) communicator_S1
-      TYPE(svLS_lhsType) svLS_lhs_S1
-      TYPE(svLS_lsType) svLS_ls_S1
+      TYPE(svLS_commuType) communicator_S(4)
+      TYPE(svLS_lhsType) svLS_lhs_S(4)
+      TYPE(svLS_lsType) svLS_ls_S(4)
 
         impistat = 0
         impistat2 = 0
@@ -495,16 +495,16 @@ c
 !  reltol for the GMRES is the stop criterion 
 ! also using Kspaceand maxIters from setup for ACUSIM
 !
-         CALL svLS_LS_CREATE(svLS_ls_S1, svLSType, dimKry=Kspace,
+         CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, dimKry=Kspace,
      2      relTol=epstol(indx), 
      3      maxItr=maxIters 
      4      )
 
-         CALL svLS_COMMU_CREATE(communicator_S1, MPI_COMM_WORLD)
+         CALL svLS_COMMU_CREATE(communicator_S(isolsc), MPI_COMM_WORLD)
  
                svLS_nFaces = 1   !not sure about this...should try it with zero
 
-            CALL svLS_LHS_CREATE(svLS_lhs_S1, communicator_S1, gnNo, nNo, 
+            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo, 
      2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
             
               faIn = 1
@@ -523,7 +523,7 @@ c
                END IF
               END DO
            
-            CALL svLS_BC_CREATE(svLS_lhs_S1, faIn, facenNo, 
+            CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
      2         1, BC_TYPE_Dir, gNodes, sV(1,:))
             DEALLOCATE(gNodes)
             DEALLOCATE(sV)
@@ -827,7 +827,7 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsS(1,j), 
      &                         solinc(1,isclr+5), tcorecpscal,
-     &                         svLS_lhs_S1,   svLS_ls_S1, svls_nfaces)
+     &                         svLS_lhs_S(isclr),   svLS_ls_S(isclr), svls_nfaces)
                         
                         
                   endif         ! end of scalar type solve
