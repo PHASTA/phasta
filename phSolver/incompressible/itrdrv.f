@@ -127,6 +127,11 @@ c
       TYPE(svLS_commuType) communicator
       TYPE(svLS_lhsType) svLS_lhs
       TYPE(svLS_lsType) svLS_ls
+! repeat for scalar solve would like to make this an array if possible to handle multiphase better
+! but lets get one working first
+      TYPE(svLS_commuType) communicator_S1
+      TYPE(svLS_lhsType) svLS_lhs_S1
+      TYPE(svLS_lsType) svLS_ls_S1
 
         impistat = 0
         impistat2 = 0
@@ -157,52 +162,9 @@ c
 cHack        BC(:,7)=BC(:,7)*0.001
 cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
 !--------------------------------------------------------------------
-!     Setting up svLS
+!     Setting up svLS Moved down for better org
 
-!      if(ipresPrjFlag.eq.1) then
-!        svLSFlag=0
-!      else
-!        svLSFlag=1  !hardcode for now while testing 
-!        svLSType=3  !hardcode for now while testing 
-!      endif
-      IF (svLSFlag .EQ. 1) THEN
-         svLSType=3 !NS solver
-!         svLSType=2 !GMRES
-! need to get a switch to handle the above two lines soon
-!  reltol for the NSSOLVE is the stop criterion on the outer loop
-!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
-!  for now we are using 
-!  Tolerance on ACUSIM Pressure Projection for CG and
-!  Tolerance on Momentum Equations for GMRES
-! also using Kspaceand maxIters from setup for ACUSIM
-!
-         eps_outer=40.0*epstol(1)  !following papers soggestion for now
-         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
-     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
-     3      maxItr=maxIters, 
-     4      maxItrIn=(/maxIters,maxIters/))
-
-         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
- 
-         IF (numpe .GT. 1) THEN
-            WRITE(fileName,*) myrank
-            fileName = "ltg.dat."//ADJUSTL(TRIM(fileName))
-            OPEN(1,FILE=fileName)
-            READ(1,*) gnNo
-            READ(1,*) nNo
-            ALLOCATE(ltg(nNo))
-            READ(1,*) ltg
-            CLOSE(1)
-         ELSE
-            gnNo = nshg
-            nNo = nshg
-            ALLOCATE(ltg(nNo))
-            DO i=1, nNo
-               ltg(i) = i
-            END DO
-         END IF
-      ELSE
-!--------------------------------------------------------------------
+      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
         call SolverLicenseServer(servername)
       ENDIF
 c
@@ -404,7 +366,51 @@ c
          allocate (lhsP(4,nnz_tot))
          allocate (lhsK(9,nnz_tot))
 
-         IF (svLSFlag .EQ. 1) THEN
+!     Setting up svLS or leslib for flow
+
+      IF (svLSFlag .EQ. 1) THEN
+         IF(nPrjs.eq.0) THEN
+           svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
+         ELSE
+           svLSType=3 !NS solver
+         ENDIF
+!  reltol for the NSSOLVE is the stop criterion on the outer loop
+!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
+!  for now we are using 
+!  Tolerance on ACUSIM Pressure Projection for CG and
+!  Tolerance on Momentum Equations for GMRES
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         eps_outer=40.0*epstol(1)  !following papers soggestion for now
+         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
+     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
+     3      maxItr=maxIters, 
+     4      maxItrIn=(/maxIters,maxIters/))
+
+         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
+ 
+!  next stuff should is computed for PETSc in this version of code but for 64 bit integers
+!  so have to decide to either change their code to use that (as will be necessary for large 
+!  problems) or create it for 32 bit.  Leaving old code until then.
+!
+         IF (numpe .GT. 1) THEN
+            WRITE(fileName,*) myrank
+            fileName = "ltg.dat."//ADJUSTL(TRIM(fileName))
+            OPEN(1,FILE=fileName)
+            READ(1,*) gnNo
+            READ(1,*) nNo
+            ALLOCATE(ltg(nNo))
+            READ(1,*) ltg
+            CLOSE(1)
+         ELSE
+            gnNo = nshg
+            nNo = nshg
+            ALLOCATE(ltg(nNo))
+            DO i=1, nNo
+               ltg(i) = i
+            END DO
+         END IF
+c
             IF  (ipvsq .GE. 2) THEN
 
 #if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
@@ -422,7 +428,7 @@ c
 #endif
 
             ELSE
-               svLS_nFaces = 1
+               svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for array size issues
             END IF
 
             CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
@@ -447,10 +453,12 @@ c
             END DO
             CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
      2         nsd, BC_TYPE_Dir, gNodes, sV)
+            DEALLOCATE(gNodes)
+            DEALLOCATE(sV)
 
-         ELSE
+         ELSE ! leslib solve 
 !--------------------------------------------------------------------
-         call myfLesNew( lesId,   41994,
+           call myfLesNew( lesId,   41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
      &                 nKvecs,         prjFlag,        nPrjs,
@@ -458,15 +466,13 @@ c
      &                 prestol,        verbose,        statsflow,
      &                 nPermDims,      nTmpDims,      servername  )
          
-         END IF
-         allocate (aperm(nshg,nPermDims))
-         allocate (atemp(nshg,nTmpDims))
-         IF (svLSFlag .NE. 1) THEN
+           allocate (aperm(nshg,nPermDims))
+           allocate (atemp(nshg,nTmpDims))
            call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
-         ENDIF
+         ENDIF !flow solver selector
 
-      else
+      else   ! not solving flow just scalar
          nPermDims = 0
          nTempDims = 0
       endif
@@ -482,6 +488,53 @@ c
          prjFlag     = 1
          indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
                              ! temperature followed by scalars
+!     Setting up svLS or leslib for scalar
+
+      IF (svLSFlag .EQ. 1) THEN
+           svLSType=2  !only option for scalars
+!  reltol for the GMRES is the stop criterion 
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         CALL svLS_LS_CREATE(svLS_ls_S1, svLSType, dimKry=Kspace,
+     2      relTol=epstol(indx), 
+     3      maxItr=maxIters 
+     4      )
+
+         CALL svLS_COMMU_CREATE(communicator_S1, MPI_COMM_WORLD)
+ 
+               svLS_nFaces = 1   !not sure about this...should try it with zero
+
+            CALL svLS_LHS_CREATE(svLS_lhs_S1, communicator_S1, gnNo, nNo, 
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            
+              faIn = 1
+              facenNo = 0
+              ib=5+isolsc
+              DO i=1, nshg
+                 IF (btest(iBC(i),ib))  facenNo = facenNo + 1
+              END DO
+              ALLOCATE(gNodes(facenNo), sV(1,facenNo))
+              sV = 0D0
+              j = 0
+              DO i=1, nshg
+               IF (btest(iBC(i),ib)) THEN
+                  j = j + 1
+                  gNodes(j) = i
+               END IF
+              END DO
+           
+            CALL svLS_BC_CREATE(svLS_lhs_S1, faIn, facenNo, 
+     2         1, BC_TYPE_Dir, gNodes, sV(1,:))
+            DEALLOCATE(gNodes)
+            DEALLOCATE(sV)
+
+            if( isolsc.eq.1) then ! if multiple scalars make sure done once
+              allocate (apermS(1,1,1))
+              allocate (atempS(1,1))  !they can all share this
+            endif
+
+         ELSE ! leslib solve of scalar 
+
          call myfLesNew( lesId,            41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
@@ -489,17 +542,20 @@ c
      &                 presPrjFlag,    nPresPrjs,      epstol(indx),
      &                 prestol,        verbose,        statssclr,
      &                 nPermDimsS,     nTmpDimsS,   servername )
-       enddo
+        ENDIF
+       enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
+       allocate (lhsS(nnz_tot,nsclrsol))
+       if(svLSFlag.eq.0) then  ! we just prepped scalar solves for leslib so allocate arrays
 c
 c  Assume all scalars have the same size needs
 c
        allocate (apermS(nshg,nPermDimsS,nsclrsol))
        allocate (atempS(nshg,nTmpDimsS))  !they can all share this
-       allocate (lhsS(nnz_tot,nsclrsol))
+       endif
 c
 c actually they could even share with atemp but leave that for later
 c
-      else
+      else !no scalar solves at all so zero dims not used
          nPermDimsS = 0
          nTmpDimsS  = 0
       endif
@@ -770,7 +826,8 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsS(1,j), 
-     &                         solinc(1,isclr+5), tcorecpscal)
+     &                         solinc(1,isclr+5), tcorecpscal,
+     &                         svLS_lhs_S1,   svLS_ls_S1, svls_nfaces)
                         
                         
                   endif         ! end of scalar type solve

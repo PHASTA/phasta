@@ -321,6 +321,7 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, nflow, 'out')
       endif
+      ENDIF ! end of selection between solvers.
       tlescp2 = TMRC()
       impistat=0
       impistat2=0
@@ -328,7 +329,6 @@ c      call summary_stop()
 
       tcorecp(1) = tcorecp(1) + telmcp2-telmcp1 ! elem. formation
       tcorecp(2) = tcorecp(2) + tlescp2-tlescp1 ! linear alg. solution
-      ENDIF
       call rstatic (res, y, solinc) ! output flow stats
 c     
 c.... end
@@ -344,7 +344,8 @@ c
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsS,       solinc,
-     &                   tcorecpscal)
+     &                   tcorecpscal,
+     &                   svLS_lhs,  svLS_ls,   svLS_nFaces)
 c
 c----------------------------------------------------------------------
 c
@@ -377,6 +378,7 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+        include "svLS.h"
 c     
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -403,6 +405,12 @@ c
      &          lesP(nshg,1),               lesQ(nshg,1),
      &          solinc(nshg,1),           CGsol(nshg),
      &          tcorecpscal(2)
+      TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
+      TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
+      REAL*8 sumtime
+      INTEGER dof, svLS_nFaces, i, j, k, l
+      INTEGER, ALLOCATABLE :: incL(:)
+      REAL*8, ALLOCATABLE :: faceRes(:), Res1(:,:), Val1(:,:)
       
 c     
 c.... *******************>> Element Data Formation <<******************
@@ -426,6 +434,37 @@ c
       telmcp2 = TMRC()
       impistat=0
       impistat2=0
+      statssclr(1)=0
+      IF (svLSFlag .EQ. 1) THEN
+
+c####################################################################
+!     Here calling svLS
+
+      ALLOCATE(faceRes(svLS_nFaces), incL(svLS_nFaces))
+      faceRes=zero  ! function to compute this left out at this time but would be needed to enable adnvanced p vs. Q BC's
+      incL = 1
+      dof = 1
+      IF (.NOT.ALLOCATED(Res1)) THEN
+         ALLOCATE (Res1(dof,nshg), Val1(dof*dof,nnz_tot))
+      END IF
+
+      DO i=1, nshg
+         Res1(1,i) = res(i,1)
+      END DO
+
+      DO i=1, nnz_tot
+         Val1(1,i)    = lhsS(i)
+      END DO
+
+      CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res1, Val1, incL, 
+     2   faceRes)
+      statssclr(1)=1.0*svLS_ls%RI%itr
+      DO i=1, nshg
+         solinc(i,1) = Res1(1,i)
+      END DO
+ 
+c####################################################################
+      ELSE
 c
 c.... lesSolve : main matrix solver
 c
@@ -456,6 +495,7 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, 1, 'out')
       endif
+      ENDIF ! decision between solvers
       tlescp2 = TMRC()
       impistat=0
       impistat2=0
