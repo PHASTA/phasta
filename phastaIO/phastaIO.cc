@@ -23,6 +23,7 @@
 #include "phastaIO.h"
 #include "mpi.h"
 #include "phiotmrc.h"
+#include <assert.h>
 
 #define VERSION_INFO_HEADER_SIZE 8192
 #define DB_HEADER_SIZE 1024
@@ -232,7 +233,7 @@ namespace{
 
 			char* text_header;
 			char* token;
-			char Line[1024];
+                        char Line[1024] = "\0";
 			char junk;
 			bool FOUND = false ;
 			int real_length;
@@ -253,16 +254,15 @@ namespace{
 					strncpy( text_header, Line, real_length );
 					text_header[ real_length ] =static_cast<char>(NULL);
 					token = strtok ( text_header, ":" );
-					//if( cscompare( phrase , token ) ) {
-                                        // Double comparison required because different fields can still start
-                                        // with the same name for mixed meshes (nbc code, nbc values, etc).
-                                        // Would be easy to fix cscompare instead but would it break sth else?
-					if( cscompare( phrase , token ) && cscompare( token , phrase ) ) {
+                                        assert(token);
+					if( cscompare( phrase , token ) ) {
 						FOUND = true ;
 						token = strtok( NULL, " ,;<>" );
+                                                assert(token);
 						skip_size = atoi( token );
 						int i;
 						for( i=0; i < expect && ( token = strtok( NULL," ,;<>") ); i++) {
+                                                        assert(token);
 							params[i] = atoi( token );
 						}
 						if ( i < expect ) {
@@ -279,6 +279,7 @@ namespace{
 					} else {
 						/* some other header, so just skip over */
 						token = strtok( NULL, " ,;<>" );
+                                                assert(token);
 						skip_size = atoi( token );
 						if ( binary_format)
 							fseek( fileObject, skip_size, SEEK_CUR );
