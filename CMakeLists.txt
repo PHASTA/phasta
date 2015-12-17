@@ -40,3 +40,16 @@ set(HEADERS
 	)
 
 install(FILES ${HEADERS} DESTINATION include)
+
+if(CMAKE_INSTALL_PREFIX)
+set(libdir ${CMAKE_INSTALL_PREFIX}/lib)
+set(includedir ${CMAKE_INSTALL_PREFIX}/include)
+set(implicit_libs "")
+message(${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
+foreach(L IN LISTS CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES)
+	set(implicit_libs "${implicit_libs} ${CMAKE_LINK_LIBRARY_FLAG}${L}")
+endforeach()
+configure_file(svls.pc.in svls.pc)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/svls.pc DESTINATION lib/pkgconfig)
+endif()
+
