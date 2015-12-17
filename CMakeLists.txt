@@ -22,3 +22,21 @@ SET(FSRCS ADDBCMUL.f
 		SOLVE.f
 		SPARMUL.f)
 add_library(svLS ${FSRCS})
+
+install(TARGETS svLS
+	RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib
+	)
+
+set(HEADERS
+			svLS_API_c.h
+			svLS_API.h
+			svLS_c.h
+			svLS.h
+			svLS_STD.h
+			svLS_STRUCT_c.h 
+			svLS_STRUCT.h
+	)
+
+install(FILES ${HEADERS} DESTINATION include)
