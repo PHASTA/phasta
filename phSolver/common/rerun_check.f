@@ -5,7 +5,7 @@
 
       integer stopjob
 
-      stopjob = 0
+      stopjob = -1
 
       if(myrank.eq.master) then
         open(unit=772,file='rerun-check',status='old',iostat=ierr)
