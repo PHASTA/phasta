@@ -1,5 +1,5 @@
-#ifndef PHSOLVER_PHIO_H
-#define PHSOLVER_PHIO_H
+#ifndef PHSOLVER_PHSTR_H
+#define PHSOLVER_PHSTR_H
 
 #ifdef __cplusplus
 extern "C" {

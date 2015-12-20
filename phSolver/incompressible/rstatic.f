@@ -179,12 +179,12 @@ c
      &          rmaxdyP,nrsmax,
      &          mproc(1)+1, jresmx, int(statsflow(4)),
      &          int(statsflow(1))
-!           write (ihist,2000) lstep+1, cputme, totres, jtotrs, 
-!     &          rmaxdyU, rmaxdyP, nrsmax,
-!     &          mproc(1)+1,jresmx,int(statsflow(4)),
-!     &          int(statsflow(1))
+           write (ihist,2000) lstep+1, cputme, totres, jtotrs, 
+     &          rmaxdyU, rmaxdyP, nrsmax,
+     &          mproc(1)+1,jresmx,int(statsflow(4)),
+     &          int(statsflow(1))
            
-!           call flush(ihist)
+           call flush(ihist)
         endif
 c        if(numpe>1) call MPI_BARRIER (MPI_COMM_WORLD,ierr)
 
@@ -260,10 +260,10 @@ c
 
            print 802, lstep+1, cputme, totres, rmaxdyT,
      &                int(statssclr(1))
-!           write (ihist,802) lstep+1, cputme, totres, 
-!     &          rmaxdyT,int(statssclr(1))
+           write (ihist,802) lstep+1, cputme, totres, 
+     &          rmaxdyT,int(statssclr(1))
            
-!               call flush(ihist)
+               call flush(ihist)
            endif
 c        else 
 c           if (myrank .eq. master) then

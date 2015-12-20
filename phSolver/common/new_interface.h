@@ -11,7 +11,6 @@
 #define print_system_stats FortranCInterface_GLOBAL_(print_system_stats,PRINT_SYSTEM_STATS)
 #define Write_Restart FortranCInterface_GLOBAL_(write_restart,WRITE_RESTART)
 #define Write_Error   FortranCInterface_GLOBAL_(write_error,WRITE_ERROR)
-#define Write_Displ   FortranCInterface_GLOBAL_(write_displ,WRITE_DISPL)
 #define Write_Field   FortranCInterface_GLOBAL_(write_field,WRITE_FIELD)
 #define Write_PhAvg   FortranCInterface_GLOBAL_(write_phavg,WRITE_PHAVG)
 #define Write_PhAvg2  FortranCInterface_GLOBAL_(write_phavg2,WRITE_PHAVG2)
@@ -43,12 +42,6 @@ Write_Error(  int* pid,
               int* numVars,
               double* array1 );
 
-void
-Write_Displ(  int* pid,
-              int* stepno,
-              int* nshg,
-              int* numVars,
-              double* array1 );
 void
 Write_Field(  int *pid,
               char* filemode,

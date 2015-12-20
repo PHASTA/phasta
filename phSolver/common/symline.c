@@ -7,8 +7,8 @@ int lineIntPnt(int, DARR2**,double**);
 #define symline FortranCInterface_GLOBAL_(symline, SYMLINE)
 void symline(int *n1, double pt[][4], double wt[], int *err)
 {
-  double *lwt;
-  DARR2 *lpt;
+  double *lwt = 0;
+  DARR2 *lpt = 0;
   int i,j;
   *err = lineIntPnt(*n1, &lpt, &lwt);
   for(i=0; i < *n1; i++){

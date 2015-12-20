@@ -8,6 +8,7 @@ include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 setup_exe(phIOreadheader phIOreadheader.cc)
 setup_exe(phIOreaddatablock phIOreaddatablock.cc)
+setup_exe(phIOposixMultiTopo phIOposixMultiTopo.cc)
 setup_exe(phIOwrite phIOwrite.cc)
 set(ftnsrc chdir_mod.f phIOread.f)
 setup_exe(phIOreadFtn "${ftnsrc}")

@@ -192,7 +192,7 @@ double Pyr_eB(double xi[3], int sign[3], int k, int m, int along)
 
 double dPeBdxi(double xi[3], int sign[3], int k, int m, int along, int byWhich)
 {
-    double dPsidxi;
+    double dPsidxi = 0;
     double tmp0 =1/(1-xi[2]); // xi3->xi[2]
   
     // byWhich was decreased by 1.  When it comes in as j it is 0 initially
@@ -244,7 +244,7 @@ double Pyr_fB (double xi[3], int sign[3], int k, int m, int faceType)
 
 double dPfBdxi(double xi[3], int sign[3], int k, int m, int faceType, int byWhich)
 {
-    double dPsidxi;
+    double dPsidxi = 0;
     double tmp0 =1/(1-xi[2]); // xi3->xi[2]
   
     if (faceType==4) {  
@@ -436,7 +436,7 @@ int HexShapeAndDrv(int p,double par[3],double N[],double dN[][3])
     int face[6][4] = {{0,3,2,1},{0,1,5,4},{1,2,6,5},
                       {0,4,7,3},{2,3,7,6},{4,5,6,7}};
     int vrt[4], z;
-    int normal,sign;
+    int normal = 0,sign;
     double FaceBlend, dFBdxi, dFBdeta, dFBdzeta;
   
     if(p<1) return nshp;

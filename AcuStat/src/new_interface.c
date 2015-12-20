@@ -799,7 +799,7 @@ Write_PhAvg2( int* pid,
               int* numvars,
               int* stepno) {
 
-    int addtagsize; // phase number is added to the name of the field
+    int addtagsize=0; // phase number is added to the name of the field
     if(*iphase<10)
       addtagsize=1;
     else if(*iphase<100)

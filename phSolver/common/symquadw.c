@@ -7,8 +7,8 @@ int quadwIntPnt(int,DARR3**,double **);
 
 void symquadw(int *n1, double pt[][4], double wt[], int *err)
 {
-  double *lwt;
-  DARR3 *lpt;
+  double *lwt = 0;
+  DARR3 *lpt = 0;
   int i,j;
   *err = quadwIntPnt(*n1, &lpt, &lwt);
   for(i=0; i < *n1; i++) {
