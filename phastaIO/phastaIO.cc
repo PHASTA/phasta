@@ -56,6 +56,7 @@ static int s_local_rank = -1;
 #define PHASTAIO_DEBUG 0 //default to not print any debugging info
 
 void phprintf(const char* fmt, ...) {
+  (void)fmt;
 #if PHASTAIO_DEBUG
   char format[1024];
   snprintf(format, sizeof(format), "phastaIO debug: %s", fmt);
@@ -67,6 +68,7 @@ void phprintf(const char* fmt, ...) {
 }
 
 void phprintf_0(const char* fmt, ...) {
+  (void)fmt;
 #if PHASTAIO_DEBUG
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -1256,7 +1258,6 @@ void readheader(
     //return ; // don't return, go to the end to print perf
   }
   else {
-    unsigned int skip_size;
     int* valueListInt;
     valueListInt = static_cast <int*>(valueArray);
     char* token = NULL;
@@ -1358,7 +1359,6 @@ void readheader(
     {
       FOUND = true ;
       token = strtok( NULL, " ,;<>" );
-      skip_size = atoi( token );
       for( j=0; j < *nItems && ( token = strtok( NULL," ,;<>") ); j++ )
         valueListInt[j] = atoi( token );
 
@@ -1428,7 +1428,6 @@ void readdatablock(
   if ( PhastaIONextActiveIndex == 0 ) {
     int filePtr = *fileDescriptor - 1;
     FILE* fileObject;
-    char junk;
 
     if ( *fileDescriptor < 1 || *fileDescriptor > (int)fileArray.size() ) {
       fprintf(stderr,"No file associated with Descriptor %d\n",*fileDescriptor);
@@ -1750,11 +1749,13 @@ void writeDataBlock(
   } else {
     char* ts1 = StringStripper( datatype );
     if ( cscompare( "integer", ts1 ) ) {
+      const int* vals = (int*) valueArray;
       for( int n=0; n < nItems ; n++ )
-        fprintf(f,"%d\n",*((int*)((int*)valueArray+n)));
+        fprintf(f,"%d\n",vals[n]);
     } else if ( cscompare( "double", ts1 ) ) {
+      const double* vals = (double*) valueArray;
       for( int n=0; n < nItems ; n++ )
-        fprintf(f,"%lf\n",*((double*)((double*)valueArray+n)));
+        fprintf(f,"%f\n",vals[n]);
     }
     free (ts1);
   }
