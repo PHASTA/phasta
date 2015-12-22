@@ -23,15 +23,12 @@ int main(int argc, char* argv[]) {
         headerData, &seven, "integer", iotype);
     assert(headerData[0] > 0 && headerData[3] > 0);
     int size = headerData[0]*headerData[3]; /* neltp*nshl */
-    fprintf(stderr, "rank %d data[0] %d\n", rank, headerData[0]);
     int* vals = (int*) calloc(size,sizeof(int));
     phio_readdatablock(file,"connectivity interior",vals,&size,"integer",iotype);
     free(vals);
     blocksRead += (headerData[0] > 0);
   }
   phio_closefile(file);
-  MPI_Barrier(MPI_COMM_WORLD);
-  fprintf(stderr, "rank %d number of blocks read %d\n", rank, blocksRead);
   MPI_Finalize();
-  return (blocksRead==2);
+  return !(blocksRead==2);
 }
