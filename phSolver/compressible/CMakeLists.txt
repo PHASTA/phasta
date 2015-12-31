@@ -16,6 +16,12 @@ set_target_properties(phastaC.exe PROPERTIES HAS_CXX TRUE)
 set_target_properties(compressible PROPERTIES HAS_CXX TRUE)
 set_target_properties(phastaC.exe PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties(compressible PROPERTIES LINKER_LANGUAGE Fortran)
+
+if(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+#force preprocessing of itrdrv.f
+ set_source_files_properties(itrdrv.f PROPERTIES COMPILE_FLAGS "-qsuffix=cpp=f")
+endif(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+
 #ughhhhh
 set(PHASTAC_LIBS 
   compressible ${PHASTAC_LIBS} 
