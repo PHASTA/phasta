@@ -412,14 +412,6 @@ extern "C" {
   } itrpar ;
 
   extern struct { 
-    int mHBrg;
-    int meBrg;
-    int myBrg;
-    int mRcos;
-    int mRsin;
-  } itrpnt ;
-
-  extern struct { 
     double datmat[MAXTS][7][3];
     int matflg[MAXTS][6];
     int nummat;

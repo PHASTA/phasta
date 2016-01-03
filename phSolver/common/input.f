@@ -99,14 +99,6 @@ c
           if (nGMRES .lt. 1)   call error ('input   ','nGMRES  ',nGMRES)
         endif
 c
-c.... allocate memory for the Q-R algorithm of GMRES 
-c
-        mHBrg = mpoint ('H-Berg  ', Kspace+1,Kspace,  0)
-        meBrg = mpoint ('e-Berg  ', Kspace+1,0,       0)
-        myBrg = mpoint ('y-Berg  ', Kspace,  0,       0)
-        mRcos = mpoint ('Rcos-QR ', Kspace,  0,       0)
-        mRsin = mpoint ('Rsin-QR ', Kspace,  0,       0)
-c
 c.... ----------------->  Time Sequence Parameters  <-----------------
 c
 c.... echo the solver information

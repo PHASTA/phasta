@@ -186,8 +186,6 @@ c /*         common /andres/ fwr1,ngaussf,idim,nlist */
 c
         common /itrpar/ eGMRES, lGMRES, iKs,    ntotGM
 c
-        common /itrpnt/ mHBrg,  meBrg,  myBrg,  mRcos,  mRsin
-c
         REAL*8          Nh, Msh
         common /mmatpar/ pr,     Planck, Stefan, Nh,     Rh,     Rgas,
      &                  gamma,  gamma1, s0,     const,  xN2,    xO2,
