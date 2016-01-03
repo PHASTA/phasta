@@ -70,6 +70,11 @@ c
         integer ifuncs(6), iarray(10)
 
         real*8 elDw(numel) ! element average of DES d variable
+
+        real*8, allocatable, dimension(:,:) :: HBrg
+        real*8, allocatable, dimension(:) :: eBrg
+        real*8, allocatable, dimension(:) :: yBrg
+        real*8, allocatable, dimension(:) :: Rcos, Rsin
 c
 c  Here are the data structures for sparse matrix GMRES
 c
@@ -134,6 +139,13 @@ c
         time   = 0
         yold   = y
         acold  = ac
+
+        allocate(HBrg(Kspace+1,Kspace))
+        allocate(eBrg(Kspace+1))
+        allocate(yBrg(Kspace))
+        allocate(Rcos(Kspace))
+        allocate(Rsin(Kspace))
+
         if (mod(impl(1),100)/10 .eq. 1) then
 c
 c     generate the sparse data fill vectors
@@ -370,8 +382,8 @@ c                        write(*,*) 'lhs=',lhs
      &                       iBC,           BC,
      &                       colm,          rowp,          lhsk,
      &                       res,
-     &                       BDiag,         a(mHBrg),      a(meBrg),
-     &                       a(myBrg),      a(mRcos),      a(mRsin),
+     &                       BDiag,         hBrg,          eBrg,
+     &                       yBrg,          Rcos,          Rsin,
      &                       iper,          ilwork,
      &                       shp,           shgl,
      &                       shpb,          shglb,         solinc,
@@ -387,8 +399,8 @@ c
      &                       acold,         x,
      &                       iBC,           BC,
      &                       res,           
-     &                       BDiag,         a(mHBrg),      a(meBrg),
-     &                       a(myBrg),      a(mRcos),      a(mRsin),
+     &                       BDiag,         HBrg,          eBrg,
+     &                       yBrg,          Rcos,          Rsin,
      &                       iper,          ilwork,
      &                       shp,           shgl,
      &                       shpb,          shglb,         solinc, 
@@ -406,8 +418,8 @@ c                        write(*,*) 'lhs=',lhs
      &                       acold,         x,
      &                       iBC,           BC,
      &                       EGmass,        res,
-     &                       BDiag,         a(mHBrg),      a(meBrg),
-     &                       a(myBrg),      a(mRcos),      a(mRsin),
+     &                       BDiag,         HBrg,          eBrg,
+     &                       yBrg,          Rcos,          Rsin,
      &                       iper,          ilwork,
      &                       shp,           shgl,
      &                       shpb,          shglb,         solinc,
@@ -452,8 +464,8 @@ c
      &                    x,             elDw,
      &                    iBC,           BC,          
      &                    rest,           
-     &                    a(mHBrg),      a(meBrg),
-     &                    a(myBrg),      a(mRcos),    a(mRsin),
+     &                    HBrg,          eBrg,
+     &                    yBrg,          Rcos,      Rsin,
      &                    iper,          ilwork,
      &                    shp,           shgl,
      &                    shpb,          shglb, solinc(1,isclr+5))
