@@ -9,15 +9,14 @@ option(PHASTA_TESTING "enable tests" OFF)
 
 option(PHASTA_USE_PETSC "Use PETSc GMRES Solver" OFF)
 if(PHASTA_USE_PETSC)
-find_package(PETSc REQUIRED)
-set (BUILD_SHARED_LIBS NO) #FIXME - the petsc cmake config
-                           #FIXME - file forces shared libs on...
-                           #FIXME - which causes linking problems for us
-find_path(PETSC_INC petscsys.h HINTS /usr/include ${PETSC_PACKAGE_INCLUDES})
-find_path(PETSC_LIB libpetsc.a HINTS /usr/lib ${PETSC_PACKAGE_INCLUDES}../lib)
-include_directories(${PETSC_PACKAGE_INCLUDES} ${PETSC_INC})
-link_directories(${PETSC_LIB})
+find_package(PETSC REQUIRED)
+link_directories(${PETSC_LIBRARY_DIRS})
+include_directories(${PETSC_INCLUDE_DIRS})
 add_definitions(-DHAVE_PETSC)
+option(IS_JEDS_BRANCH "Use Jed's Experimental PETSc Optimizations" OFF)
+if(IS_JEDS_BRANCH)
+	add_definitions(-DJEDBROWN)
+endif()
 endif(PHASTA_USE_PETSC)
 
 add_subdirectory(common)

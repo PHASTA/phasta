@@ -54,6 +54,13 @@ c
 c.... read q from [RESTAR.INP], reset LSTEP
 c
         call restar ('in  ',  y,  ac)
+ 
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+        if(matflg(1,1).eq.0)then ! compressible code
+          call INIprofile(BC,y,x)
+          call MPI_BARRIER(MPI_COMM_WORLD,ierr)
+        endif
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c
         if((itwmod.gt.0) 
      &     .or. (nsonmax.eq.1 .and. iLES.gt.0) ) then 

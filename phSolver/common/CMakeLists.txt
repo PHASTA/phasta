@@ -31,6 +31,12 @@ endif()
 include_directories(${PHASTA_COMMON_INCLUDE_DIRS})
 
 ADD_LIBRARY(common ${SRC_FILES})
+if(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+        set_source_files_properties(fillsparse.f PROPERTIES COMPILE_FLAGS
+"-qsuffix=cpp=f")
+        set_source_files_properties(petscdbg.f PROPERTIES COMPILE_FLAGS
+"-qsuffix=cpp=f")
+endif(CMAKE_Fortran_COMPILER_ID MATCHES XL)
 TARGET_LINK_LIBRARIES(common ${PHASTA_COMMON_LIBS})
 
 configure_file(
