@@ -755,6 +755,11 @@ c
 
             endif
 c
+c.... update and the aerodynamic forces
+c
+            call forces ( yold,  ilwork )
+            
+c
 c .. write out the instantaneous solution
 c
 2001    continue  ! we could get here by 2001 label if user requested stop
@@ -772,7 +777,7 @@ c
 
            call restar ('out ',  yold  ,ac)
            if(ideformwall == 1) then
-              call write_displ(myrank, lstep, nshg, 3, uold )
+!              call write_displ(myrank, lstep, nshg, 3, uold )
              if(myrank.eq.master) then
                write(*,*) 'ideformwall is 1 and is a dead code path... exiting'
              endif
@@ -900,11 +905,6 @@ c                        call flush(ifile)
                endif
             endif
 
-c
-c.... update and the aerodynamic forces
-c
-            call forces ( yold,  ilwork )
-            
             if((irscale.ge.0).or.(itwmod.gt.0)) 
      &           call getvel (yold,     ilwork, iBC,
      &                        nsons,    ifath, velbar)
