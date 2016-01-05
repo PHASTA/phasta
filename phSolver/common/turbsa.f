@@ -47,9 +47,9 @@ c-----------------------------------------------------------------------
       
       character(len=20) fname1,  fmt1
       real*8   x(numnp,nsd)
-      integer  nwall(numpe),      idisp(numpe)
+      integer  nwall(numpe),      idisp(numpe), npwmark(numnp)
       character(len=5)  cname      
-      real*8, allocatable :: xwi(:,:,:), xw(:,:,:)
+      real*8, allocatable :: xwi(:,:), xw(:,:)
 
 !MR CHANGE
       integer :: ierr
@@ -80,50 +80,40 @@ c   hard code trip point until we are sure it is worth doing
 c
 
 c
-c.... Count the welts (wall-elements)
+c.... find the points that are on the wall and mark npwmap with a 1 if they are
 c
-         nwalli=0
+         npwmark(1:numnp)=0
          do iblk = 1, nelblb    ! loop over boundary elt blocks
             npro = lcblkb(1,iblk+1) - lcblkb(1,iblk)
+            nenbl  = lcblkb(6,iblk) ! no. of vertices per bdry. face
             do j = 1, npro
-               if(btest(miBCB(iblk)%p(j,1),4)) nwalli=nwalli+1
+               if(btest(miBCB(iblk)%p(j,1),4)) then
+                  do k=1,nenbl
+                    npw=mienb(iblk)%p(j,k)
+                    npwmark(npw)=1
+                  enddo
+                endif
             enddo
          enddo
-c
-c.... Create wallnode-coord list for welts on processor
-c
-         if (nwalli.eq.0) nwalli=1 !  patch for mpi's lack of imagination
-         allocate (xwi(nwalli,nenb+1,nsd))
-         xwi = 1.0d32
-         xwi(:,nenb+1,:)=zero
-         nwalli = 0
-         do iblk = 1, nelblb    ! loop over boundary elt blocks
-c
-            iel    = lcblkb(1,iblk)
-            nenbl  = lcblkb(6,iblk) ! no. of vertices per bdry. face
-            npro   = lcblkb(1,iblk+1) - iel 
-c
-            do j = 1, npro      ! loop over belts in this blk
-               if(btest(miBCB(iblk)%p(j,1),4)) then
-                  nwalli=nwalli+1
-c assemble local coord list
-                  do node = 1, nenbl
-                     xwi(nwalli,node,1:3)=x(mienb(iblk)%p(j,node),:)
-                  enddo
-c put the centroid coordinates in the last slot
-                  do node = 1, nenbl
-                     xwi(nwalli,nenb+1,:)=xwi(nwalli,nenb+1,:)
-     &                    +xwi(nwalli,node,:)
-                  enddo
-                  xwi(nwalli,nenb+1,:)=xwi(nwalli,nenb+1,:)/nenbl
-c
-               endif
-            enddo               ! loop over belts in this blk
-c
-         enddo                  ! loop over boundary elt blocks
-c
-         if (nwalli.eq.0) xwi=1.0e32 ! fix for mpi's lack of imagination
-         if (nwalli.eq.0) nwalli=1 !  patch for mpi's lack of imagination
+         nwalli=sum(npwmark(1:numnp))
+         markNeeded=1
+         if (nwalli.eq.0) then
+             markNeeded=0
+             nwalli=1 !  patch for mpi's lack of imagination
+         endif
+         allocate (xwi(nwalli,nsd))
+ 
+         if(markneeded.eq.1) then         
+           nwalli=0
+           do i = 1,numnp
+              if(npwmark(i).eq.1)  then
+                nwalli=nwalli+1
+                xwi(nwalli,1:nsd)=x(i,1:nsd)
+              endif
+           enddo
+         else
+           xwi=1.0e32 ! fix for mpi's lack of imagination
+         endif
 c
 c  Pool "number of welts" info from all processors
 c
@@ -152,7 +142,7 @@ c the local information is the global information for single-processor
 c
 c  Make all-processor wallnode-coord collage
 c
-         allocate (xw(nwallt,nenb+1,nsd))
+         allocate (xw(nwallt,nsd))
          if (numpe.gt.1) then   ! multiple processors
 c we will gather coordinates from local on-proc sets to a global set
 c we will stack each processor's coordinate list atop that of the
@@ -180,13 +170,10 @@ c So, first we will build this displacement array
             do j=2,numpe
                idisp(j)=idisp(j-1)+nwall(j-1) ! see diagram above
             enddo
-c Now, we gather the data one slice at a time (1:nwalli)
-            do j=1,nenb+1
-               do k=1,nsd
-                  call MPI_ALLGATHERV(xwi(:,j,k),nwalli,
-     &                 MPI_DOUBLE_PRECISION,xw(:,j,k),nwall,idisp,
-     &                 MPI_DOUBLE_PRECISION,MPI_COMM_WORLD,ierr)
-               enddo
+            do k=1,nsd
+               call MPI_ALLGATHERV(xwi(:,k),nwalli,
+     &              MPI_DOUBLE_PRECISION,xw(:,k),nwall,idisp,
+     &              MPI_DOUBLE_PRECISION,MPI_COMM_WORLD,ierr)
             enddo
          else                   ! single-processor
 c global data is local data in single processor case
@@ -201,46 +188,22 @@ c
          d2wall=1.0e32
          do i=1,numnp
             do j=1, nwallt
-               do k=1,nenb+1
-                  distance =  ( x(i,1) - xw(j,k,1) )**2
-     &                 +( x(i,2) - xw(j,k,2) )**2
-     &                 +( x(i,3) - xw(j,k,3) )**2
-                  if ( d2wall(i).gt.distance ) d2wall(i) = distance
-               enddo
+               distance =  ( x(i,1) - xw(j,1) )**2
+     &              +( x(i,2) - xw(j,2) )**2
+     &              +( x(i,3) - xw(j,3) )**2
+               if ( d2wall(i).gt.distance ) d2wall(i) = distance
             enddo
          enddo
          d2wall=sqrt(d2wall)
 c
          deallocate(xwi)
          deallocate(xw)
-c
-c.... write d2wall to a file so we don't have to do this again
-c
-
-!MR CHANGE #Fix this with SyncIO!!!!!
-!         write (fmt1,"('(''d2wall.'',i',i1,',1x)')") 1
-!         write (fname1,fmt1) 0
-!         fname1 = trim(fname1) // cname(myrank+1)
-!         if(myrank.eq.master) write (*,*) 'Writing dist file : ', fname1
-!         open (unit=72, file=fname1, status='unknown',
-!     &                                    form='unformatted', err=996)
-!
-!         write (72) d2wall
-!         close (72)
-
-!MR CHANGE END
-
-c         write(*,*) "make sure to: echo 0 > distcalc.dat"
-c         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
-c         call error ('distcalc','complete',0)
       endif
 
-!MR CHANGE
       call MPI_BARRIER(MPI_COMM_WORLD,ierr)
       if(myrank.eq.master) then
         write (*,*) 'leaving initTurb'
       endif
-!MR CHANGE
 
       return
 995     call error ('d2wall  ','opening ', 72)
