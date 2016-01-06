@@ -1,5 +1,13 @@
 file(GLOB SRC_FILES *.cc *.f *.f90 *.c)
 list(REMOVE_ITEM SRC_FILES "main.cc")
+
+if(PHASTA_BUILD_SVLS)
+	add_definitions(-DHAVE_SVLS)
+endif()
+if(ACUSOLVE_LIB)
+	add_definitions(-DHAVE_ACUSOLVE)
+endif()
+
 add_library(incompressible ${SRC_FILES})
 
 find_package(phastaCommon REQUIRED PATHS ${CMAKE_BINARY_DIR})
@@ -30,7 +38,7 @@ endif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 #and we need to serialize incompressible after common
 add_dependencies(incompressible common)
 find_library(ACUSOLVE_LIB libles)
-#ughhh
+if(PHASTA_BUILD_SVLS)
 set(PHASTAIC_LIBS
   ${PHASTA_COMMON_LIBS}
   incompressible
@@ -39,6 +47,16 @@ set(PHASTAIC_LIBS
   incompressible
   ${PHASTA_COMMON_LIBS}
 )
+else()
+set(PHASTAIC_LIBS
+  ${PHASTA_COMMON_LIBS}
+  incompressible
+  ${ACUSOLVE_LIB}
+  incompressible
+  ${PHASTA_COMMON_LIBS}
+)
+endif(PHASTA_BUILD_SVLS)
+
 set(PHASTAIC_LIBS ${PHASTAIC_LIBS} phastaIO)
 if(PHASTA_BUILD_SHAPEFUNCTION)
   set(PHASTAIC_LIBS ${PHASTAIC_LIBS} shapeFunction)

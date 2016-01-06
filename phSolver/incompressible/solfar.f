@@ -8,8 +8,12 @@
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsK,       lhsP, 
      &                   solinc,     rerr,       tcorecp,
-     &                   GradV,       sumtime,
-     &                   svLS_lhs,  svLS_ls,   svLS_nFaces)
+     &                   GradV,       sumtime
+#ifdef HAVE_SVLS     
+     &                   ,svLS_lhs,  svLS_ls,   svLS_nFaces)
+#else
+     &                   )
+#endif
 c
 c----------------------------------------------------------------------
 c
@@ -65,7 +69,9 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+#ifdef HAVE_SVLS      
         include "svLS.h"
+#endif        
 c 
 C
 C     Argument variables
@@ -79,8 +85,10 @@ C
 C
       REAL*8                rdtmp
 C    
+#ifdef HAVE_SVLS
       TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
       TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
+#endif      
        
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -114,7 +122,10 @@ c
       
       real*8    msum(4),mval(4),cpusec(10)
       REAL*8 sumtime
-      INTEGER dof, svLS_nFaces, i, j, k, l
+#ifdef HAVE_SVLS      
+      INTEGER svLS_nFaces
+#endif      
+      INTEGER dof, i, j, k, l
       INTEGER, ALLOCATABLE :: incL(:)
       REAL*8, ALLOCATABLE :: faceRes(:), Res4(:,:), Val4(:,:)
 
@@ -158,6 +169,7 @@ c      call summary_stop()
 
             tmpres(:,:) = res(:,:)
             iblk = 1
+#ifdef HAVE_SVLS            
       IF (svLSFlag .EQ. 1) THEN
 
 c####################################################################
@@ -204,9 +216,14 @@ c####################################################################
       DO i=1, nshg
          solinc(i,1:dof) = Res4(1:dof,i)
       END DO
- 
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
 c####################################################################
       ELSE
+#elif defined(HAVE_SVLS)
+      ENDIF      
+#endif
+#ifdef HAVE_ACUSOLVE      
 c
 c.... lesSolve : main matrix solver
 c
@@ -321,7 +338,10 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, nflow, 'out')
       endif
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)    
       ENDIF ! end of selection between solvers.
+#endif      
       tlescp2 = TMRC()
       impistat=0
       impistat2=0
@@ -344,8 +364,12 @@ c
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsS,       solinc,
-     &                   tcorecpscal,
-     &                   svLS_lhs,  svLS_ls,   svLS_nFaces)
+     &                   tcorecpscal
+#ifdef HAVE_SVLS     
+     &                   ,svLS_lhs,  svLS_ls,   svLS_nFaces)
+#else
+     &                   )      
+#endif      
 c
 c----------------------------------------------------------------------
 c
@@ -378,7 +402,9 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+#ifdef HAVE_SVLS      
         include "svLS.h"
+#endif        
 c     
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -405,10 +431,13 @@ c
      &          lesP(nshg,1),               lesQ(nshg,1),
      &          solinc(nshg,1),           CGsol(nshg),
      &          tcorecpscal(2)
+#ifdef HAVE_SVLS     
       TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
       TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
+      INTEGER svLS_nFaces
+#endif      
       REAL*8 sumtime
-      INTEGER dof, svLS_nFaces, i, j, k, l
+      INTEGER dof, i, j, k, l
       INTEGER, ALLOCATABLE :: incL(:)
       REAL*8, ALLOCATABLE :: faceRes(:), Res1(:,:), Val1(:,:)
       
@@ -435,6 +464,7 @@ c
       impistat=0
       impistat2=0
       statssclr(1)=0
+#ifdef HAVE_SVLS      
       IF (svLSFlag .EQ. 1) THEN
 
 c####################################################################
@@ -462,9 +492,14 @@ c####################################################################
       DO i=1, nshg
          solinc(i,1) = Res1(1,i)
       END DO
- 
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE) 
 c####################################################################
       ELSE
+#elif defined(HAVE_SVLS)
+      ENDIF
+#endif            
+#ifdef HAVE_ACUSOLVE
 c
 c.... lesSolve : main matrix solver
 c
@@ -495,7 +530,10 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, 1, 'out')
       endif
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)      
       ENDIF ! decision between solvers
+#endif      
       tlescp2 = TMRC()
       impistat=0
       impistat2=0

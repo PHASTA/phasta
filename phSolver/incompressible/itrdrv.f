@@ -42,7 +42,13 @@ c      use readarrays !reads in uold and acold
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
+#ifdef HAVE_SVLS        
         include "svLS.h"
+#endif
+#if !defined(HAVE_SVLS) && !defined(HAVE_ACUSOLVE)
+#error "You must enable a linear solver"
+#endif
+
 c
 
         
@@ -120,6 +126,7 @@ c
 !MR CHANGE 
 !--------------------------------------------------------------------
 !     Setting up svLS
+#ifdef HAVE_SVLS
       INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
       INTEGER, ALLOCATABLE :: gNodes(:)
       REAL*8, ALLOCATABLE :: sV(:,:)
@@ -131,6 +138,7 @@ c
       TYPE(svLS_commuType) communicator_S(4)
       TYPE(svLS_lhsType) svLS_lhs_S(4)
       TYPE(svLS_lsType) svLS_ls_S(4)
+#endif
 
         impistat = 0
         impistat2 = 0
@@ -163,9 +171,11 @@ cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
 !--------------------------------------------------------------------
 !     Setting up svLS Moved down for better org
 
+#ifdef HAVE_ACUSOLVE
       IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
         call SolverLicenseServer(servername)
       ENDIF
+#endif
 c
 c only master should be verbose
 c
@@ -366,7 +376,7 @@ c
          allocate (lhsK(9,nnz_tot))
 
 !     Setting up svLS or leslib for flow
-
+#ifdef HAVE_SVLS
       IF (svLSFlag .EQ. 1) THEN
          IF(nPrjs.eq.0) THEN
            svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
@@ -433,8 +443,13 @@ c
      2         nsd, BC_TYPE_Dir, gNodes, sV)
             DEALLOCATE(gNodes)
             DEALLOCATE(sV)
-
-         ELSE ! leslib solve 
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
+         ELSE ! leslib solve
+#elif defined(HAVE_SVLS)
+         ENDIF         
+#endif
+#ifdef HAVE_ACUSOLVE 
 !--------------------------------------------------------------------
            call myfLesNew( lesId,   41994,
      &                 eqnType,
@@ -448,8 +463,10 @@ c
            allocate (atemp(nshg,nTmpDims))
            call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
          ENDIF !flow solver selector
-
+#endif
       else   ! not solving flow just scalar
          nPermDims = 0
          nTempDims = 0
@@ -467,7 +484,7 @@ c
          indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
                              ! temperature followed by scalars
 !     Setting up svLS or leslib for scalar
-
+#ifdef HAVE_SVLS
       IF (svLSFlag .EQ. 1) THEN
            svLSType=2  !only option for scalars
 !  reltol for the GMRES is the stop criterion 
@@ -510,9 +527,13 @@ c
               allocate (apermS(1,1,1))
               allocate (atempS(1,1))  !they can all share this
             endif
-
+#endif        
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
          ELSE ! leslib solve of scalar 
-
+#elif defined(HAVE_SVLS)
+         ENDIF
+#endif
+#ifdef HAVE_ACUSOLVE
          call myfLesNew( lesId,            41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
@@ -520,9 +541,13 @@ c
      &                 presPrjFlag,    nPresPrjs,      epstol(indx),
      &                 prestol,        verbose,        statssclr,
      &                 nPermDimsS,     nTmpDimsS,   servername )
+#endif
+#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
         ENDIF
+#endif
        enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
        allocate (lhsS(nnz_tot,nsclrsol))
+#ifdef HAVE_ACUSOLVE       
        if(svLSFlag.eq.0) then  ! we just prepped scalar solves for leslib so allocate arrays
 c
 c  Assume all scalars have the same size needs
@@ -530,6 +555,7 @@ c
        allocate (apermS(nshg,nPermDimsS,nsclrsol))
        allocate (atempS(nshg,nTmpDimsS))  !they can all share this
        endif
+#endif
 c
 c actually they could even share with atemp but leave that for later
 c
@@ -756,8 +782,12 @@ c
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsK,      lhsP,
      &                         solinc,        rerr,      tcorecp,
-     &                         GradV,      sumtime,
-     &                         svLS_lhs,     svLS_ls,  svLS_nFaces)
+     &                         GradV,      sumtime
+#ifdef HAVE_SVLS
+     &                         ,svLS_lhs,     svLS_ls,  svLS_nFaces)
+#else
+     &                         )
+#endif      
                   
                   else          ! scalar type solve
                      if (icode.eq.5) then ! Solve for Temperature
@@ -804,8 +834,12 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsS(1,j), 
-     &                         solinc(1,isclr+5), tcorecpscal,
-     &                         svLS_lhs_S(isclr),   svLS_ls_S(isclr), svls_nfaces)
+     &                         solinc(1,isclr+5), tcorecpscal
+#ifdef HAVE_SVLS
+     &                         ,svLS_lhs_S(isclr),   svLS_ls_S(isclr), svls_nfaces)
+#else
+     &                         )
+#endif
                         
                         
                   endif         ! end of scalar type solve
