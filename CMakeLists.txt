@@ -31,7 +31,7 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES BlueGeneQ-static)
 #SET(CMAKE_Fortran_SOURCE_FILE_EXTENSIONS f90 f F90 F)
 # stuff for C/C++ calls to Fortran -- still needs to be done properly...
 IF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffixed-form -ffixed-line-length-132 " )
+  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffixed-form -ffixed-line-length-132 -cpp " )
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
