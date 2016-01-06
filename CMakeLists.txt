@@ -102,6 +102,12 @@ endif(EXISTS ${PHASTA_SOURCE_DIR}/phShape)
 
 OPTION(PHASTA_BUILD_SVLS "Build svLS Linear Solver" OFF)
 if(PHASTA_BUILD_SVLS)
+	message(WARNING "\
+svLS has a non-commercial license. \n \
+by activating PHASTA_BUILD_SVLS \n \
+you agree to the terms outlined in \
+svLS/license.txt"
+	)
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/svLS")
 	add_subdirectory(svLS)
 endif(PHASTA_BUILD_SVLS)
