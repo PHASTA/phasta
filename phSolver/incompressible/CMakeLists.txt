@@ -1,4 +1,3 @@
-include_directories(${SVLS_INCLUDE_DIR})
 file(GLOB SRC_FILES *.cc *.f *.f90 *.c)
 list(REMOVE_ITEM SRC_FILES "main.cc")
 add_library(incompressible ${SRC_FILES})
@@ -31,13 +30,12 @@ endif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 #and we need to serialize incompressible after common
 add_dependencies(incompressible common)
 find_library(ACUSOLVE_LIB libles)
-find_library(SVLS_LIB libsvLS)
 #ughhh
 set(PHASTAIC_LIBS
   ${PHASTA_COMMON_LIBS}
   incompressible
   ${ACUSOLVE_LIB}
-  ${SVLS_LIB}
+  svLS
   incompressible
   ${PHASTA_COMMON_LIBS}
 )
