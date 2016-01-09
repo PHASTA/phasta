@@ -196,7 +196,7 @@ c
      &                  CFLsl(MAXTS),   nstep(MAXTS),   niter(MAXTS),
      &                  impl(MAXTS),    rhoinf(MAXTS),
      &                  LHSupd(6),  loctim(MAXTS),  deltol(MAXTS,2), 
-     &                  svLSFlag,   svLSType
+     &                  leslib,     svLSFlag,   svLSType
 c
         common /intdat/ intg(2,MAXTS),  intpt(3),       intptb(3)
 c

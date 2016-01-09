@@ -1506,6 +1506,7 @@ c
 	   pp=p   ! make a vector that we can copy masters onto slaves
 		  ! and thereby make ready for an accurate Ap product
 
+#ifdef HAVE_LESLIB
 	   call commOut(pp, ilwork, 1,iper,iBCdumb,BCdumb)  !slaves= master
 
 	   call fLesSparseApSclr(	col,	row,	lhsM,	
@@ -1514,6 +1515,10 @@ c
 
 	   call commIn(q, ilwork, 1,iper,iBC,BC) ! masters=masters+slaves
 							 ! slaves zeroed
+#else
+           if(myrank.eq.0) write(*,*) 'need alt solver in filter.f'
+           call error('filter   ','noleslib',1)
+#endif
 c	   call CFAp (p,  q) ! put Ap product in q
 
 c	   if(nump>1) call commu (q, ilwork, 1, 'in ') 

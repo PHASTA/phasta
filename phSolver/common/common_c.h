@@ -409,6 +409,7 @@ extern "C" {
     int LHSupd[6];
     int loctim[MAXTS];
     double deltol[2][MAXTS];
+    int leslib;
     int svLSFlag;
     int svLSType;
   } inpdat ;

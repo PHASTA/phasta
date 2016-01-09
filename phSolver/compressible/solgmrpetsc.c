@@ -169,7 +169,9 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
 // this node is not owned by this rank so we skip 
           } else { 
            for(j=col[i]-1;j<col[i+1]-1;j++) {
-             glbNZ=fncorp[row[j]];
+//          assert(row[j]<=nshg);
+//          assert(fncorp[row[j]-1]<=nshgt);
+             glbNZ=fncorp[row[j]-1];
              if((glbNZ < mbeg) || (glbNZ > mend)) {
                 iodiagnz[i]++;
              } else {

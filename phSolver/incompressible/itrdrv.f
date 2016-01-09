@@ -45,8 +45,8 @@ c      use readarrays !reads in uold and acold
 #ifdef HAVE_SVLS        
         include "svLS.h"
 #endif
-#if !defined(HAVE_SVLS) && !defined(HAVE_ACUSOLVE)
-#error "You must enable a linear solver"
+#if !defined(HAVE_SVLS) && !defined(HAVE_LESLIB)
+#error "You must enable a linear solver during cmake setup"
 #endif
 
 c
@@ -171,10 +171,10 @@ cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
 !--------------------------------------------------------------------
 !     Setting up svLS Moved down for better org
 
-#ifdef HAVE_ACUSOLVE
-      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
+#ifdef HAVE_LESLIB
+!      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
         call SolverLicenseServer(servername)
-      ENDIF
+!      ENDIF
 #endif
 c
 c only master should be verbose
@@ -360,7 +360,7 @@ c
       nnz_tot=icnt ! this is exactly the number of non-zero blocks on
                    ! this proc
 
-      if (nsolflow.eq.1) then
+      if (nsolflow.eq.1) then  ! start of setup for the flow
          lesId   = numeqns(1)
          eqnType = 1
          nDofs   = 4
@@ -376,9 +376,10 @@ c
          allocate (lhsK(9,nnz_tot))
 
 !     Setting up svLS or leslib for flow
-#ifdef HAVE_SVLS
+
       IF (svLSFlag .EQ. 1) THEN
-         IF(nPrjs.eq.0) THEN
+#ifdef HAVE_SVLS
+        IF(nPrjs.eq.0) THEN
            svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
          ELSE
            svLSType=3 !NS solver
@@ -443,13 +444,14 @@ c
      2         nsd, BC_TYPE_Dir, gNodes, sV)
             DEALLOCATE(gNodes)
             DEALLOCATE(sV)
+#else
+         if(myrank.eq.0) write(*,*) 'your input requests svLS but your cmake did not build for it'
+         call error('itrdrv  ','nosVLS',svLSFlag)  
 #endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
-         ELSE ! leslib solve
-#elif defined(HAVE_SVLS)
-         ENDIF         
-#endif
-#ifdef HAVE_ACUSOLVE 
+           ENDIF
+
+           if(leslib.eq.1) then
+#ifdef HAVE_LESLIB 
 !--------------------------------------------------------------------
            call myfLesNew( lesId,   41994,
      &                 eqnType,
@@ -463,10 +465,12 @@ c
            allocate (atemp(nshg,nTmpDims))
            call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
+#else
+         if(myrank.eq.0) write(*,*) 'your input requests leslib but your cmake did not build for it'
+         call error('itrdrv  ','nolslb',leslib)       
 #endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
-         ENDIF !flow solver selector
-#endif
+         endif !leslib=1
+
       else   ! not solving flow just scalar
          nPermDims = 0
          nTempDims = 0
@@ -527,13 +531,12 @@ c
               allocate (apermS(1,1,1))
               allocate (atempS(1,1))  !they can all share this
             endif
+         ENDIF  !svLS handing scalar solve
 #endif        
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
-         ELSE ! leslib solve of scalar 
-#elif defined(HAVE_SVLS)
-         ENDIF
-#endif
-#ifdef HAVE_ACUSOLVE
+        
+
+#ifdef HAVE_LESLIB
+         if (leslib.eq.1) then
          call myfLesNew( lesId,            41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
@@ -541,14 +544,12 @@ c
      &                 presPrjFlag,    nPresPrjs,      epstol(indx),
      &                 prestol,        verbose,        statssclr,
      &                 nPermDimsS,     nTmpDimsS,   servername )
-#endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
-        ENDIF
+        endif
 #endif
        enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
        allocate (lhsS(nnz_tot,nsclrsol))
-#ifdef HAVE_ACUSOLVE       
-       if(svLSFlag.eq.0) then  ! we just prepped scalar solves for leslib so allocate arrays
+#ifdef HAVE_LESLIB       
+       if(leslib.eq.1) then  ! we just prepped scalar solves for leslib so allocate arrays
 c
 c  Assume all scalars have the same size needs
 c
@@ -1326,6 +1327,7 @@ c
             tcormr1 = TMRC()
           endif
           if((nsolflow.eq.1).and.(ipresPrjFlag.eq.1)) then
+#ifdef HAVE_LESLIB
            call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
      &                    nPermDims )
            if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
@@ -1334,6 +1336,7 @@ c
             write(6,*) 'call saveLesRestart for projection and'//
      &           'pressure projection vectors', tcormr2-tcormr1
            endif
+#endif
           endif
 
           if(ierrcalc.eq.1) then

@@ -445,7 +445,7 @@ c                        write(*,*) 'lhs=',lhs
      &                       shpb,          shglb,         solinc,
      &                       rerr,          fncorp )
 #else
-                     write(*,*) 'exiting because run time input asked for PETSc, not linked in exec'
+                     if(myrank.eq.0) write(*,*) 'exiting because run time input asked for PETSc, not linked in exec'
                      call error('itrdrv  ','noPETSc',usingpetsc)
 #endif
                      else

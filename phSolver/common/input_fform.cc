@@ -532,16 +532,17 @@ int input_fform(phSolver::Input& inp)
     //Linear Solver parameters
      conpar.usingpetsc=0;  // default is to have PETSc off
       incomp.iprjFlag = 0; incomp.ipresPrjFlag=0; inpdat.svLSFlag=0;
+      inpdat.leslib=0;
     if( (string)inp.GetValue("Solver Type") =="svLS" ){
       inpdat.svLSFlag = 1; }
     if( (string)inp.GetValue("Solver Type") =="ACUSIM with P Projection" ){
-      incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
+      inpdat.leslib=1; incomp.iprjFlag = 0; incomp.ipresPrjFlag=1;}
     else if ( (string)inp.GetValue("Solver Type") =="ACUSIM" ){
-      incomp.iprjFlag = 0; incomp.ipresPrjFlag=0;}
+      inpdat.leslib=1; incomp.iprjFlag = 0; incomp.ipresPrjFlag=0;}
     else if( (string)inp.GetValue("Solver Type") =="ACUSIM with Velocity Projection" ){
-      incomp.iprjFlag = 1; incomp.ipresPrjFlag=0;}
+      inpdat.leslib=1; incomp.iprjFlag = 1; incomp.ipresPrjFlag=0;}
     else if( (string)inp.GetValue("Solver Type") =="ACUSIM with Full Projection" ){
-      incomp.iprjFlag = 1; incomp.ipresPrjFlag=1;}
+      inpdat.leslib=1; incomp.iprjFlag = 1; incomp.ipresPrjFlag=1;}
     else if( (string)inp.GetValue("Solver Type") =="GMRES Matrix Free"){ 
       inpdat.impl[0] += 10*solflow;}
     else if( (string)inp.GetValue("Solver Type") =="GMRES EBE"){ 

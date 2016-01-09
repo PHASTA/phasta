@@ -100,17 +100,17 @@ if(PHASTA_BUILD_PHSHAPE)
 endif(PHASTA_BUILD_PHSHAPE)
 endif(EXISTS ${PHASTA_SOURCE_DIR}/phShape)
 
-OPTION(PHASTA_BUILD_SVLS "Build svLS Linear Solver" OFF)
-if(PHASTA_BUILD_SVLS)
+OPTION(PHASTA_USE_SVLS "Build svLS Linear Solver" OFF)
+if(PHASTA_USE_SVLS)
 	message(WARNING "\
 svLS has a non-commercial license. \n \
-by activating PHASTA_BUILD_SVLS \n \
+by activating PHASTA_USE_SVLS in cmake \n \
 you agree to the terms outlined in \
 svLS/license.txt"
 	)
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/svLS")
 	add_subdirectory(svLS)
-endif(PHASTA_BUILD_SVLS)
+endif(PHASTA_USE_SVLS)
 
 OPTION(PHASTA_BUILD_SOLVERS "Build Solvers" ON)
 if(PHASTA_BUILD_SOLVERS)

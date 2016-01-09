@@ -216,14 +216,11 @@ c####################################################################
       DO i=1, nshg
          solinc(i,1:dof) = Res4(1:dof,i)
       END DO
+      ENDIF 
 #endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)
-c####################################################################
-      ELSE
-#elif defined(HAVE_SVLS)
-      ENDIF      
-#endif
-#ifdef HAVE_ACUSOLVE      
+
+#ifdef HAVE_ACUSOLVE  
+      if(leslib.eq.1) then    
 c
 c.... lesSolve : main matrix solver
 c
@@ -338,10 +335,8 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, nflow, 'out')
       endif
-#endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)    
-      ENDIF ! end of selection between solvers.
-#endif      
+      ENDIF ! end of leslib flow solve
+#endif   
       tlescp2 = TMRC()
       impistat=0
       impistat2=0
@@ -492,14 +487,10 @@ c####################################################################
       DO i=1, nshg
          solinc(i,1) = Res1(1,i)
       END DO
-#endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE) 
-c####################################################################
-      ELSE
-#elif defined(HAVE_SVLS)
       ENDIF
-#endif            
+#endif          
 #ifdef HAVE_ACUSOLVE
+      if(leslib.eq.1) then
 c
 c.... lesSolve : main matrix solver
 c
@@ -529,10 +520,8 @@ c
 
       if (numpe > 1) then
          call commu ( solinc, ilwork, 1, 'out')
-      endif
-#endif
-#if defined(HAVE_SVLS) && defined(HAVE_ACUSOLVE)      
-      ENDIF ! decision between solvers
+      endif      
+      ENDIF ! leslib conditional
 #endif      
       tlescp2 = TMRC()
       impistat=0
