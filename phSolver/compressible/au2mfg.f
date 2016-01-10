@@ -109,7 +109,7 @@
 !
 !.... flop count
 !
-        flops = flops + 8*nflow*nshg+nshg
+   !      flops = flops + 8*nflow*nshg+nshg
 !
 !.... end
 !

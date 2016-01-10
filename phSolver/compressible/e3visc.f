@@ -186,7 +186,7 @@ c
             f6 = ( f6 + (dxidx(:,1,3) +
      &              dxidx(:,2,3) + dxidx(:,3,3))**2 ) * pt39
 c     
-            flops = flops + 36*npro
+       !      flops = flops + 36*npro
          endif
 c     
 c.... correction for wedges
@@ -220,7 +220,7 @@ c
      &           ( dxidx(:,1,3) + dxidx(:,2,3) )**2 ) * pt57
      &           + dxidx(:,3,3) * dxidx(:,3,3)
 c     
-            flops = flops + 51*npro
+       !      flops = flops + 51*npro
          endif
 c     
 c.... calculate compact K matrix in local parent coordinates
@@ -260,7 +260,7 @@ c
 c     
 c.... flop count
 c
-         flops = flops + 86*npro
+    !      flops = flops + 86*npro
 c     
 c.... end of GLS
 c     
@@ -295,7 +295,7 @@ c
       ri (:,2:5) = ri (:,2:5) + rmi(:,2:5)
 c     rmi(:,2:5) = rmi(:,2:5) + qdi(:,2:5)
 c
-c     flops = flops + 74*npro
+c!      flops = flops + 74*npro
 c
 c.... diffusive flux in x2-direction
 c
@@ -319,7 +319,7 @@ c
       ri (:,7:10) = ri (:,7:10) + rmi(:,7:10)
 c     rmi(:,7:10) = rmi(:,7:10) + qdi(:,2:5)
 c
-c     flops = flops + 74*npro
+c!      flops = flops + 74*npro
 c
 c.... diffusive flux in x3-direction
 c
@@ -342,7 +342,7 @@ c       rmi(:,11) = zero
 c
       ri (:,12:15) = ri (:,12:15) + rmi(:,12:15)
 c
-c     flops = flops + 74*npro
+c!      flops = flops + 74*npro
 c
 c  stiff for preconditioner has been eliminated
 c  all preconditioner stuff is in e3bdg.f
@@ -439,7 +439,7 @@ c
       rti (:,:) = rti (:,:) + rmti(:,:)
 c     rmi(:,2:5) = rmi(:,2:5) + qdi(:,2:5)
 c     
-c     flops = flops + 74*npro
+c!      flops = flops + 74*npro
 c     
       ttim(23) = ttim(23) + tmr()
 

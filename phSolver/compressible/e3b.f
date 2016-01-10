@@ -172,7 +172,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 23*npro
+!      flops = flops + 23*npro
 c
 c.... end of ires = 1 or 3
 c
@@ -257,7 +257,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 27*npro
+!      flops = flops + 27*npro
 c
 c.... end of Navier Stokes part
 c
@@ -287,7 +287,7 @@ c
      &                     + WdetJb * shape(:,nodlcl) * F5
           enddo
 c
-          flops = flops + 12*nshlb*npro
+!      flops = flops + 12*nshlb*npro
 c
         endif
 c
@@ -309,7 +309,7 @@ c
      &                        shape(:,nodlcl) * (Fv5 - Fh5)
           enddo
 c
-          flops = flops + 11*nenbl*npro
+!      flops = flops + 11*nenbl*npro
 c
         endif
 c
@@ -608,7 +608,7 @@ c
                  rtl(:,nodlcl) = rtl(:,nodlcl)
      &                         + WdetJb * shape(:,nodlcl) * F
               enddo
-              flops = flops + 12*nshlb*npro
+!      flops = flops + 12*nshlb*npro
            endif
         endif
 c
@@ -630,7 +630,7 @@ c            rml(:,nodlcl,5) = rml(:,nodlcl,5) - WdetJb *
 c     &                        shpb(nodlcl,intp) * (Fv5 - Fh5)
 c          enddo
 c
-c          flops = flops + 11*nenbl*npro
+c     !      flops = flops + 11*nenbl*npro
 c
 c        endif
 c

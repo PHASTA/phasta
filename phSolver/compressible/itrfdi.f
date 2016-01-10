@@ -140,7 +140,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 10*nflow*nshg+3*nshg
+   !      flops = flops + 10*nflow*nshg+3*nshg
 c
 c.... end
 c
@@ -263,7 +263,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 10*nflow*nshg+3*nshg
+   !      flops = flops + 10*nflow*nshg+3*nshg
 c
 c.... end
 c

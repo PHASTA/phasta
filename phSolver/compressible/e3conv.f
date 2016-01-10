@@ -91,7 +91,7 @@
           ri(:,14) = (- u3) * rho * u3 - pres
           ri(:,15) = (- u3) * rho * (ei + rk) - u3 * pres
 !
-          flops = flops + 28*npro
+!      flops = flops + 28*npro
 !
         endif
 !
@@ -434,7 +434,7 @@
 !     
            endif
 
-           flops = flops + 28*npro
+!      flops = flops + 28*npro
 
         endif
 !

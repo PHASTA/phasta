@@ -264,7 +264,7 @@ c
          rLymi(:,5) = tau(:,3) * rLymi(:,5)
       endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return
@@ -390,7 +390,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 65*npro
+   !      flops = flops + 65*npro
 
 c.... reduce the diffusion contribution
 c
@@ -726,7 +726,7 @@ c
            enddo
         endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return
@@ -856,7 +856,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 65*npro
+   !      flops = flops + 65*npro
 
 c.... reduce the diffusion contribution
 c
@@ -1191,7 +1191,7 @@ c
            enddo
         endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return
@@ -1377,7 +1377,7 @@ c          rLymi(:,4) = tau(:,2) * rLymi(:,4)
 c          rLymi(:,5) = tau(:,3) * rLymi(:,5)
 c        endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return

@@ -165,7 +165,7 @@ c
           a3 = ( a3 + (dxidx(:,1,3) + dxidx(:,2,3) +
      &                 dxidx(:,3,3))**2 ) * pt39
 c
-          flops = flops + 15*npro
+!      flops = flops + 15*npro
         endif
 c
 c.... set up the 1st level Eigenvectors =  R_t*Tau^*
@@ -213,7 +213,7 @@ c              Q(:,i,j) = abs(Q(:,i,j)) !make sure eigenv. are positive
 c           enddo
 c        enddo
 
-        flops = flops + 203*npro
+   !      flops = flops + 203*npro
 c
 c.... return
 c
@@ -280,7 +280,7 @@ c
 c
 c.... modify for time dependent problems
 c
-        ! consider time term if iremoveStabTimeTerm is set to zero
+! consider time term if iremoveStabTimeTerm is set to zero
         if(iremoveStabTimeTerm.eq.0) then
            tmp  = dtsfct * four * (Dtgl * Dtgl)
            rlam(:,:) = rlam(:,:) + tmp
@@ -334,7 +334,7 @@ c
 c        
 c.... flop count
 c
-        flops = flops + 85*npro
+   !      flops = flops + 85*npro
 c
 c.... return
 c

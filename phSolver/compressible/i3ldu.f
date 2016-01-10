@@ -93,7 +93,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 110*nshg
+!      flops = flops + 110*nshg
 c
           return
         endif
@@ -120,7 +120,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 25*nshg
+!      flops = flops + 25*nshg
 c
           return
         endif
@@ -147,7 +147,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 25*nshg
+!      flops = flops + 25*nshg
 c
           return
         endif
@@ -168,7 +168,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 40*nshg
+!      flops = flops + 40*nshg
 c
           return
         endif

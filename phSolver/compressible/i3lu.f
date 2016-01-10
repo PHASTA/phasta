@@ -92,7 +92,7 @@ c
      &                              - Diag(:,5,4) * Diag(:,4,5)
           Diag(:,5,5) = one / Diag(:,5,5)
 c
-c  INACCURATE NOW          flops = flops + 110*nshg
+c  INACCURATE NOW     !      flops = flops + 110*nshg
 c
           return
         endif
@@ -115,7 +115,7 @@ c         r(:,1) =  r(:,1) !no-op
 c
 c.... flop count
 c
-c  INACCURATE           flops = flops + 25*nshg
+c  INACCURATE      !      flops = flops + 25*nshg
 c
           return
         endif
@@ -142,7 +142,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 25*nshg
+!      flops = flops + 25*nshg
 
           return
         endif
@@ -166,7 +166,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + 40*nshg
+!      flops = flops + 40*nshg
 
           return
         endif

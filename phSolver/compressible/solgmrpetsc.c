@@ -154,11 +154,11 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
 
 
 
-      PetscInt* idiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
-      PetscInt* iodiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
       gcorp_t glbNZ;
 
       if(firstpetsccall == 1) {
+        PetscInt* idiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
+        PetscInt* iodiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
         for(i=0;i<iownnodes;i++) {
              idiagnz[i]=0;
              iodiagnz[i]=0;
@@ -222,8 +222,8 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
          MPI_Barrier(MPI_COMM_WORLD); 
         }
         }
-       }
-       if(firstpetsccall == 1) {
+//       }
+//       if(firstpetsccall == 1) {
 
         petsc_bs = (PetscInt) nflow;
         petsc_m  = (PetscInt) nflow* (PetscInt) iownnodes;
@@ -530,11 +530,11 @@ void     SolGMRpSclr(double* y,         double* ac,
 
 
 
-      PetscInt* idiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
-      PetscInt* iodiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
       gcorp_t glbNZ;
 
       if(firstpetsccalls == 1) {
+        PetscInt* idiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
+        PetscInt* iodiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
         for(i=0;i<iownnodes;i++) {
              idiagnz[i]=0;
              iodiagnz[i]=0;
@@ -545,7 +545,7 @@ void     SolGMRpSclr(double* y,         double* ac,
 // this node is not owned by this rank so we skip 
           } else { 
            for(j=col[i]-1;j<col[i+1]-1;j++) {
-             glbNZ=fncorp[row[j]];
+             glbNZ=fncorp[row[j]-1];
              if((glbNZ < mbeg) || (glbNZ > mend)) {
                 iodiagnz[i]++;
              } else {
@@ -573,8 +573,8 @@ void     SolGMRpSclr(double* y,         double* ac,
 
 
         
-       }
-       if(firstpetsccalls == 1) {
+//       }
+//       if(firstpetsccalls == 1) {
 
         petsc_m  = (PetscInt) iownnodes;
         petsc_M  = (PetscInt) nshgt;

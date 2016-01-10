@@ -101,7 +101,7 @@ c
            dui(:,5) = dui(:,5) + shape(:,n) * yl(:,n,5) ! T
         enddo
 c     
-        flops = flops + 10*nshl*npro
+!      flops = flops + 10*nshl*npro
 c     
 c     
 c.... compute conservative variables
@@ -193,7 +193,7 @@ c
              aci(:,5) = aci(:,5) + shape(:,n) * acl(:,n,5)
           enddo
 c
-          flops = flops + 10*nshl*npro
+!      flops = flops + 10*nshl*npro
           ttim(12) = ttim(12) + secs(0.0)
 c       endif                    !ires .ne. 2
 c
@@ -624,7 +624,7 @@ c
              acti(:)  = acti(:)  + shape(:,n) * acl(:,n,id)
           enddo
 c
-          flops = flops + 10*nshl*npro
+!      flops = flops + 10*nshl*npro
           ttim(12) = ttim(12) + tmr()
        endif                    !ires .ne. 2
 c

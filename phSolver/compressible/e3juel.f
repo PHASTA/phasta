@@ -89,7 +89,7 @@ c
 	    rml(:,i,5) = rml(:,i,5) + fddt * (yl(:,i,5)+ub(:,5))
 	  enddo
 c
-          flops = flops + 35*nshl*npro
+!      flops = flops + 35*nshl*npro
 	endif
 
 c
@@ -150,7 +150,7 @@ c
 c
           enddo
 c
-          flops = flops + 45*nshl*npro
+!      flops = flops + 45*nshl*npro
 	endif
 
 	ttim(28) = ttim(28) + tmr()
@@ -237,7 +237,7 @@ c$$$
 c$$$c
 c$$$          enddo
 c$$$c
-c$$$          flops = flops + 45*nenl*npro
+c$$$     !      flops = flops + 45*nenl*npro
 c$$$	endif
 c$$$
 c$$$	ttim(28) = ttim(28) + tmr()

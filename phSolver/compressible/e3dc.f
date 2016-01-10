@@ -277,7 +277,7 @@ c	    DC(:,intp)=dim((fact*sqrt(raLS*gnorm)),(rtLS*gnorm))
 c
 c.... flop count
 c
-	    flops = flops + 46*npro
+!	    flops = flops + 46*npro
 c
 	  endif
 c
@@ -299,7 +299,7 @@ c
 c
 c.... flop count
 c
-	    flops = flops + 36*npro
+!	    flops = flops + 36*npro
 c
 	  endif
 c
@@ -326,7 +326,7 @@ c	    DC(:,intp) = min( dim(fact * sqrt(raLS * gnorm),
 c
 c.... flop count
 c
-	    flops = flops + 48*npro
+!	    flops = flops + 48*npro
 c
 	  endif
 c
@@ -373,7 +373,7 @@ c
 	  ri (:,15) = ri (:,15) + DC(:,intp) * gAgyi(:,15)
 	  rmi(:,15) = rmi(:,15) + DC(:,intp) * gAgyi(:,15)
 c
-	  flops = flops + 45*npro
+!	  flops = flops + 45*npro
 c
 	endif
 c
@@ -399,7 +399,7 @@ c
 	  rmi(:,14) = rmi(:,14) + DC(:,intp) * gAgyi(:,14)
 	  rmi(:,15) = rmi(:,15) + DC(:,intp) * gAgyi(:,15)
 c
-	  flops = flops + 30*npro
+!	  flops = flops + 30*npro
 c
 	endif
 c
@@ -455,7 +455,7 @@ c
 c
 c.... flop count
 c
-	  flops = flops + 210*npro
+!	  flops = flops + 210*npro
 c
 c.... end of stiffness
 c
@@ -592,7 +592,7 @@ c	    DCt(:,intp)=dim((fact*sqrt(raLSt*gnormt)),(rtLSt*gnormt))
 c
 c.... flop count
 c
-	    flops = flops + 46*npro
+!	    flops = flops + 46*npro
 c
 	  endif
 c
@@ -614,7 +614,7 @@ c
 c
 c.... flop count
 c
-	    flops = flops + 36*npro
+!	    flops = flops + 36*npro
 c
 	  endif
 c
@@ -641,7 +641,7 @@ c	    DCt(:,intp) = min( dim(fact * sqrt(raLSt * gnormt),
 c
 c.... flop count
 c
-	    flops = flops + 48*npro
+!	    flops = flops + 48*npro
 c
 	  endif
 c
@@ -664,7 +664,7 @@ c
 	  rmti( :,3) = rmti( :,3) + DCt(:,intp) * gAgyit( :,3)
 	 
 c
-	  flops = flops + 45*npro
+!	  flops = flops + 45*npro
 c
 	endif
 c
@@ -677,7 +677,7 @@ c
 	  rmti( :,3) = rmti( :,3) + DCt(:,intp) * gAgyit( :,3)
 	  
 c
-	  flops = flops + 30*npro
+!	  flops = flops + 30*npro
 c
 	endif
 c
@@ -726,7 +726,7 @@ c
 c
 c.... flop count
 c
-	  flops = flops + 210*npro
+!	  flops = flops + 210*npro
 c
 c.... end of stiffness
 c

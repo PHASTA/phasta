@@ -80,7 +80,7 @@ c.... compute engBC (internal energy in this case)
 c
 c         engBC = T * (Rgas / gamma1)
 c
-          flops = flops + npro
+!      flops = flops + npro
 c
         endif
 c
@@ -96,7 +96,7 @@ c.... compute engBC (enthalpy in this case)
 c
 c          engBC = T * (Rgas * gamma / gamma1)
 c
-          flops = flops + npro
+!      flops = flops + npro
 c
 c        endif
 c
@@ -152,7 +152,7 @@ c           Calculate Internal Energy
 c              tmpl = T* 8.314* 18.0/ ((3.598/3.264) -1.0)
                ei(:) = tmpl(:)*prop_blend(:)+tmpg*(1-prop_blend(:))
             endif
-            flops = flops + 4*npro
+!      flops = flops + 4*npro
          endif ! end if(ithm==6)
 c
         if (ithm .ge. 7) then
@@ -217,7 +217,7 @@ c                tmpl = sqrt( (3.598/3.264 * 8.314*18) * T ) ! for liquid
 c
                 
              endif
-             flops = flops + 12*npro
+!      flops = flops + 12*npro
 c
           endif
 c

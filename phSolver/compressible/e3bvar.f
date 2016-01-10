@@ -358,13 +358,13 @@ c
 c
 c.... flop count
 c
-          flops = flops + (184+30*nshl+8*nshlb)*npro
+!      flops = flops + (184+30*nshl+8*nshlb)*npro
 c
         endif
 c
 c.... flop count
 c
-        flops = flops + (27+18*nshl+14*nshlb)*npro
+!      flops = flops + (27+18*nshl+14*nshlb)*npro
 c
 c.... return
 c
@@ -625,7 +625,7 @@ c.... impose scalar flux boundary conditions
 c
 c.... flop count
 c
-        flops = flops + (27+18*nshl+14*nenbl)*npro
+!      flops = flops + (27+18*nshl+14*nenbl)*npro
 c
 c.... return
 c
