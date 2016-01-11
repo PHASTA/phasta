@@ -219,7 +219,7 @@ c####################################################################
       ENDIF 
 #endif
 
-#ifdef HAVE_ACUSOLVE  
+#ifdef HAVE_LESLIB  
       if(leslib.eq.1) then    
 c
 c.... lesSolve : main matrix solver
@@ -489,7 +489,7 @@ c####################################################################
       END DO
       ENDIF
 #endif          
-#ifdef HAVE_ACUSOLVE
+#ifdef HAVE_LESLIB
       if(leslib.eq.1) then
 c
 c.... lesSolve : main matrix solver
