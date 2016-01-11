@@ -110,11 +110,6 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       double rmes[nshg*nflow];
 // DEBUG
       int i,j,k,l,m;
-      //int indexsetary[nflow*nshg];
-      //int gblindexsetary[nflow*nshg];
-      PetscInt indexsetary[nflow*nshg];
-      PetscInt gblindexsetary[nflow*nshg];
-      PetscInt nodetoinsert;
 
       // FIXME: PetscScalar
       double  real_rtol, real_abstol, real_dtol;
@@ -287,6 +282,10 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       // Since we always reference by global indexes this doesn't matter
       // except for cache performance)
       // TODO: Better arrangment?
+      //PetscInt indexsetary[nflow*nshg];
+      PetscInt* indexsetary = malloc(sizeof(PetscInt)*nflow*nshg);
+      PetscInt* gblindexsetary = malloc(sizeof(PetscInt)*nflow*nshg);
+      PetscInt nodetoinsert;
         nodetoinsert = 0;
         k=0;
         if(workfc.numpe > 1) {
@@ -331,6 +330,8 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
 //        printf("after 1st ISLocalToGlobalMappingCreateIS %d\n",ierr);
         ierr =  ISLocalToGlobalMappingCreateIS(GlobalIndexSet,&GblVectorMapping);
 //        printf("after 2nd ISLocalToGlobalMappingCreateIS %d\n",ierr);
+      free(indexsetary);
+      free(gblindexsetary);
       }
       if(genpar.lhs == 1) {
       get_time((duration), (duration+1));
@@ -431,6 +432,7 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       firstpetsccall = 0;
       // later timer ('Solver  ');
 
+
 // .... output the statistics
 // 
       itrpar.iKs=0; // see rstat()
@@ -504,9 +506,6 @@ void     SolGMRpSclr(double* y,         double* ac,
       double rmes[nshg];
 // DEBUG
       int i,j,k,l,m;
-      PetscInt indexsetarys[nshg];
-      PetscInt gblindexsetarys[nshg];
-      PetscInt nodetoinsert;
 
       double  real_rtol, real_abstol, real_dtol;
       double *parray; 
@@ -617,6 +616,11 @@ void     SolGMRpSclr(double* y,         double* ac,
       // Since we always reference by global indexes this doesn't matter
       // except for cache performance)
       // TODO: Better arrangment?
+
+      PetscInt* indexsetarys = malloc(sizeof(PetscInt)*nshg);
+      PetscInt* gblindexsetarys = malloc(sizeof(PetscInt)*nshg);
+      PetscInt nodetoinsert;
+
         nodetoinsert = 0;
         k=0;
         if(workfc.numpe > 1) {
@@ -645,6 +649,8 @@ void     SolGMRpSclr(double* y,         double* ac,
                PETSC_COPY_VALUES, &GlobalIndexSets);
         ierr = ISLocalToGlobalMappingCreateIS(LocalIndexSets,&VectorMappings);
         ierr =  ISLocalToGlobalMappingCreateIS(GlobalIndexSets,&GblVectorMappings);
+      free(indexsetarys);
+      free(gblindexsetarys);
       }
       if(genpar.lhs ==1) {
       ierr = MatAssemblyBegin(lhsPs, MAT_FINAL_ASSEMBLY);
