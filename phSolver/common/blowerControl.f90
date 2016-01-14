@@ -323,7 +323,6 @@
   
           integer :: i, iBlower, imapped, tstep 
           real*8  :: deltaBLinv, vmag, dt
-          real*8, allocatable :: phase
           
           !local variables to shorten the code a bit
           integer :: nNodeMap

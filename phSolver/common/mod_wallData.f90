@@ -144,7 +144,7 @@
           wNormCalced = .true.
     
           return
-        end
+        end subroutine
     
         subroutine addElemNormal(wNorm, eNorm, nn)
         !Adds contributions from the wall element normal en into the wall
