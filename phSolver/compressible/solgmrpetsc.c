@@ -51,6 +51,9 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static ISLocalToGlobalMapping GblVectorMappings;
       static VecScatter scatter7s;
       static int firstpetsccalls = 1;
+
+      static int rankdump=-1;  // 8121 was the problem rank with 3.5.3
+
    
 void     SolGMRp(double* y,         double* ac,        double* yold,      
      	double* x,         int* iBC,       double* BC,  
@@ -246,13 +249,15 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         ierr = MatSetOption(lhsP, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 
 // Next is Jed Brown's improvement to imprint Assembly to make that stage scalable after the first call
-#ifdef JEDBROWN        
+#ifdef HIDEJEDBROWN        
         ierr = MatSetOption(lhsP, MAT_SUBSET_OFF_PROC_ENTRIES, PETSC_TRUE);
 #endif        
         ierr = MatSetUp(lhsP);
       
       PetscInt myMatStart, myMatEnd;
       ierr = MatGetOwnershipRange(lhsP, &myMatStart, &myMatEnd);
+//debug
+      if(workfc.myrank == rankdump) printf("Flow myrank,myMatStart,myMatEnd %d,%d,%d, \n", workfc.myrank,myMatStart,myMatEnd);
       }
 //      MPI_Barrier(MPI_COMM_WORLD); 
  //     if(workfc.myrank ==0) printf("Before MatZeroEntries  \n");
@@ -288,9 +293,19 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       PetscInt nodetoinsert;
         nodetoinsert = 0;
         k=0;
+         if(workfc.myrank == rankdump) {
+             printf("myrank,i,iownnodes,nshg %d %d %d %d \n",workfc.myrank,i,iownnodes,nshg);
+             printf("myrank,mbeg,mend %d %d %d \n",workfc.myrank,mbeg,mend);
+           }
         if(workfc.numpe > 1) {
           for (i=0; i<nshg ; i++) {
             nodetoinsert = fncorp[i]-1;
+
+//debug
+         if(workfc.myrank == rankdump) {
+             printf("myrank,i,nodetoinsert %d %d %d \n",workfc.myrank,i,nodetoinsert);
+         }
+            
 //            if(nodetoinsert<0) printf("nodetoinsert <0! myrank: %d, value: %ld\n", workfc.myrank, nodetoinsert);
 //            assert(fncorp[i]>=0);
             for (j=1; j<=nflow; j++) {
@@ -313,6 +328,10 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         
         for (i=0; i<nshg*nflow; i++) {
           gblindexsetary[i] = i ; //TODO: better option for performance?
+//debug
+         if(workfc.myrank == rankdump) {
+             printf("myrank,i,glbindexsetary %d %d %d \n",workfc.myrank,i,gblindexsetary[i]);
+         }
         }
 //  Create Vector Index Maps
         petsc_n  = (PetscInt) nshg * (PetscInt) nflow;
@@ -580,18 +599,19 @@ void     SolGMRpSclr(double* y,         double* ac,
         petsc_PA  = (PetscInt) 40;
         
         ierr = MatCreateAIJ(PETSC_COMM_WORLD, petsc_m, petsc_m, petsc_M, petsc_M,
-                             0, idiagnz, 0, iodiagnz, &lhsPs);
+                            0, idiagnz, 0, iodiagnz, &lhsPs);
 
         ierr = MatSetOption(lhsPs, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 
 // Next is Jed Brown's improvement to imprint Assembly to make that stage scalable after the first call
-#ifdef JEDBROWN        
+#ifdef HIDEJEDBROWN        
         ierr = MatSetOption(lhsPs, MAT_SUBSET_OFF_PROC_ENTRIES, PETSC_TRUE);
 #endif        
         ierr = MatSetUp(lhsPs);
       
       PetscInt myMatStart, myMatEnd;
-      ierr = MatGetOwnershipRange(lhsP, &myMatStart, &myMatEnd);
+      ierr = MatGetOwnershipRange(lhsPs, &myMatStart, &myMatEnd);
+      if(workfc.myrank ==rankdump) printf("Sclr myrank,myMatStart,myMatEnd %d,%d,%d, \n", workfc.myrank,myMatStart,myMatEnd);
       }
 //      MPI_Barrier(MPI_COMM_WORLD); 
  //     if(workfc.myrank ==0) printf("Before MatZeroEntries  \n");
@@ -623,9 +643,21 @@ void     SolGMRpSclr(double* y,         double* ac,
 
         nodetoinsert = 0;
         k=0;
+
+//debug
+         if(workfc.myrank == rankdump) {
+             printf("myrank,i,iownnodes,nshg %d %d %d %d \n",workfc.myrank,i,iownnodes,nshg);
+             printf("myrank,mbeg,mend %d %d %d \n",workfc.myrank,mbeg,mend);
+           }
+
         if(workfc.numpe > 1) {
           for (i=0; i<nshg ; i++) {
             nodetoinsert = fncorp[i]-1;
+//debug
+         if(workfc.myrank == rankdump) {
+             printf("myrank,i,nodetoinsert %d %d %d \n",workfc.myrank,i,nodetoinsert);
+         }
+            
             indexsetarys[k] = nodetoinsert;
             k = k+1;
           }
@@ -640,6 +672,10 @@ void     SolGMRpSclr(double* y,         double* ac,
         
         for (i=0; i<nshg; i++) {
           gblindexsetarys[i] = i ; //TODO: better option for performance?
+//debug
+         if(workfc.myrank == rankdump) {
+             printf("myrank,i,glbindexsetarys %d %d %d \n",workfc.myrank,i,gblindexsetarys[i]);
+         }
         }
 //  Create Vector Index Maps
         petsc_n  = (PetscInt) nshg;
