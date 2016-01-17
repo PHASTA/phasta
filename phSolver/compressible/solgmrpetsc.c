@@ -15,8 +15,8 @@
 #define SolGMRpSclr FortranCInterface_GLOBAL_(solgmrpsclr,SOLGMRPSCLR)
 #define ElmGMRPETSc FortranCInterface_GLOBAL_(elmgmrpetsc, ELMGMRPETSC)
 #define ElmGMRPETScSclr FortranCInterface_GLOBAL_(elmgmrpetscsclr, ELMGMRPETSCSCLR)
-#define rstat FortranCInterface_GLOBAL_(rstat, RSTAT)
-#define rstatSclr FortranCInterface_GLOBAL_(rstatsclr, RSTATSCLR)
+#define rstatp FortranCInterface_GLOBAL_(rstatp, RSTATP)
+#define rstatpSclr FortranCInterface_GLOBAL_(rstatpsclr, RSTATPSCLR)
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #define max(a,b) (((a) > (b)) ? (a) : (b))
 #define get_time FortranCInterface_GLOBAL_(get_time,GET_TIME) 
@@ -51,6 +51,7 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static int firstpetsccalls = 1;
 
       static int rankdump=-1;  // 8121 was the problem rank with 3.5.3
+      PetscReal resNrm;
 
    
 void     SolGMRp(double* y,         double* ac,        double* yold,      
@@ -323,11 +324,12 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
           assert(fncorp[i]>0);
           assert(PetscRow>=0);
           assert(PetscRow<=nshgt*nflow);
-          ierr =  VecSetValue(resP, PetscRow, valtoinsert, INSERT_VALUES);
+          ierr =  VecSetValue(resP, PetscRow, valtoinsert, ADD_VALUES);
         }
       }
       ierr = VecAssemblyBegin(resP);
       ierr = VecAssemblyEnd(resP);
+      ierr = VecNorm(resP,NORM_2,&resNrm);
       get_time((duration+2), (duration+3));
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
@@ -380,7 +382,7 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
                         (duration+1), (duration+3),
                         "solWork \0"); // char(0))
       itrpar.ntotGM += (int) its;
-      rstat (res, ilwork);
+      rstatp (&resNrm);
 //    
 // .... end
 //     
@@ -616,21 +618,19 @@ void     SolGMRpSclr(double* y,         double* ac,
           assert(fncorp[i]>0);
           assert(PetscRow>=0);
           assert(PetscRow<=nshgt);
-          ierr =  VecSetValue(resPs, PetscRow, valtoinsert, INSERT_VALUES);
+          ierr =  VecSetValue(resPs, PetscRow, valtoinsert, ADD_VALUES);
       }
-//      printf("after VecSetValue loop %d\n",ierr);
       ierr = VecAssemblyBegin(resPs);
       ierr = VecAssemblyEnd(resPs);
+      ierr = VecNorm(resPs,NORM_2,&resNrm);
       
       if(firstpetsccalls == 1) {
         ierr = KSPCreate(PETSC_COMM_WORLD, &ksps);
         ierr = KSPSetOperators(ksps, lhsPs, lhsPs);
-//3.4 ierr = KSPSetOperators(ksps, lhsPs, lhsPs, SAME_NONZERO_PATTERN);
         ierr = KSPGetPC(ksps, &pcs);
         ierr = PCSetType(pcs, PCPBJACOBI);
         PetscInt maxits;
         maxits = (PetscInt)  solpar.nGMRES * (PetscInt) solpar.Kspace;
-        //ierr = KSPSetTolerances(ksp, timdat.etol, PETSC_DEFAULT, PETSC_DEFAULT, solpar.nGMRES*solpar.Kspace);
         ierr = KSPSetTolerances(ksps, timdat.etol, PETSC_DEFAULT, PETSC_DEFAULT, maxits);
         ierr = KSPSetFromOptions(ksps); 
       }
@@ -658,7 +658,7 @@ void     SolGMRpSclr(double* y,         double* ac,
       ierr = KSPGetIterationNumber(ksps, &its);
       itrpar.iKss = (int) its;
       itrpar.ntotGMs += (int) its;
-      rstatSclr (res, ilwork);
+      rstatpSclr (&resNrm);
 //     
 // .... end
 //     

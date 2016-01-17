@@ -824,11 +824,6 @@ c
      &                  rest,
      &                  rmest,         Diag,       iper,      
      &                  ilwork,        EGmasst)
-      call rstat (rest, ilwork) 
-      if(ntotGM.eq.0) resfrts=zero  !don't let this mess up scaled dB     
-      if(myrank.eq.master) then
-            write(*,*)'residual prior to sbd-preconditioning'
-      endif
 c
 c.... **********************>>    EBE - GMRES    <<********************
 c

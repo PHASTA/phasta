@@ -268,7 +268,8 @@ c
 c.... -------------------->   communications <-------------------------
 c
 
-      if (numpe > 1) then
+!      if (numpe > 1) then
+      if (numpe < 1) then
         call commu (res  , ilwork, nflow  , 'in ')
 
         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
@@ -284,7 +285,8 @@ c
 c
 c.... return
 c
-      if (numpe > 1) then
+!      if (numpe > 1) then
+      if (numpe < 1) then
         call commu (res  , ilwork, nflow  , 'out')
         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
       endif
@@ -483,7 +485,7 @@ c
 c.... -------------------->   communications <-------------------------
 c
 
-      if (numpe > 1) then
+      if (numpe < 1) then
         call commu (rest  , ilwork, 1  , 'in ')
 
         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
@@ -496,7 +498,7 @@ c
 c.... satisfy the BCs on the residual
 c
       call bc3ResSclr (y,  iBC,  BC,  rest,  iper, ilwork)
-      if (numpe > 1) then
+      if (numpe < 1) then
         call commu (rest  , ilwork, 1  , 'out')
         call MPI_BARRIER (MPI_COMM_WORLD,ierr)
       endif
