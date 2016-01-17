@@ -15,7 +15,7 @@ c Chris Whiting, Winter 1998.     (Matrix EBE-GMRES)
 c----------------------------------------------------------------------
 c
         use pointer_data
-        use timedata
+        use timedataC
 c
         include "common.h"
         include "mpif.h"
@@ -295,7 +295,7 @@ c Chris Whiting, Winter 1998.     (Matrix EBE-GMRES)
 c----------------------------------------------------------------------
 c
         use pointer_data
-        use timedata
+        use timedataC
 c
         include "common.h"
         include "mpif.h"
@@ -325,7 +325,7 @@ c
         real*8, allocatable :: tmpshp(:,:), tmpshgl(:,:,:)
         real*8, allocatable :: tmpshpb(:,:), tmpshglb(:,:,:)
         real*8, allocatable :: EGmass(:,:,:)
-	ttim(80) = ttim(80) - secs(0.0)
+        ttim(80) = ttim(80) - secs(0.0)
 c
 c.... set up the timer
 c
@@ -356,7 +356,6 @@ c
           lelCat = lcblk(2,iblk)
           lcsyst = lcblk(3,iblk)
           iorder = lcblk(4,iblk)
-          nenl   = lcblk(5,iblk)   ! no. of vertices per element
           nshl   = lcblk(10,iblk)
           mattyp = lcblk(7,iblk)
           ndofl  = lcblk(8,iblk)
@@ -468,6 +467,14 @@ c
 c.... end of interior element loop
 c
        enddo
+!ifdef DEBUG !Nicholas Mati
+!        call write_debug(myrank, 'res-afterAsIGMR'//char(0),
+!     &                           'res'//char(0), res, 
+!     &                           'd'//char(0), nshg, nflow, lstep)
+!        call write_debug(myrank, 'y-afterAsIGMR'//char(0),
+!     &                           'y'//char(0), y, 
+!     &                           'd'//char(0), nshg, ndof, lstep)
+!endif //DEBUG
 c
 c.... -------------------->   boundary elements   <--------------------
 c
@@ -498,6 +505,12 @@ c
 
           allocate (tmpshpb(nshl,MAXQPT))
           allocate (tmpshglb(nsd,nshl,MAXQPT))
+          if(lhs.eq.1 .and. iLHScond >= 1) then
+             allocate (EGmass(npro,nshl,nshl))
+             EGmass = zero
+          else
+             allocate (EGmass(1,1,1))
+          endif
           
           tmpshpb(1:nshl,:) = shpb(lcsyst,1:nshl,:)
           tmpshglb(:,1:nshl,:) = shglb(lcsyst,:,1:nshl,:)
@@ -506,14 +519,26 @@ c
      &                 tmpshpb,                 tmpshglb, 
      &                 mienb(iblk)%p,           mmatb(iblk)%p,
      &                 miBCB(iblk)%p,           mBCB(iblk)%p,
-     &                 res,                     rmes)
+     &                 res,                     rmes, 
+     &                 EGmass)
+          if(lhs == 1 .and. iLHScond > 0) then
+            call fillSparseC_BC(mienb(iblk)%p, EGmass, 
+     &                   lhsk, row, col)
+          endif
 
+          deallocate (EGmass)
           deallocate (tmpshpb)
           deallocate (tmpshglb)
-c
-c.... end of boundary element loop
-c
-        enddo
+        enddo   !end of boundary element loop
+    
+!ifdef DEBUG !Nicholas Mati
+!        call write_debug(myrank, 'res-afterAsBMFG'//char(0),
+!     &                           'res'//char(0), res, 
+!     &                           'd'//char(0), nshg, nflow, lstep)
+!        call MPI_ABORT(MPI_COMM_WORLD) 
+!endif //DEBUG
+
+
 c
       ttim(80) = ttim(80) + secs(0.0)
 c
@@ -763,7 +788,7 @@ c.... satisfy the BC's on the implicit LHS
 c     
           call bc3LHSSclr (iBC, mien(iblk)%p, EGmasst(iel:inum,:,:) )
 c
-          elDw(iel:iel+npro)=elDwl(1:npro)
+          elDw(iel:inum)=elDwl(1:npro)
           deallocate ( elDwl )
           deallocate ( tmpshp )
           deallocate ( tmpshgl )

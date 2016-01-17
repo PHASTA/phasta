@@ -89,7 +89,7 @@ c
      &                                        + shg(:,i,3) * ri(:,15) )
           enddo
 c
-          flops = flops + 36*nshl*npro
+!      flops = flops + 36*nshl*npro
         endif
 c
 c.... ires = 2 or 3
@@ -118,7 +118,7 @@ c
      &                   + shp(:,i) * rmi(:,20)    )
           enddo
 c
-          flops = flops + (15+45*nshl)*npro
+!      flops = flops + (15+45*nshl)*npro
         endif
 c
 c.... add temporal contribution to rl
@@ -141,7 +141,7 @@ c
             rl(:,i,5) = rl(:,i,5) + shp(:,i) * WdetJ * ri(:,20)  
           enddo
  
-          flops = flops + 11*nshl*npro
+!      flops = flops + 11*nshl*npro
        endif
 
 c
@@ -311,7 +311,7 @@ c
      &                                        + shg(:,i,3) * rti(:,3) )
 
           enddo
-          flops = flops + 36*nshl*npro
+!      flops = flops + 36*nshl*npro
         endif
 c
 c.... ires = 2 or 3
@@ -335,7 +335,7 @@ c     &                   shg(:,i,1) * rmi(:, 5) + shg(:,i,2) * rmi(:,10)
 c     &                 + shg(:,i,3) * rmi(:,15) + shp(:,i) * rmi(:,20) )
 c          enddo
 c
-c          flops = flops + (15+45*nshl)*npro
+c     !      flops = flops + (15+45*nshl)*npro
 c        endif
 
 c
@@ -346,7 +346,7 @@ c
             rtl(:,i) = rtl(:,i) + shp(:,i) * WdetJ * rti(:,4)
           enddo
  
-          flops = flops + 11*nshl*npro
+!      flops = flops + 11*nshl*npro
 
 c
 c.... ---------------------------->  LHS  <----------------------------

@@ -15,11 +15,15 @@
        integer nmax          
        real*8 wn1(3),wn2(3),wn3(3)
        
-       icd=ibits(iBCg,3,3)
-       ixset=ibits(iBCg,3,1)
-       iyset=ibits(iBCg,4,1)
-       izset=ibits(iBCg,5,1)
-       iBC=iBCg-(ixset*8+iyset*16+izset*32)
+       icd      = ibits(iBCg,3,3)
+       ixset    = ibits(iBCg,3,1)
+       iyset    = ibits(iBCg,4,1)
+       izset    = ibits(iBCg,5,1)
+C
+C...   release the previous setting for velocities
+C
+       iBC      = iBCg-(ixset*8+iyset*16+izset*32)
+
        
 ccc case1: one slipwall and no user-specified velocity BC
        if(nslpw.eq.1.and.icd.eq.0)then 
@@ -28,11 +32,11 @@ ccc case1: one slipwall and no user-specified velocity BC
         enddo
         wn1(:)=wlnorm(:,islpw)
         ii=nmax(wn1(1),wn1(2),wn1(3))
-        if(ii.eq.1)then  ! u has the largest constrain
-         iBC=iBC+8       
-         BC(3)=0
-         BC(4)=wn1(2)/wn1(1)
-         BC(5)=wn1(3)/wn1(1) 
+        if(ii.eq.1)then  ! u has the largest constrain, u should be constrained
+         iBC  = iBC+8       
+         BC(3)= 0
+         BC(4)= wn1(2)/wn1(1)
+         BC(5)= wn1(3)/wn1(1) 
         elseif(ii.eq.2)then
          iBC=iBC+16       
          BC(3)=0
@@ -63,12 +67,18 @@ ccc case2: two slipwall and no user-specified velocity BC
         c9=wn2(2) 
         c10=wn2(3)
         c11=0
-        ck1=c5*c10-c9*c6
-        ck2=c4*c9-c8*c5
-        ck3=c4*c9-c8*c5
+C
+C... ck is the cross product of wn1 and wn2
+C
+        ck1=c5*c10 - c9*c6
+        ck2=c6*c8  - c4*c10
+        ck3=c4*c9  - c8*c5
+
         kk=nmax(ck1,ck2,ck3)
-        if(kk.eq.1)then  ! u has the largest freedom
-          iBC=iBC+48
+
+        if(kk.eq.1)then  ! u has the largest freedom, v and w should be constrained
+C
+          iBC=iBC + 48
           det=c5*c10-c9*c6
           BC(3)=(c10*c7-c6*c11)/det
           BC(4)=(c10*c4-c6*c8)/det          
@@ -104,9 +114,11 @@ ccc case3: one slipwall and one user-specified velocity BC
         c9=wn1(2)
         c10=wn1(3)
         c11=0
-        ck1=c5*c10-c9*c6
-        ck2=c4*c9-c8*c5
-        ck3=c4*c9-c8*c5
+
+        ck1=c5*c10 - c9*c6
+        ck2=c6*c8  - c4*c10
+        ck3=c4*c9  - c8*c5
+
         kk=nmax(ck1,ck2,ck3)
         if(kk.eq.1)then  ! u has the largest freedom
           iBC=iBC+48
@@ -226,9 +238,11 @@ ccc case8: two slipwall and three user-specified velocity BC
         c9=wn2(2) 
         c10=wn2(3)
         c11=0
-        ck1=c5*c10-c9*c6   ! ck is the cross product of wn1 and wn2
-        ck2=c4*c9-c8*c5
-        ck3=c4*c9-c8*c5
+
+        ck1=c5*c10 - c9*c6     ! ck is the cross product of wn1 and wn2
+        ck2=c6*c8  - c4*c10
+        ck3=c4*c9  - c8*c5
+
         kk=nmax(ck1,ck2,ck3)
         if(kk.eq.1)then  ! u has the largest freedom
           det=c5*c10-c9*c6
@@ -255,7 +269,12 @@ ccc
        return
        end 
 
-cccccccccccccc
+C-------------------------------------------------
+C function nmax
+C     returns the index at which the input number
+C     has the largest absolute value. 
+C     For example nmax( 0.1, -3.4, 1.2  ) = 2
+C-------------------------------------------------
 
        integer function nmax(nx,ny,nz)
        real*8 nx,ny,nz
@@ -269,7 +288,9 @@ cccccccccccccc
           return
        end
 
-cccccccccccccc
+C-----------------------------------------------------------
+C function det3x3 computes the determinant of a 3x3 matrix
+C-----------------------------------------------------------
       
        real*8 function det3x3(a1,a2,a3,a4,a5,a6,a7,a8,a9)
        real*8 a1,a2,a3,a4,a5,a6,a7,a8,a9        

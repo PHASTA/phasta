@@ -50,7 +50,11 @@ c
 
       integer n, e
       integer wallmask(nshl)
-      real*8  xki, xki3, fv1, evisc
+      real*8  xki, xki3, fv1, evisc, lvisc
+            xx=zero
+            do n=1,nenl
+               xx(:)=xx(:) + shp(:,n) * xl(:,n,1)
+            enddo
 c
 c
 c.... constant viscosity
@@ -70,27 +74,81 @@ c
             rmu = datmat(1,2,2) + (datmat(1,2,1)-datmat(1,2,2))
      &           *prop_blend
          elseif(irampViscOutlet.eq.1)then ! increase viscosity near outlet
-c.............ramp rmu near outlet (for a NGC geometry)
-            xx=zero
-            do n=1,nenl
-               xx(:)=xx(:) + shp(:,n) * xl(:,n,1)
-            enddo
+c.............ramp rmu near outlet (for a Duct geometry)
             fmax=10.0
-            where(xx(:).le. 0.42) !healfway btwn AIP and exit
-               rmu(:)=datmat(1,2,1)
-            elsewhere(xx(:).ge. 0.75) !2/3 of the way to the exit
+!           fmax=2000.0      
+
+c           if (myrank .eq. master)then
+c              write(*,*) 'viscosity', datmat(1,2,1)
+c           endif
+
+c... geometry6
+           if(iDuctgeometryType .eq. 6)then
+             
+c            if (myrank .eq. master) write(*,*) 'getdiff, geometry6'
+
+             where(xx(:).le. 0.42) !halfway btwn AIP and exit
+               rmu(:)= datmat(1,2,1)
+             elsewhere(xx(:).ge. 0.75) !2/3 of the way to the exit
                rmu(:)=fmax*datmat(1,2,1)
-            elsewhere
+             elsewhere
                rmu(:)= datmat(1,2,1)*(
      &          (55.65294821-55.65294821*fmax)*xx(:)*xx(:)*xx(:)
      &          +(-97.67092412+97.67092412*fmax)*xx(:)*xx(:)
      &          +(52.59203606-52.59203606*fmax)*xx(:)
      &          -7.982719760+8.982719760*fmax)
-            endwhere
+              
+             endwhere
+
+c             do i = 1,npro
+c                if(xx(i) .lt. 0.75 .and. xx(i) .gt. 0.42) 
+c     &             write(*,*) xx(i), rmu(i)
+c             enddo
+
+c... geometry8
+           elseif (iDuctgeometryType .eq. 8)then   
+             xstart=1.5  !1.6*4.5*0.0254+0.85*0.5
+             xmidwy=2.0  !1.6*4.5*0.0254+0.85*1.0
+             where(xx(:).le.xstart)
+               rmu(:)=datmat(1,2,1)
+             elsewhere(xx(:).ge.xmidwy)         
+               rmu(:)=fmax*datmat(1,2,1)
+             elsewhere
+               rmu(:)=datmat(1,2,1)
+     &               *(1+(fmax-1)*(0.5+
+     &            tanh(5*(xx(:)-(xmidwy+xstart)/2)/(xmidwy-xstart))/2))
+             endwhere
+
+
+
+           endif
+c..................................................... 
          else ! constant viscosity
             rmu = datmat(1,2,1)
          endif
-c     
+!
+!   boundary layer thickening via molecular viscosity
+!
+         scaleCntrl=1.0
+         Lvisc=0.2
+         xbltb=-0.2159-two*Lvisc
+         xblte=-0.2159-Lvisc
+         where((xx(:).gt.xbltb) .and. (xx(:).lt.xblte))
+           rmu(:)=scaleCntrl*datmat(1,2,1)
+         endwhere
+
+!          xvisc1 = -0.3048
+!          xvisc2 = -0.2159
+!          where(xx(:).lt.xvisc1)
+!            rmu(:)=scaleCntrl*datmat(1,2,1)
+!          elsewhere(xx(:).gt.xvisc1 .and. xx(:).lt.xvisc2)
+!            rmu(:)=( scaleCntrl - (scaleCntrl - 1)*
+!     &             (xx(:) - xvisc1)/(xvisc2 - xvisc1))*datmat(1,2,1)
+!          endwhere
+
+         !if(myrank.eq.master) then
+         !   write(*,*) 'adjusting viscosity in region by ', scaleCntrl
+         !endif
       else
 c     
 c.... generalized Sutherland viscosity

@@ -31,7 +31,7 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES BlueGeneQ-static)
 #SET(CMAKE_Fortran_SOURCE_FILE_EXTENSIONS f90 f F90 F)
 # stuff for C/C++ calls to Fortran -- still needs to be done properly...
 IF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
-  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffixed-form -ffixed-line-length-132 -x f95-cpp-input" )
+  SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -ffixed-form -ffixed-line-length-132 -cpp " )
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
@@ -99,6 +99,18 @@ if(PHASTA_BUILD_PHSHAPE)
 	add_subdirectory(phShape)
 endif(PHASTA_BUILD_PHSHAPE)
 endif(EXISTS ${PHASTA_SOURCE_DIR}/phShape)
+
+OPTION(PHASTA_USE_SVLS "Build svLS Linear Solver" OFF)
+if(PHASTA_USE_SVLS)
+	message(WARNING "\
+svLS has a non-commercial license. \n \
+by activating PHASTA_USE_SVLS in cmake \n \
+you agree to the terms outlined in \
+svLS/license.txt"
+	)
+	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/svLS")
+	add_subdirectory(svLS)
+endif(PHASTA_USE_SVLS)
 
 OPTION(PHASTA_BUILD_SOLVERS "Build Solvers" ON)
 if(PHASTA_BUILD_SOLVERS)

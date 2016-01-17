@@ -125,7 +125,7 @@ covered above       A0(:,5,1) = drdp * u1
         A0(:,5,4) = rho * u3 
         A0(:,5,5) = e4p
 c
-        flops = flops + 67*npro
+   !      flops = flops + 67*npro
 c
 c.... Calculate A-tilde-1, A-tilde-2 and A-tilde-3
 c
@@ -159,7 +159,7 @@ c
         A1(:,5,4) = rho * u1 * u3
         A1(:,5,5) = u1 * e4p
 c
-        flops = flops + 35*npro
+   !      flops = flops + 35*npro
 c
         A2(:,1,1) = drdp * u2
 c       A2(:,1,2) = zero
@@ -191,7 +191,7 @@ c
         A2(:,5,4) = rho * u2 * u3
         A2(:,5,5) = u2 * e4p
 c
-        flops = flops + 35*npro
+   !      flops = flops + 35*npro
 c
         A3(:,1,1) = drdp * u3
 c       A3(:,1,2) = zero
@@ -223,7 +223,7 @@ c
         A3(:,5,4) = e3p + rho * u3 * u3
         A3(:,5,5) = u3 * e4p
 c
-        flops = flops + 35*npro
+   !      flops = flops + 35*npro
 	ttim(21) = ttim(21) + secs(0.0)
 
 c

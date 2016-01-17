@@ -145,7 +145,7 @@ c        call tnanq(temp,5,"res**2  ")
 c
 c.... flop count
 c
-        flops = flops + ndof*nshg+nshg
+!        flops = flops + ndof*nshg+nshg
 c
 c.... check if GMRES iterations are required
 c
@@ -203,7 +203,7 @@ c
 c
 c.... flop count
 c
-          flops = flops + ndof*nshg+nshg
+!          flops = flops + ndof*nshg+nshg
 c
         endif
 c
@@ -266,7 +266,7 @@ c
 c
         enddo
 c
-        flops = flops + (3*iKs+1)*nflow*nshg+(iKs+1)*nshg
+!        flops = flops + (3*iKs+1)*nflow*nshg+(iKs+1)*nshg
 c
 c  the last inner product was with what was left of the vector (after
 c  projecting off all of the previous vectors
@@ -341,7 +341,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + (3*iKs+1)*nflow*nshg
+!        flops = flops + (3*iKs+1)*nflow*nshg
 c
 c.... check for convergence
 c

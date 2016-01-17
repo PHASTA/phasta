@@ -57,6 +57,7 @@ c
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
+!              write (fname2,"('connectivity interior?')") 
             endif
 
             !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
@@ -82,6 +83,7 @@ c
               write (fname2,"('connectivity interior',i1)") iblk
             else
               write (fname2,"('connectivity interior linear tetrahedron')") 
+!              write (fname2,"('connectivity interior?')") 
             endif
 
            ! Synchronization for performance monitoring, as some parts do not include some topologies
@@ -125,6 +127,13 @@ c
 c
                 allocate (mien(nelblk)%p(npro,nshl))
                 allocate (mxmudmi(nelblk)%p(npro,maxsh))
+                if(usingpetsc.eq.0) then
+                    allocate (mienG(nelblk)%p(1,1))
+                else
+                    allocate (mienG(nelblk)%p(npro,nshl))
+                endif
+                ! note mienG will be passed to gensav but nothing filled if not 
+                ! using PETSc so this is safe
 c
 c.... save the element block
 c
@@ -133,6 +142,7 @@ c
                 mater=1   ! all one material for now
                 call gensav (ientp(n1:n2,1:nshl),
      &                       mater,           mien(nelblk)%p,
+     &                       mienG(nelblk)%p,
      &                       mmat(nelblk)%p)
                 iel=iel+npro
              enddo

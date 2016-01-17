@@ -208,7 +208,7 @@ c
      &                     + iv_core*iv_rankpercore
      &                     + iv_thread
                  
-          if(myrank == 0) then
+          if(myrank == 0 .and. isrf.le.iv_rankpernode) then
               write(*,*) '  sforce ', isrf, 'if any handled by rank',
      &                      irankfilesforce(isrf), ' on node', iv_node
           endif

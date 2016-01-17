@@ -34,6 +34,7 @@ c
 !MR CHANGE
       use turbsa          ! used to access d2wall
 !MR CHANGE END
+      use fncorpmod
       use iso_c_binding
 
 c      use readarrays !reads in uold and acold
@@ -41,6 +42,13 @@ c      use readarrays !reads in uold and acold
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
+#ifdef HAVE_SVLS        
+        include "svLS.h"
+#endif
+#if !defined(HAVE_SVLS) && !defined(HAVE_LESLIB)
+#error "You must enable a linear solver during cmake setup"
+#endif
+
 c
 
         
@@ -76,7 +84,7 @@ c
 
         dimension wallubar(2),walltot(2)
 c     
-c.... For Farzin's Library
+c.... For linear solver Library
 c
         integer eqnType, prjFlag, presPrjFlag, verbose
 c
@@ -116,6 +124,21 @@ c
         integer :: iv_rankpernode, iv_totnodes, iv_totcores
         integer :: iv_node, iv_core, iv_thread
 !MR CHANGE 
+!--------------------------------------------------------------------
+!     Setting up svLS
+#ifdef HAVE_SVLS
+      INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
+      INTEGER, ALLOCATABLE :: gNodes(:)
+      REAL*8, ALLOCATABLE :: sV(:,:)
+
+      TYPE(svLS_commuType) communicator
+      TYPE(svLS_lhsType) svLS_lhs
+      TYPE(svLS_lsType) svLS_ls
+! repeat for scalar solves (up to 4 at this time which is consistent with rest of PHASTA)
+      TYPE(svLS_commuType) communicator_S(4)
+      TYPE(svLS_lhsType) svLS_lhs_S(4)
+      TYPE(svLS_lsType) svLS_ls_S(4)
+#endif
 
         impistat = 0
         impistat2 = 0
@@ -145,7 +168,14 @@ c  hack SA variable
 c
 cHack        BC(:,7)=BC(:,7)*0.001
 cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
+!--------------------------------------------------------------------
+!     Setting up svLS Moved down for better org
+
+#ifdef HAVE_LESLIB
+!      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
         call SolverLicenseServer(servername)
+!      ENDIF
+#endif
 c
 c only master should be verbose
 c
@@ -295,7 +325,7 @@ c
         endif
 
 c
-c.... ---------------> initialize Farzin's Library <---------------
+c.... ---------------> initialize LesLib Library <---------------
 c
 c.... assign parameter values
 c     
@@ -322,7 +352,7 @@ c
       nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
       
 c
-c.... Now, call Farzin's lesNew routine to initialize
+c.... Now, call lesNew routine to initialize
 c     memory space
 c
       call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
@@ -330,11 +360,100 @@ c
       nnz_tot=icnt ! this is exactly the number of non-zero blocks on
                    ! this proc
 
-      if (nsolflow.eq.1) then
+      if (nsolflow.eq.1) then  ! start of setup for the flow
          lesId   = numeqns(1)
          eqnType = 1
          nDofs   = 4
-         call myfLesNew( lesId,   41994,
+
+!--------------------------------------------------------------------
+!     Rest of configuration of svLS is added here, where we have LHS
+!     pointers
+
+         nPermDims = 1
+         nTmpDims = 1
+
+         allocate (lhsP(4,nnz_tot))
+         allocate (lhsK(9,nnz_tot))
+
+!     Setting up svLS or leslib for flow
+
+      IF (svLSFlag .EQ. 1) THEN
+#ifdef HAVE_SVLS
+        IF(nPrjs.eq.0) THEN
+           svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
+         ELSE
+           svLSType=3 !NS solver
+         ENDIF
+!  reltol for the NSSOLVE is the stop criterion on the outer loop
+!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
+!  for now we are using 
+!  Tolerance on ACUSIM Pressure Projection for CG and
+!  Tolerance on Momentum Equations for GMRES
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         eps_outer=40.0*epstol(1)  !following papers soggestion for now
+         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
+     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
+     3      maxItr=maxIters, 
+     4      maxItrIn=(/maxIters,maxIters/))
+
+         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
+            nNo=nshg
+            gnNo=nshgt
+            IF  (ipvsq .GE. 2) THEN
+
+#if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 0))
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 0)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs
+#else
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs
+#endif
+
+            ELSE
+               svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for array size issues
+            END IF
+
+            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            
+            faIn = 1
+            facenNo = 0
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0)  facenNo = facenNo + 1
+            END DO
+            ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
+            sV = 0D0
+            j = 0
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0) THEN
+                  j = j + 1
+                  gNodes(j) = i
+                  IF (.NOT.BTEST(iBC(i),3)) sV(1,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
+               END IF
+            END DO
+            CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
+     2         nsd, BC_TYPE_Dir, gNodes, sV)
+            DEALLOCATE(gNodes)
+            DEALLOCATE(sV)
+#else
+         if(myrank.eq.0) write(*,*) 'your input requests svLS but your cmake did not build for it'
+         call error('itrdrv  ','nosVLS',svLSFlag)  
+#endif
+           ENDIF
+
+           if(leslib.eq.1) then
+#ifdef HAVE_LESLIB 
+!--------------------------------------------------------------------
+           call myfLesNew( lesId,   41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
      &                 nKvecs,         prjFlag,        nPrjs,
@@ -342,15 +461,17 @@ c
      &                 prestol,        verbose,        statsflow,
      &                 nPermDims,      nTmpDims,      servername  )
          
-         allocate (aperm(nshg,nPermDims))
-         allocate (atemp(nshg,nTmpDims))
-         allocate (lhsP(4,nnz_tot))
-         allocate (lhsK(9,nnz_tot))
-
-         call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
+           allocate (aperm(nshg,nPermDims))
+           allocate (atemp(nshg,nTmpDims))
+           call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
      &                        nPermDims )
+#else
+         if(myrank.eq.0) write(*,*) 'your input requests leslib but your cmake did not build for it'
+         call error('itrdrv  ','nolslb',leslib)       
+#endif
+         endif !leslib=1
 
-      else
+      else   ! not solving flow just scalar
          nPermDims = 0
          nTempDims = 0
       endif
@@ -366,6 +487,56 @@ c
          prjFlag     = 1
          indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
                              ! temperature followed by scalars
+!     Setting up svLS or leslib for scalar
+#ifdef HAVE_SVLS
+      IF (svLSFlag .EQ. 1) THEN
+           svLSType=2  !only option for scalars
+!  reltol for the GMRES is the stop criterion 
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, dimKry=Kspace,
+     2      relTol=epstol(indx), 
+     3      maxItr=maxIters 
+     4      )
+
+         CALL svLS_COMMU_CREATE(communicator_S(isolsc), MPI_COMM_WORLD)
+ 
+               svLS_nFaces = 1   !not sure about this...should try it with zero
+
+            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo, 
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            
+              faIn = 1
+              facenNo = 0
+              ib=5+isolsc
+              DO i=1, nshg
+                 IF (btest(iBC(i),ib))  facenNo = facenNo + 1
+              END DO
+              ALLOCATE(gNodes(facenNo), sV(1,facenNo))
+              sV = 0D0
+              j = 0
+              DO i=1, nshg
+               IF (btest(iBC(i),ib)) THEN
+                  j = j + 1
+                  gNodes(j) = i
+               END IF
+              END DO
+           
+            CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
+     2         1, BC_TYPE_Dir, gNodes, sV(1,:))
+            DEALLOCATE(gNodes)
+            DEALLOCATE(sV)
+
+            if( isolsc.eq.1) then ! if multiple scalars make sure done once
+              allocate (apermS(1,1,1))
+              allocate (atempS(1,1))  !they can all share this
+            endif
+         ENDIF  !svLS handing scalar solve
+#endif        
+        
+
+#ifdef HAVE_LESLIB
+         if (leslib.eq.1) then
          call myfLesNew( lesId,            41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
@@ -373,17 +544,23 @@ c
      &                 presPrjFlag,    nPresPrjs,      epstol(indx),
      &                 prestol,        verbose,        statssclr,
      &                 nPermDimsS,     nTmpDimsS,   servername )
-       enddo
+        endif
+#endif
+       enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
+       allocate (lhsS(nnz_tot,nsclrsol))
+#ifdef HAVE_LESLIB       
+       if(leslib.eq.1) then  ! we just prepped scalar solves for leslib so allocate arrays
 c
 c  Assume all scalars have the same size needs
 c
        allocate (apermS(nshg,nPermDimsS,nsclrsol))
        allocate (atempS(nshg,nTmpDimsS))  !they can all share this
-       allocate (lhsS(nnz_tot,nsclrsol))
+       endif
+#endif
 c
 c actually they could even share with atemp but leave that for later
 c
-      else
+      else !no scalar solves at all so zero dims not used
          nPermDimsS = 0
          nTmpDimsS  = 0
       endif
@@ -606,7 +783,12 @@ c
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsK,      lhsP,
      &                         solinc,        rerr,      tcorecp,
-     &                         GradV)
+     &                         GradV,      sumtime
+#ifdef HAVE_SVLS
+     &                         ,svLS_lhs,     svLS_ls,  svLS_nFaces)
+#else
+     &                         )
+#endif      
                   
                   else          ! scalar type solve
                      if (icode.eq.5) then ! Solve for Temperature
@@ -653,7 +835,12 @@ c     Delt(1)= Deltt ! Give a pseudo time step
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
      &                         colm,          lhsS(1,j), 
-     &                         solinc(1,isclr+5), tcorecpscal)
+     &                         solinc(1,isclr+5), tcorecpscal
+#ifdef HAVE_SVLS
+     &                         ,svLS_lhs_S(isclr),   svLS_ls_S(isclr), svls_nfaces)
+#else
+     &                         )
+#endif
                         
                         
                   endif         ! end of scalar type solve
@@ -1140,13 +1327,17 @@ c
           if(myrank.eq.0)  then
             tcormr1 = TMRC()
           endif
-          call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
+          if((nsolflow.eq.1).and.(ipresPrjFlag.eq.1)) then
+#ifdef HAVE_LESLIB
+           call saveLesRestart( lesId,  aperm , nshg, myrank, lstep,
      &                    nPermDims )
           if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
           if(myrank.eq.0)  then
             tcormr2 = TMRC()
             write(6,*) 'call saveLesRestart for projection and'//
      &           'pressure projection vectors', tcormr2-tcormr1
+          endif
+#endif 
           endif
 
           if(ierrcalc.eq.1) then
@@ -1352,8 +1543,10 @@ c
       if(nsolflow.eq.1) then
          deallocate (lhsK)
          deallocate (lhsP)
+         IF (svLSFlag .NE. 1) THEN
          deallocate (aperm)
          deallocate (atemp)
+         ENDIF
       endif
       if(nsclrsol.gt.0) then
          deallocate (lhsS)

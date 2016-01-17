@@ -76,7 +76,7 @@ else
 
 endif
 
-mods  := stats.f BCprofile.f mod_BCsfIDmap.f
+mods  := mod_timedata.f stats.f BCprofile.f mod_BCsfIDmap.f
 
 dirs := .
 DEPS := $(DEPS) phasta/phSolver/$(VERSION)/phSolver phasta/phastaIO phasta/phMetis\

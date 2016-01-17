@@ -16,6 +16,12 @@ set_target_properties(phastaC.exe PROPERTIES HAS_CXX TRUE)
 set_target_properties(compressible PROPERTIES HAS_CXX TRUE)
 set_target_properties(phastaC.exe PROPERTIES LINKER_LANGUAGE Fortran)
 set_target_properties(compressible PROPERTIES LINKER_LANGUAGE Fortran)
+
+if(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+#force preprocessing of itrdrv.f
+ set_source_files_properties(itrdrv.f PROPERTIES COMPILE_FLAGS "-qsuffix=cpp=f")
+endif(CMAKE_Fortran_COMPILER_ID MATCHES XL)
+
 #ughhhhh
 set(PHASTAC_LIBS 
   compressible ${PHASTAC_LIBS} 
@@ -29,7 +35,10 @@ if(PHASTA_BUILD_PHSHAPE)
   set(PHASTAC_LIBS ${PHASTAC_LIBS} phshape)
 endif(PHASTA_BUILD_PHSHAPE)
 target_link_libraries(phastaC.exe ${PHASTAC_LIBS})
-
+if(PHASTA_USE_PETSC)
+	#target_link_libraries(phastaC.exe ${PETSC_LIB}/libpetsc.a ${PETSC_PACKAGE_LIBS})
+	target_link_libraries(phastaC.exe ${PETSC_LIBRARIES})
+endif()
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/phastaCConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/phastaCConfig.cmake"

@@ -24,12 +24,12 @@ c
 c ALL COMPUTABLE WITH READ DATA BUT FOR NOW USER MUST COMPUTE FOR 
 c EACH GEOMETRY + PROFILE
 C
-        ctrl_factor(1) = 1.00*Rgas*293/((2*0.587375)**2) ! inlet
+        ctrl_factor(1) = 1.00*Rgas*330.578/((2*0.587375)**2) ! inlet
 c        ctrl_factor(1) = 1.00*Rgas*293/((0.0889*0.1143)) ! inlet
 c no chamber       ctrl_factor(2) = 2.25*Rgas*293/((0.02441024589128274-0.008949756886432915)*(2*0.0508)) ! bottom FC
-        ctrl_factor(2) = 2.25*Rgas*293/((0.0168910950375201
+        ctrl_factor(2) = 2.25*Rgas*317/((0.0168910950375201
      &                        -0.01054110785157094)*(2*0.041275)) ! bottom FC
-        ctrl_factor(3) = 2.25*Rgas*293/(((-0.126612)
+        ctrl_factor(3) = 2.25*Rgas*317/(((-0.126612)
      &                  -(-0.156330))*(2*0.0508)) ! top FC
 c        ctrl_factor(2) = 2.25*Rgas*293/(lbot *wbot)           
 c        ctrl_factor(1) = CfactInl ! inlet
@@ -47,9 +47,9 @@ c2D        ctrl_factor(3) = 1.5*Rgas*273/0.001188690 ! top FC
         kmaxinf=0
         kmaxbot=0
         kmaxtop=0
-        rmaxvinflow=zero
-        rmaxvbot=zero
-        rmaxvtop=zero
+        rmaxvinflow=-one
+        rmaxvbot=-one
+        rmaxvtop=-one
 c
 c find the peak value (and node number) of each inlet
 c   SWITCH THIS TO USE SURFID's 
@@ -78,7 +78,10 @@ c
            endif
         enddo
 c
-c  call BCprofileScale. Since callled form init, this is going to be used to setc  the yold value on the first step.  Consequently, we will need to set istep toc  -1 temporarily so that when it looks to the target value at the "end" of the c  step it will actually be looking to time zero.  Note we will reset it back toc  zero after this call
+c  call BCprofileScale. Since called form init, this is going to be used to set
+c  the yold value on the first step. Consequently, we will need to set istep to
+c  -1 temporarily so that when it looks to the target value at the "end" of the c  step it will actually be looking to time zero. Note we will reset it back to
+c  zero after this call
 c
         istep=-1 !offset the istep+1 increment so that it gets t0 right
         call BCprofileScale(vbc_prof,BC,yold)
@@ -88,7 +91,7 @@ c
 
         subroutine BCprofileScale(vbc_prof,BC,yold)
         use rampBC
-	use timedata
+        use timedataC
         include "common.h"
         include "mpif.h"
         include "auxmpi.h"
@@ -98,8 +101,8 @@ c
 c
 c in some way find mdot for this way
 c
- 	call rampedMdot(mdotNow)
-c	call flowControl(mdotNow)
+        call rampedMdot(mdotNow)
+c       call flowControl(mdotNow)
 
 c
 c compute the pressure from the current solution at the peak of profile
@@ -127,23 +130,35 @@ c
             do kk=1,numnp
                if(vbc_prof(kk,1).ne.zero) then
                   if(vbc_prof(kk,2).ne.zero) then ! both of these true means top FC
-                     BC(kk,3)=ctrl_a(3)*vbc_prof(kk,1)
-                     BC(kk,4)=ctrl_a(3)*vbc_prof(kk,2)
+                     if(ctrl_a(3).ge.zero) then
+                        BC(kk,3)=ctrl_a(3)*vbc_prof(kk,1)
+                        BC(kk,4)=ctrl_a(3)*vbc_prof(kk,2)
+                     endif
                   else ! only x true means inflow
-                     BC(kk,3)=ctrl_a(1)*vbc_prof(kk,1)
+                     if(ctrl_a(1).ge.zero) then
+                        BC(kk,3)=ctrl_a(1)*vbc_prof(kk,1)
+                     endif
+                     if(ctrl_a(1).eq.zero) then
+                        BC(kk,7) = 0.0d0 ! scalar_1 set to zero for zero flow
+                     endif
                   endif
                else if(vbc_prof(kk,2).ne.zero) then ! y true means low FC
-                  BC(kk,4)=ctrl_a(2)*vbc_prof(kk,2)
+                  if(ctrl_a(2).ge.zero) then
+                     BC(kk,4)=ctrl_a(2)*vbc_prof(kk,2)
+                  endif
+                  if(ctrl_a(2).eq.zero) then
+                     BC(kk,7) = 0.0d0 ! scalar_1 set to zero for zero flow
+                  endif
                endif
             enddo
-            if(ninflow.gt.0) write(myrank+2000,2000) 
-     &                BC(kmaxinf,3),BC(kmaxinf,4),ctrl_a(1),ctrl_pr(1)
-            if(nfcbot .gt.0) write(myrank+2000,2000)
-     &                BC(kmaxbot,3),BC(kmaxbot,4),ctrl_a(2),ctrl_pr(2)
-            if(nfctop .gt.0) write(myrank+2000,2000)
-     &                BC(kmaxtop,3),BC(kmaxtop,4),ctrl_a(3),ctrl_pr(3)
+c            if(ninflow.gt.0) write(myrank+2000,2000), lstep,kmaxinf,one,
+c     &                BC(kmaxinf,3),BC(kmaxinf,4),ctrl_a(1),ctrl_pr(1)
+c            if(nfcbot .gt.0) write(myrank+2000,2000), lstep,kmaxbot,two,
+c     &                BC(kmaxbot,3),BC(kmaxbot,4),ctrl_a(2),ctrl_pr(2)
+c            if(nfctop .gt.0) write(myrank+2000,2000), lstep,kmaxtop,three,
+c     &                BC(kmaxtop,3),BC(kmaxtop,4),ctrl_a(3),ctrl_pr(3)
         endif
- 2000   format(4(e14.7,2x))
+ 2000   format(i6,i6,5(e14.7,2x))
         return
         end
 

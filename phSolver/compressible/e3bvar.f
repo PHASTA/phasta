@@ -4,7 +4,7 @@
      &                     u1,      u2,      u3,      rho,     ei,
      &                     cp,      rk,      
      &                     rou,     p,       tau1n,   tau2n,   tau3n,
-     &                     heat)
+     &                     heat,    dNadx)
 c
 c----------------------------------------------------------------------
 c
@@ -41,6 +41,7 @@ c  tau1n  (npro)                : BC viscous flux 1
 c  tau2n  (npro)                : BC viscous flux 2
 c  tau3n  (npro)                : BC viscous flux 3
 c  heat   (npro)                : BC heat flux
+c  dNdx   (npro, nsd)           : BC element shape function gradients
 c
 c
 c Zdenek Johan, Summer 1990.  (Modified from e2bvar.f)
@@ -65,18 +66,21 @@ c
      &            rou(npro),               p(npro),
      &            tau1n(npro),             tau2n(npro),
      &            tau3n(npro),             heat(npro)
-c
+
         dimension gl1yi(npro,nflow),       gl2yi(npro,nflow),
      &            gl3yi(npro,nflow),       dxdxib(npro,nsd,nsd),
      &            dxidxb(npro,nsd,nsd),    temp(npro),
      &            temp1(npro),             temp2(npro),
-     &            temp3(npro)
-c
+     &            temp3(npro),
+     &            dNadx(npro, nshl, nsd),  dNadxi(npro, nshl, nsd)
+
         dimension h(npro),                 cv(npro),
      &            alfap(npro),             betaT(npro),
      &            gamb(npro),              c(npro),
      &            tmp(npro),
      &            v1(npro,nsd),            v2(npro,nsd)
+
+        integer   aa
 c
 c.... ------------------->  integration variables  <--------------------
 c
@@ -291,6 +295,33 @@ c
 c
 c.... end grad-v
 c
+          !Compute the gradient of the shape function for heat flux's 
+          !contribution to lhsk
+          if(iLHScond > 0) then
+            dNadx = zero
+            
+            !dNdx(a,i) = dN_a / dx_i
+
+            do aa = 1, nshl  !TODO: get rid of the intermediary dNadxi
+                             !shglb(:,nsd,a=1)* N(:,a=1)
+              dNadxi(:,aa,1) = shglb(:,1,aa) * 1 !would normally be a sum over
+              dNadxi(:,aa,2) = shglb(:,2,aa) * 1 !all nodes, but N = 0 for a /= 1
+              dNadxi(:,aa,3) = shglb(:,3,aa) * 1
+            enddo 
+                        
+            do aa = 1, nshl
+              dNadx(:,aa,1) = dNadxi(:,aa,1) * dxidxb(:,1,1) + 
+     &                        dNadxi(:,aa,2) * dxidxb(:,2,1) +
+     &                        dNadxi(:,aa,3) * dxidxb(:,3,1) 
+              dNadx(:,aa,2) = dNadxi(:,aa,1) * dxidxb(:,1,2) + 
+     &                        dNadxi(:,aa,2) * dxidxb(:,2,2) +
+     &                        dNadxi(:,aa,3) * dxidxb(:,3,2) 
+              dNadx(:,aa,3) = dNadxi(:,aa,1) * dxidxb(:,1,3) + 
+     &                        dNadxi(:,aa,2) * dxidxb(:,2,3) +
+     &                        dNadxi(:,aa,3) * dxidxb(:,3,3) 
+            enddo
+          endif
+         
         endif
 c
 c.... -------------------->  Boundary Conditions  <--------------------
@@ -327,13 +358,13 @@ c
 c
 c.... flop count
 c
-          flops = flops + (184+30*nshl+8*nshlb)*npro
+!      flops = flops + (184+30*nshl+8*nshlb)*npro
 c
         endif
 c
 c.... flop count
 c
-        flops = flops + (27+18*nshl+14*nshlb)*npro
+!      flops = flops + (27+18*nshl+14*nshlb)*npro
 c
 c.... return
 c
@@ -594,7 +625,7 @@ c.... impose scalar flux boundary conditions
 c
 c.... flop count
 c
-        flops = flops + (27+18*nshl+14*nenbl)*npro
+!      flops = flops + (27+18*nshl+14*nenbl)*npro
 c
 c.... return
 c

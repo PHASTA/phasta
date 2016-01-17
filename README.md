@@ -10,7 +10,7 @@
     -DCMAKE_BUILD_TYPE=Debug \
     -DPHASTA_INCOMPRESSIBLE=ON \
     -DPHASTA_COMPRESSIBLE=ON \
-    -DACUSOLVE_LIB=/path/to/libles.a \
+    -DLESLIB=/path/to/libles.a \
     -DCASES=/path/to/phastaCases/ \
     -DPHASTA_TESTING=ON \
     ..

@@ -86,7 +86,7 @@ c         call yshuffle(ypre, 'old2new ')
 c
 c.... flop count
 c
-        flops = flops + 4*nflow*nshg
+   !      flops = flops + 4*nflow*nshg
 c
 c.... end
 c

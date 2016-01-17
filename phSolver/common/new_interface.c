@@ -199,7 +199,7 @@ void countfieldstowriterestart()
   }
 
   /*projection vectors and pressure projection vectors (call saveLesRestart in itrdrv)*/
-  if(matdat.matflg[0][0] ==-1) {
+  if(incomp.ipresPrjFlag ==1) {
     nfields = nfields +2;
   }
 

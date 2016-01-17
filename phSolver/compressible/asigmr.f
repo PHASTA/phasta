@@ -12,7 +12,7 @@ c Zdenek Johan, Winter 1991.  (Fortran 90)
 c----------------------------------------------------------------------
 c
         use rlssave     ! Use the resolved Leonard stresses at the nodes.
-        use timedata    ! time series
+        use timedataC    ! time series
         use specialBC    ! get ytarget to localize and send down
         include "common.h"
 c
@@ -26,9 +26,9 @@ c
      &            qres(nshg,idflx)
 
 c
-        dimension ycl(npro,nshl,ndofl),       acl(npro,nshl,ndof),
-     &            xl(npro,nenl,nsd),          ytargetl(npro,nshl,nflow),
-     &            rl(npro,nshl,nflow),       rml(npro,nshl,nflow),
+        dimension ycl(npro,nshl,ndofl),     acl(npro,nshl,ndof),
+     &            xl(npro,nenl,nsd),        ytargetl(npro,nshl,nflow),
+     &            rl(npro,nshl,nflow),      rml(npro,nshl,nflow),
      &            BDiagl(npro,nshl,nflow,nflow),
      &            ql(npro,nshl,idflx)
 c        

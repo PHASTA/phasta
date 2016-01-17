@@ -5,6 +5,7 @@
 #include "phIO.h"
 #include "syncio.h"
 #include "posixio.h"
+#include <assert.h>
 
 int main(int argc, char* argv[]) {
   MPI_Init(&argc,&argv);
@@ -17,16 +18,17 @@ int main(int argc, char* argv[]) {
   phio_fp file;
   posixio_setup(&file, 'r');
   phio_openfile("geombc.dat.", file);
-  MPI_Barrier(MPI_COMM_WORLD);
-  do {
+  for(int i=0;i<2;i++) {
     phio_readheader(file, "connectivity interior",
         headerData, &seven, "integer", iotype);
-    fprintf(stderr, "rank %d data[0] %d\n", rank, headerData[0]);
+    assert(headerData[0] > 0 && headerData[3] > 0);
+    int size = headerData[0]*headerData[3]; /* neltp*nshl */
+    int* vals = (int*) calloc(size,sizeof(int));
+    phio_readdatablock(file,"connectivity interior",vals,&size,"integer",iotype);
+    free(vals);
     blocksRead += (headerData[0] > 0);
-  } while( headerData[0] > 0 );
+  }
   phio_closefile(file);
-  MPI_Barrier(MPI_COMM_WORLD);
-  fprintf(stderr, "rank %d number of blocks read %d\n", rank, blocksRead);
   MPI_Finalize();
-  return (blocksRead==2);
+  return !(blocksRead==2);
 }

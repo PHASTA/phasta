@@ -98,111 +98,174 @@ c
 c
 c.... Accumulate the lhsK
 c
-	do e = 1, npro
-	    do aa = 1, nshl
-		i = ien(e,aa)
-		c = col(i)
-		n = col(i+1) - c
-		r = (aa-1)*nflow
-		do b = 1, nshl
-		    s = (b-1)*nflow
-                    k = sparseloc( row(c), n, ien(e,b) ) + c-1
-c
-		    do g = 1, nflow
-		       t = (g-1)*nflow
-		       do f = 1, nflow
+      do e = 1, npro
+        do aa = 1, nshl  !loop over matrix block column index
+          i = ien(e,aa)  !get mapping from aath node of element e to 
+                         ! the ith row of lhsk
 
-			  lhsK(t+f,k) = lhsK(t+f,k) + EGmass(e,r+f,s+g)
-c
+          c = col(i)     !Get the mapping from the ith row of lhsk to
+                         ! to the corresponding location in row
+          n = col(i+1) - c   !number of nonzero blocks in the row
+          r = (aa-1)*nflow   !starting index of the ath node in EGmass
+          do b = 1, nshl     
+            s = (b-1)*nflow  !starting index of the bth node's 
+                             !contribution to node aa. 
+            k = sparseloc( row(c), n, ien(e,b) ) + c-1 
+                !Find the index of row which corresponds to node b of 
+                !element e. This is where contributions from EGmass 
+                !will actually get stored. 
+            
+            do g = 1, nflow    !loop over columns in a block
+               t = (g-1)*nflow 
+               do f = 1, nflow !loop over rows in a block
+                 lhsK(t+f,k) = lhsK(t+f,k) + EGmass(e,r+f,s+g)
+               enddo
+            enddo
+          enddo
+        enddo
+      enddo
 
-                       enddo
-                   enddo
-		enddo
-	    enddo
-	enddo
-c
-c.... end
-c
-	return
-	end
+      return
+      end
+ 
+      subroutine fillsparseC_BC(    iens, EGmass,
+     &                              lhsk, row,    col)
+!
+!-----------------------------------------------------------
+! This routine adds contributions from heat flux BCs to the 
+! spasely stored LHS mass matrix. This routine is modified 
+! from fillsparseC. 
+!
+! Nicholas Mati, Summer 2014. (Sparse Matrix)
+!-----------------------------------------------------------
+!
+      include "common.h"
 
-	subroutine fillsparseSclr(   iens,      xSebe,	lhsS,
-     1			             row,	col)
-c
-c
-c
-	include "common.h"
-	real*8	xSebe(npro,nshl,nshl)
-	integer	ien(npro,nshl),	col(nshg+1), row(nshg*nnz)
-	real*8	lhsS(nnz_tot)	
-c
-	integer	aa,	b,	c,	e,	i,	k,	n
-c
-	integer sparseloc
+      real*8     EGmass(npro, nshl, nshl)  !only contains term (5,5)
+      integer    ien(npro,nshl),    col(nshg+1), row(nnz*nshg)
+      real*8     lhsK(nflow*nflow,nnz_tot)
 
-	integer iens(npro,nshl)
+      integer aa, b, c, e, i, k, n, n1
+      integer f, g, r, s, t
+      
+      integer sparseloc
+      integer iens(npro,nshl)
 c
 c prefer to show explicit absolute value needed for cubic modes and
 c higher rather than inline abs on pointer as in past versions
 c iens is the signed ien array ien is unsigned
 c
-	ien=abs(iens)
+      ien=abs(iens)
+
+      !Accumulate the lhsK
+      do e = 1, npro
+        do aa = 1, nshl  !loop over matrix block column index
+          i = ien(e,aa)  !get mapping from aath node of element e to 
+                         ! the ith row of lhsk
+
+          c = col(i)     !Get the mapping from the ith row of lhsk to
+                         ! to the corresponding location in row
+          n = col(i+1) - c   !number of nonzero blocks in the row
+!          r = (aa-1)*nflow   !starting index of the ath node in EGmass
+          do b = 1, nshl     
+!            s = (b-1)*nflow  !starting index of the bth node's 
+                             !contribution to node aa. 
+            k = sparseloc( row(c), n, ien(e,b) ) + c-1 
+                !Find the index of row which corresponds to node b of 
+                !element e. This is where contributions from EGmass 
+                !will actually get stored. 
+            
+            lhsk(25, k) = lhsk(25, k) + EGmass(e, aa, b)
+!            do g = 1, nflow    !loop over columns in a block
+!               t = (g-1)*nflow 
+!               do f = 1, nflow !loop over rows in a block
+!                 lhsK(t+f,k) = lhsK(t+f,k) + EGmass(e,r+f,s+g)
+!               enddo
+!            enddo
+          enddo !loop over node b
+        enddo !loop over node a
+      enddo !loop over elements
+
+      !end
+      return
+      end
+
+
+      subroutine fillsparseSclr(   iens,      xSebe,    lhsS,
+     1                         row,    col)
+      
+      include "common.h"
+      real*8    xSebe(npro,nshl,nshl)
+      integer    ien(npro,nshl),    col(nshg+1), row(nshg*nnz)
+      real*8    lhsS(nnz_tot)    
+
+      integer    aa,    b,    c,    e,    i,    k,    n
+
+      integer sparseloc
+
+      integer iens(npro,nshl)
+c
+c prefer to show explicit absolute value needed for cubic modes and
+c higher rather than inline abs on pointer as in past versions
+c iens is the signed ien array ien is unsigned
+c
+      ien=abs(iens)
 c
 c.... Accumulate the lhs
 c
-	do e = 1, npro
-	    do aa = 1, nshl
-		i = ien(e,aa)
-		c = col(i)
-		n = col(i+1) - c
-		do b = 1, nshl
-		    k = sparseloc( row(c), n, ien(e,b) ) + c-1
+      do e = 1, npro
+        do aa = 1, nshl
+        i = ien(e,aa)
+        c = col(i)
+        n = col(i+1) - c
+        do b = 1, nshl
+            k = sparseloc( row(c), n, ien(e,b) ) + c-1
 c
-		    lhsS(k) = lhsS(k) + xSebe(e,aa,b)
-		enddo
-	    enddo
-	enddo
+            lhsS(k) = lhsS(k) + xSebe(e,aa,b)
+        enddo
+        enddo
+      enddo
 c
 c.... end
 c
-	return
-	end
+      return
+      end
 
-	integer	function sparseloc( list, n, target )
+      integer    function sparseloc( list, n, target )
 
 c-----------------------------------------------------------
 c This function finds the location of the non-zero elements
 c of the LHS matrix in the sparsely stored matrix 
 c lhsK(nflow*nflow,nnz*numnp)
 c
-c Nahid Razmara, Spring 2000. 	(Sparse Matrix)
+c Nahid Razmara, Spring 2000.     (Sparse Matrix)
 c-----------------------------------------------------------
 
-	integer	list(n),	n,	target
-	integer	rowvl,	rowvh,	rowv
+      integer    list(n),    n,    target
+      integer    rowvl,    rowvh,    rowv
 
 c
 c.... Initialize
 c
-	rowvl = 1
-	rowvh = n + 1
+      rowvl = 1
+      rowvh = n + 1
 c
 c.... do a binary search
 c
-100	if ( rowvh-rowvl .gt. 1 ) then
-	    rowv = ( rowvh + rowvl ) / 2
-	    if ( list(rowv) .gt. target ) then
-		rowvh = rowv
-	    else
-		rowvl = rowv
-	    endif
-	    goto 100
-	endif
+100    if ( rowvh-rowvl .gt. 1 ) then
+        rowv = ( rowvh + rowvl ) / 2
+        if ( list(rowv) .gt. target ) then
+        rowvh = rowv
+        else
+        rowvl = rowv
+        endif
+        goto 100
+      endif
 c
 c.... return
 c
-	sparseloc = rowvl
+      sparseloc = rowvl
 c
-	return
-	end
+      return
+      end
 

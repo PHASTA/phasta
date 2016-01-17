@@ -8,11 +8,16 @@
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsK,       lhsP, 
      &                   solinc,     rerr,       tcorecp,
-     &                   GradV)
+     &                   GradV,       sumtime
+#ifdef HAVE_SVLS     
+     &                   ,svLS_lhs,  svLS_ls,   svLS_nFaces)
+#else
+     &                   )
+#endif
 c
 c----------------------------------------------------------------------
 c
-c This is the 2nd interface routine to the Farzin's linear equation 
+c This is the 2nd interface routine to the  linear equation 
 c solver library that uses the CGP and GMRES methods.
 c
 c input:
@@ -64,7 +69,27 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
-c     
+#ifdef HAVE_SVLS      
+        include "svLS.h"
+#endif        
+c 
+C
+C     Argument variables
+C
+      INTEGER            npermdims
+      INTEGER             ntmpdims
+C
+C     Local variables
+C
+      INTEGER              lesid
+C
+      REAL*8                rdtmp
+C    
+#ifdef HAVE_SVLS
+      TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
+      TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
+#endif      
+       
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
      &          u(nshg,nsd),              uold(nshg,nsd),
@@ -96,7 +121,13 @@ c
       real*8    rerr(nshg,10),            rtmp(nshg,4),rtemp
       
       real*8    msum(4),mval(4),cpusec(10)
-
+      REAL*8 sumtime
+#ifdef HAVE_SVLS      
+      INTEGER svLS_nFaces
+#endif      
+      INTEGER dof, i, j, k, l
+      INTEGER, ALLOCATABLE :: incL(:)
+      REAL*8, ALLOCATABLE :: faceRes(:), Res4(:,:), Val4(:,:)
 
 c     
 c.... *******************>> Element Data Formation <<******************
@@ -138,7 +169,59 @@ c      call summary_stop()
 
             tmpres(:,:) = res(:,:)
             iblk = 1
+#ifdef HAVE_SVLS            
+      IF (svLSFlag .EQ. 1) THEN
 
+c####################################################################
+!     Here calling svLS
+
+      ALLOCATE(faceRes(svLS_nFaces), incL(svLS_nFaces))
+      faceRes=zero  ! function to compute this left out at this time but would be needed to enable adnvanced p vs. Q BC's
+      incL = 1
+      dof = 4
+      IF (.NOT.ALLOCATED(Res4)) THEN
+         ALLOCATE (Res4(dof,nshg), Val4(dof*dof,nnz_tot))
+      END IF
+
+      DO i=1, nshg
+         Res4(1:dof,i) = res(i,1:dof)
+      END DO
+
+      DO i=1, nnz_tot
+         Val4(1:3,i)   = lhsK(1:3,i)
+         Val4(5:7,i)   = lhsK(4:6,i)
+         Val4(9:11,i)  = lhsK(7:9,i)
+         Val4(13:15,i) = lhsP(1:3,i)
+         Val4(16,i)    = lhsP(4,i)
+      END DO
+
+      !Val4(4:12:4,:) = -lhsP(1:3,:)^t
+      DO i=1, nshg
+         Do j=colm(i), colm(i+1) - 1
+            k = rowp(j)
+            DO l=colm(k), colm(k+1) - 1
+               IF (rowp(l) .EQ. i) THEN
+                  Val4(4:12:4,l) = -lhsP(1:3,j)
+                  EXIT
+               END IF
+            END DO
+         END DO
+      END DO
+      CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res4, Val4, incL, 
+     2   faceRes)
+      
+      if(myrank.eq.master) write(*,*) 'svLS outer iterations', svLS_ls%RI%itr
+      statsflow(1)=1.0*svLS_ls%GM%itr
+      statsflow(4)=1.0*svLS_ls%CG%itr
+      DO i=1, nshg
+         solinc(i,1:dof) = Res4(1:dof,i)
+      END DO
+      ENDIF 
+#endif
+
+#ifdef HAVE_LESLIB  
+      if(leslib.eq.1) then    
+c
 c.... lesSolve : main matrix solver
 c
       lesId   = numeqns(1)
@@ -252,6 +335,8 @@ c
       if (numpe > 1) then
          call commu ( solinc, ilwork, nflow, 'out')
       endif
+      ENDIF ! end of leslib flow solve
+#endif   
       tlescp2 = TMRC()
       impistat=0
       impistat2=0
@@ -259,7 +344,6 @@ c      call summary_stop()
 
       tcorecp(1) = tcorecp(1) + telmcp2-telmcp1 ! elem. formation
       tcorecp(2) = tcorecp(2) + tlescp2-tlescp1 ! linear alg. solution
-
       call rstatic (res, y, solinc) ! output flow stats
 c     
 c.... end
@@ -275,7 +359,12 @@ c
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
      &                   colm,       lhsS,       solinc,
-     &                   tcorecpscal)
+     &                   tcorecpscal
+#ifdef HAVE_SVLS     
+     &                   ,svLS_lhs,  svLS_ls,   svLS_nFaces)
+#else
+     &                   )      
+#endif      
 c
 c----------------------------------------------------------------------
 c
@@ -308,6 +397,9 @@ c
       include "common.h"
       include "mpif.h"
       include "auxmpi.h"
+#ifdef HAVE_SVLS      
+        include "svLS.h"
+#endif        
 c     
       real*8    y(nshg,ndof),             ac(nshg,ndof),
      &          yold(nshg,ndof),          acold(nshg,ndof),
@@ -334,6 +426,15 @@ c
      &          lesP(nshg,1),               lesQ(nshg,1),
      &          solinc(nshg,1),           CGsol(nshg),
      &          tcorecpscal(2)
+#ifdef HAVE_SVLS     
+      TYPE(svLS_lhsType), INTENT(INOUT) :: svLS_lhs
+      TYPE(svLS_lsType), INTENT(INOUT) ::  svLS_ls
+      INTEGER svLS_nFaces
+#endif      
+      REAL*8 sumtime
+      INTEGER dof, i, j, k, l
+      INTEGER, ALLOCATABLE :: incL(:)
+      REAL*8, ALLOCATABLE :: faceRes(:), Res1(:,:), Val1(:,:)
       
 c     
 c.... *******************>> Element Data Formation <<******************
@@ -357,6 +458,39 @@ c
       telmcp2 = TMRC()
       impistat=0
       impistat2=0
+      statssclr(1)=0
+#ifdef HAVE_SVLS      
+      IF (svLSFlag .EQ. 1) THEN
+
+c####################################################################
+!     Here calling svLS
+
+      ALLOCATE(faceRes(svLS_nFaces), incL(svLS_nFaces))
+      faceRes=zero  
+      incL = 1
+      dof = 1
+      IF (.NOT.ALLOCATED(Res1)) THEN
+         ALLOCATE (Res1(dof,nshg), Val1(dof*dof,nnz_tot))
+      END IF
+
+      DO i=1, nshg
+         Res1(1,i) = res(i,1)
+      END DO
+
+      DO i=1, nnz_tot
+         Val1(1,i)    = lhsS(i)
+      END DO
+
+      CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res1, Val1, incL, 
+     2   faceRes)
+      statssclr(1)=1.0*svLS_ls%RI%itr
+      DO i=1, nshg
+         solinc(i,1) = Res1(1,i)
+      END DO
+      ENDIF
+#endif          
+#ifdef HAVE_LESLIB
+      if(leslib.eq.1) then
 c
 c.... lesSolve : main matrix solver
 c
@@ -386,7 +520,9 @@ c
 
       if (numpe > 1) then
          call commu ( solinc, ilwork, 1, 'out')
-      endif
+      endif      
+      ENDIF ! leslib conditional
+#endif      
       tlescp2 = TMRC()
       impistat=0
       impistat2=0

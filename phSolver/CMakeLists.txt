@@ -7,6 +7,18 @@ set(CASES "/path/to/test/cases/"
   "path to the test cases")
 option(PHASTA_TESTING "enable tests" OFF)
 
+option(PHASTA_USE_PETSC "Use PETSc GMRES Solver" OFF)
+if(PHASTA_USE_PETSC)
+find_package(PETSC REQUIRED)
+link_directories(${PETSC_LIBRARY_DIRS})
+include_directories(${PETSC_INCLUDE_DIRS})
+add_definitions(-DHAVE_PETSC)
+option(IS_JEDS_BRANCH "Use Jed's Experimental PETSc Optimizations" OFF)
+if(IS_JEDS_BRANCH)
+	add_definitions(-DJEDBROWN)
+endif()
+endif(PHASTA_USE_PETSC)
+
 add_subdirectory(common)
 option(PHASTA_INCOMPRESSIBLE "Build the incompressible solver" OFF)
 option(PHASTA_COMPRESSIBLE "Build the compressible solver" ON)

@@ -264,7 +264,7 @@ c
          rLymi(:,5) = tau(:,3) * rLymi(:,5)
       endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return
@@ -390,7 +390,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 65*npro
+   !      flops = flops + 65*npro
 
 c.... reduce the diffusion contribution
 c
@@ -726,7 +726,7 @@ c
            enddo
         endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return
@@ -856,7 +856,7 @@ c
 c
 c.... flop count
 c
-        flops = flops + 65*npro
+   !      flops = flops + 65*npro
 
 c.... reduce the diffusion contribution
 c
@@ -1191,7 +1191,7 @@ c
            enddo
         endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return
@@ -1306,6 +1306,7 @@ c
 c... rmu will now hold the total (molecular plus eddy) viscosity...
       dts=one/(Dtgl*dtsfct)
       if(iremoveStabTimeTerm.gt.0) dts = dts*100000  ! remove time term from scalar
+! Duct code had this       dts=1.0e16
       taut(:)=min(dts,h2o2u)
       taut(:)=taut(:)/rho
       taut(:)=min(taut(:),h2o2u*h2o2u*rk*pt66*saSigma/rmu)
@@ -1376,7 +1377,7 @@ c          rLymi(:,4) = tau(:,2) * rLymi(:,4)
 c          rLymi(:,5) = tau(:,3) * rLymi(:,5)
 c        endif
 c
-c  INCORRECT NOW         flops = flops + 255*npro
+c  INCORRECT NOW    !      flops = flops + 255*npro
 c
 c
 c.... return

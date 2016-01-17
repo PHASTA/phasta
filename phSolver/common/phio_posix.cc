@@ -11,11 +11,6 @@
 #include <string>
 
 namespace {
-  std::string appendPosix(const char* phrase) {
-    std::stringstream ss;
-    ss << phrase << "?";
-    return ss.str();
-  }
   std::string appendRank(const char* phrase) {
     std::stringstream ss;
     ss << phrase << phcomm_rank()+1;
@@ -52,8 +47,7 @@ void posix_readheader(
     int*  nItems,
     const char  datatype[],
     const char  iotype[] ) {
-  std::string posixPhrase = appendPosix(keyphrase);
-  readheader(fileDescriptor, posixPhrase.c_str(),
+  readheader(fileDescriptor, keyphrase,
       valueArray, nItems, datatype, iotype);
 }
 
@@ -65,8 +59,7 @@ void posix_writeheader(
       const int* ndataItems,
       const char datatype[],
       const char iotype[] ) {
-  std::string posixPhrase = appendPosix(keyphrase);
-  writeheader(fileDescriptor, posixPhrase.c_str(), valueArray,
+  writeheader(fileDescriptor, keyphrase, valueArray,
       nItems, ndataItems, datatype, iotype);
 }
 
@@ -77,8 +70,7 @@ void posix_readdatablock(
     int*  nItems,
     const char  datatype[],
     const char  iotype[] ) {
-  std::string posixPhrase = appendPosix(keyphrase);
-  readdatablock(fileDescriptor, posixPhrase.c_str(),
+  readdatablock(fileDescriptor, keyphrase,
       valueArray, nItems, datatype, iotype);
 }
 
@@ -89,8 +81,7 @@ void posix_writedatablock(
     const int* nItems,
     const char datatype[],
     const char iotype[]) {
-  std::string posixPhrase = appendPosix(keyphrase);
-  writedatablock(fileDescriptor, posixPhrase.c_str(), valueArray,
+  writedatablock(fileDescriptor, keyphrase, valueArray,
       nItems, datatype, iotype);
 }
 

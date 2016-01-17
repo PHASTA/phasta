@@ -4,7 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cassert>
-
+#ifdef HAVE_PETSC
+#include <petscsys.h>
+#include <petscviewer.h>
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -155,6 +158,19 @@ int phasta( int argc, char *argv[] ) {
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
 
+#ifdef HAVE_PETSC
+    PETSC_COMM_WORLD=MPI_COMM_WORLD;
+    PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
+    PetscInitializeFortran();
+    PetscPopSignalHandler(); //Let us segfault in peace ;-)
+    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if(myrank == 0)
+    {
+	    printf("PETSc Initialized\n");
+	    fflush(stdout);
+    }
+#endif
     workfc.numpe = size;
     workfc.myrank = myrank;
 
@@ -234,6 +250,9 @@ int phasta( int argc, char *argv[] ) {
     else{
         printf("error during reading ascii input \n");
     }
+#ifdef HAVE_PETSC
+    PetscFinalize();
+#endif
     MPI_Barrier(MPI_COMM_WORLD);
     if ( myrank == 0 ) {
       printf("phasta.cc - last call before finalize!\n");

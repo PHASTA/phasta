@@ -519,7 +519,6 @@ c.... end
 c
 	return
 	end
-
 C============================================================================
 	subroutine commOut(  global,  ilwork,  n, 
      &                       iper,    iBC, BC  )

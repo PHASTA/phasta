@@ -22,7 +22,9 @@
 #define astore FortranCInterface_GLOBAL_(astore,ASTORE)
 #define conpar FortranCInterface_GLOBAL_(conpar,CONPAR)
 #define ctrlvari FortranCInterface_GLOBAL_(ctrlvari,CTRLVARI)
-#define ctrlvar  FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
+#define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
+#define ctrlvar FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
+#define ductvar FortranCInterface_GLOBAL_(ductvar,DUCTVAR)
 #define shpdat FortranCInterface_GLOBAL_(shpdat,SHPDAT)
 #define datpnt FortranCInterface_GLOBAL_(datpnt,DATPNT)
 #define elmpar FortranCInterface_GLOBAL_(elmpar,ELMPAR)
@@ -56,7 +58,7 @@
 #define amgvari FortranCInterface_GLOBAL_(amgvari,AMGVARI)
 
 #define MAXBLK   50000
-#define MAXSURF  30  
+#define MAXSURF  1000  
 #define MAXTS   100
 #define MAXTOP   6
 #define MAXQPT   125
@@ -99,8 +101,11 @@ extern "C" {
   } fronts ;
 
   extern struct { 
+    long long int nshgt;
+    long long int minowned;
+    long long int maxowned;
     int numper;
-    int nshgt;
+    //int nshgt;
     int nshg0;
   } newdim ;
 
@@ -250,6 +255,9 @@ extern "C" {
     int nflow;
     int nnz_tot;
     int idtn;
+    int ncorpsize;
+    int iownnodes;
+    int usingpetsc;
   } conpar ;
  
 /*chen Sep 25 2009  Flow Control Parameters*/
@@ -258,6 +266,31 @@ extern "C" {
     int isetOutPres;
     int isetInitial;
   } ctrlvari;
+
+	extern struct{
+		double BlowingVelDuct; 
+		double BlowingIniMdotDuct;
+		double BlowingFnlMdotDuct;
+		double suctionVbottom;
+		double suctionVside_lower;
+		double suctionVside_upper;
+		double suctionVtop;
+		double blowerVelocity;
+		double blowerTemperature;
+		double blowerEV;
+		int isetOutletID;
+		int isetInitial_Duct;
+		int isetInlet_Duct;
+		int isetSuctionID_Duct;
+		int isetBlowerID_Duct;
+		int iDuctgeometryType;
+		int iStraigtPrint;
+		int isetEV_IC_BC;
+		int isetEVramp;
+		int isetBlowing_Duct;
+		int ifixBlowingVel_Duct;  
+		int nBlowingStepsDuct;
+	}ductvari;
 
   extern struct{
     double inletVelX;
@@ -269,6 +302,16 @@ extern "C" {
     double pres_ini;
     double evis_ini;
   } ctrlvar;
+
+	extern struct{
+		double evis_IC_BC;
+		double EVrampXmin;
+		double EVrampXmax;
+		double EVrampMin;
+		double EVrampMax;
+	} ductvar;
+//////////////////////////////////////////
+
  
   extern struct { 
     double epsilon_ls;
@@ -350,6 +393,7 @@ extern "C" {
     int irampViscOutlet;
     int istretchOutlet;
     int iremoveStabTimeTerm;
+	int iLHScond;
   } genpar ;
 
   extern struct { 
@@ -365,6 +409,9 @@ extern "C" {
     int LHSupd[6];
     int loctim[MAXTS];
     double deltol[2][MAXTS];
+    int leslib;
+    int svLSFlag;
+    int svLSType;
   } inpdat ;
 
   extern struct { 
@@ -407,17 +454,12 @@ extern "C" {
   extern struct { 
     double eGMRES;
     int lGMRES;
+    int lGMRESs;
     int iKs;
+    int iKss;
     int ntotGM;
+    int ntotGMs;
   } itrpar ;
-
-  extern struct { 
-    int mHBrg;
-    int meBrg;
-    int myBrg;
-    int mRcos;
-    int mRsin;
-  } itrpnt ;
 
   extern struct { 
     double datmat[MAXTS][7][3];
@@ -479,6 +521,7 @@ extern "C" {
 
   extern struct { 
     double resfrt;
+    double resfrts;
   } resdat ;
 
   extern struct { 
@@ -501,10 +544,10 @@ extern "C" {
     double Dtmax;
     double alpha;
     double etol;
-    int lstep;
+    int lstep;  // read from numstart.dat and incremented every time step
     int ifunc;
     int itseq;
-    int istep;
+    int istep; //  how many steps (starting from 0 each run)
     int iter;
     int nitr;
     double almi;
