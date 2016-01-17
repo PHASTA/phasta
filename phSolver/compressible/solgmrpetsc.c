@@ -36,9 +36,8 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static Vec DyP, resP, DyPLocal;
       static PetscErrorCode ierr;
       static PetscInt PetscOne, PetscRow, PetscCol, LocalRow, LocalCol;
-      static IS LocalIndexSet, GlobalIndexSet;
+      static IS LocalIndexSet;
       static ISLocalToGlobalMapping VectorMapping;
-      static ISLocalToGlobalMapping GblVectorMapping;
       static  VecScatter scatter7;
       static int firstpetsccall = 1;
    
@@ -46,9 +45,8 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static PC pcs;
       static KSP ksps;
       static Vec DyPs, resPs, DyPLocals;
-      static IS LocalIndexSets, GlobalIndexSets;
+      static IS LocalIndexSets;
       static ISLocalToGlobalMapping VectorMappings;
-      static ISLocalToGlobalMapping GblVectorMappings;
       static VecScatter scatter7s;
       static int firstpetsccalls = 1;
 
@@ -124,37 +122,11 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       PetscOne = 1;
       uint64_t duration[4];
 
-//      printf("%g %g %g \n", *rerr, *(rerr+1) , *(rerr+2));
-
-       if(firstpetsccall == 1) {
-/*         call get_time(duration(1),duration(2));
-         call system('sleep 10');
-         call get_time(duration(3),duration(4));
-         call get_max_time_diff(duration(1), duration(3), 
-                              duration(2), duration(4),
-                              "TenSecondSleep " // char(0))
-         if(myrank .eq. 0) {
-           !write(*,"(A, E10.3)") "TenSecondSleep ", elapsed
-         }
-*/
-       }
-//      
-//     
-// .... *******************>> Element Data Formation <<******************
-// 
-// 
-// .... set the parameters for flux and surface tension calculations
-// 
-// 
-      genpar.idflx = 0 ;
-      if(genpar.idiff >= 1)  genpar.idflx= genpar.idflx + (nflow-1) * nsd;
-      if (genpar.isurf == 1) genpar.idflx=genpar.idflx + nsd;
-
-
-
       gcorp_t glbNZ;
 
       if(firstpetsccall == 1) {
+//Everthing in this conditional block should be moved to a function to estimate the size of PETSc's matrix which improves time on the first matrix fill
+//
         PetscInt* idiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
         PetscInt* iodiagnz= (PetscInt*) malloc(sizeof(PetscInt)*iownnodes);
         for(i=0;i<iownnodes;i++) {
@@ -209,47 +181,28 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         }
         // Print debug info
         if(nshgt < 200){
-        int irank;
-        for(irank=0;irank<workfc.numpe;irank++) {
-          if(irank == workfc.myrank){
-            printf("mbeg,mend,myrank,idiagnz, iodiagnz %d %d %d \n",mbeg,mend,workfc.myrank);
-            for(i=0;i<iownnodes;i++) {
-              printf("%d %ld %ld \n",workfc.myrank,idiagnz[i],iodiagnz[i]);
+          int irank;
+          for(irank=0;irank<workfc.numpe;irank++) {
+            if(irank == workfc.myrank){
+              printf("mbeg,mend,myrank,idiagnz, iodiagnz %d %d %d \n",mbeg,mend,workfc.myrank);
+              for(i=0;i<iownnodes;i++) {
+                printf("%d %ld %ld \n",workfc.myrank,idiagnz[i],iodiagnz[i]);
+              }
             }
+           MPI_Barrier(MPI_COMM_WORLD); 
           }
-         MPI_Barrier(MPI_COMM_WORLD); 
-        }
-        }
-//       }
-//       if(firstpetsccall == 1) {
-
+        } 
         petsc_bs = (PetscInt) nflow;
         petsc_m  = (PetscInt) nflow* (PetscInt) iownnodes;
         petsc_M  = (PetscInt) nshgt * (PetscInt) nflow;
         petsc_PA  = (PetscInt) 40;
-        // TODO: fixe nshgt for 64 bit integer!!!!!
-       
-        //ierr = MatCreateBAIJ(PETSC_COMM_WORLD, nflow, nflow*iownnodes,
-        //       nflow*iownnodes, nshgt*nflow, nshgt*nflow, 0,
-
-// this has no pre-allocate        ierr = MatCreateBAIJ(PETSC_COMM_WORLD, petsc_bs, petsc_m, petsc_m, petsc_M, petsc_M,
-// this has no pre-allocate                             0, NULL, 0, NULL, &lhsP);
-
-// next 2 do pre-allocate
-
-//      MPI_Barrier(MPI_COMM_WORLD); 
-//      if(workfc.myrank ==0) printf("Before matCreateBAIJ petsc_bs,petsc_m,petsc_M,petsc_PA %ld %ld %ld %ld \n",petsc_bs,petsc_m,petsc_M,petsc_PA);
-        
         ierr = MatCreateBAIJ(PETSC_COMM_WORLD, petsc_bs, petsc_m, petsc_m, petsc_M, petsc_M,
                              0, idiagnz, 0, iodiagnz, &lhsP);
 
-//                              petsc_PA, NULL, petsc_PA, NULL, &lhsP);
-//      MPI_Barrier(MPI_COMM_WORLD); 
-//      if(workfc.myrank ==0) printf("Before matSetOoption 1  \n");
         ierr = MatSetOption(lhsP, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
 
 // Next is Jed Brown's improvement to imprint Assembly to make that stage scalable after the first call
-#ifdef HIDEJEDBROWN        
+#ifdef JEDBROWN        
         ierr = MatSetOption(lhsP, MAT_SUBSET_OFF_PROC_ENTRIES, PETSC_TRUE);
 #endif        
         ierr = MatSetUp(lhsP);
@@ -259,43 +212,42 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
 //debug
       if(workfc.myrank == rankdump) printf("Flow myrank,myMatStart,myMatEnd %d,%d,%d, \n", workfc.myrank,myMatStart,myMatEnd);
       }
-//      MPI_Barrier(MPI_COMM_WORLD); 
- //     if(workfc.myrank ==0) printf("Before MatZeroEntries  \n");
       if(genpar.lhs ==1) ierr = MatZeroEntries(lhsP);
+
+//     
+// .... *******************>> Element Data Formation <<******************
+// 
+// 
+// .... set the parameters for flux and surface tension calculations
+// 
+// 
+      genpar.idflx = 0 ;
+      if(genpar.idiff >= 1)  genpar.idflx= genpar.idflx + (nflow-1) * nsd;
+      if (genpar.isurf == 1) genpar.idflx=genpar.idflx + nsd;
 
       get_time(duration, (duration+1)); 
          
-//      MPI_Barrier(MPI_COMM_WORLD); 
- //     if(workfc.myrank ==0) printf("Before elmgmr  \n");
-//      for (i=0; i<nshg ; i++) {
-//            assert(fncorp[i]>0);
-//      }
-
       ElmGMRPETSc(y,             ac,            x,
                   shp,           shgl,          iBC,
                   BC,            shpb,
                   shglb,         res,
                   rmes,                   iper,
                   ilwork,        rerr ,         &lhsP);
-//  Below was just to confirm that what is in rstat is the res or b vector given to PETSc
-//      rstat (res, ilwork);
-//      if(workfc.myrank ==0) printf("residual after ElmGMRPETSc\n");
+      
       get_time((duration+2), (duration+3));
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
                         "ElmGMRPETSc \0");  // char(0))
-//       printf("after ElmGMRPETSc\n");
        if(firstpetsccall == 1) {
       // Setup IndexSet. For now, we mimic vector insertion procedure
       // Since we always reference by global indexes this doesn't matter
       // except for cache performance)
       // TODO: Better arrangment?
-      //PetscInt indexsetary[nflow*nshg];
       PetscInt* indexsetary = malloc(sizeof(PetscInt)*nflow*nshg);
-      PetscInt* gblindexsetary = malloc(sizeof(PetscInt)*nflow*nshg);
       PetscInt nodetoinsert;
         nodetoinsert = 0;
         k=0;
+//debug
          if(workfc.myrank == rankdump) {
              printf("myrank,i,iownnodes,nshg %d %d %d %d \n",workfc.myrank,i,iownnodes,nshg);
              printf("myrank,mbeg,mend %d %d %d \n",workfc.myrank,mbeg,mend);
@@ -303,13 +255,11 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         if(workfc.numpe > 1) {
           for (i=0; i<nshg ; i++) {
             nodetoinsert = fncorp[i]-1;
-
 //debug
          if(workfc.myrank == rankdump) {
              printf("myrank,i,nodetoinsert %d %d %d \n",workfc.myrank,i,nodetoinsert);
          }
             
-//            if(nodetoinsert<0) printf("nodetoinsert <0! myrank: %d, value: %ld\n", workfc.myrank, nodetoinsert);
 //            assert(fncorp[i]>=0);
             for (j=1; j<=nflow; j++) {
               indexsetary[k] = nodetoinsert*nflow+(j-1);
@@ -329,31 +279,11 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
           }
         } 
         
-        for (i=0; i<nshg*nflow; i++) {
-          gblindexsetary[i] = i ; //TODO: better option for performance?
-//debug
-         if(workfc.myrank == rankdump) {
-             printf("myrank,i,glbindexsetary %d %d %d \n",workfc.myrank,i,gblindexsetary[i]);
-         }
-        }
 //  Create Vector Index Maps
         petsc_n  = (PetscInt) nshg * (PetscInt) nflow;
-        //ierr = ISCreateGeneral(PETSC_COMM_SELF, nshg*nflow, indexsetary,
-     	//       PETSC_COPY_VALUES, &LocalIndexSet);
         ierr = ISCreateGeneral(PETSC_COMM_SELF, petsc_n, indexsetary,
      	       PETSC_COPY_VALUES, &LocalIndexSet);
-//        printf("after 1st ISCreateGeneral %d\n", ierr);
-        //ierr = ISCreateGeneral(PETSC_COMM_SELF, nshg*nflow, gblindexsetary,
-        //       PETSC_COPY_VALUES, &GlobalIndexSet);
-        ierr = ISCreateGeneral(PETSC_COMM_SELF, petsc_n, gblindexsetary,
-               PETSC_COPY_VALUES, &GlobalIndexSet);
-//        printf("after 2nd ISCreateGeneral %d\n", ierr);
-        ierr = ISLocalToGlobalMappingCreateIS(LocalIndexSet,&VectorMapping);
-//        printf("after 1st ISLocalToGlobalMappingCreateIS %d\n",ierr);
-        ierr =  ISLocalToGlobalMappingCreateIS(GlobalIndexSet,&GblVectorMapping);
-//        printf("after 2nd ISLocalToGlobalMappingCreateIS %d\n",ierr);
       free(indexsetary);
-      free(gblindexsetary);
       }
       if(genpar.lhs == 1) {
       get_time((duration), (duration+1));
@@ -367,19 +297,14 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       } 
       if(firstpetsccall == 1) {
         ierr = MatGetLocalSize(lhsP, &LocalRow, &LocalCol);
-//  TODO Should this be LocalRow? LocalCol? or does LocalRow always == LocalCol
-        //ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, nshgt*nflow, &resP);
         ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &resP);
-        //ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, nshgt*nflow, &DyP);
         ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &DyP);
       }
       ierr = VecZeroEntries(resP);
       ierr = VecZeroEntries(DyP);
       if(firstpetsccall == 1) {
-        //ierr = VecCreateSeq(PETSC_COMM_SELF, nshg*nflow, &DyPLocal);
         ierr = VecCreateSeq(PETSC_COMM_SELF, petsc_n, &DyPLocal);
       }
-//         call VecZeroEntries(DyPLocal, ierr)
 
       PetscRow=0;
       k = 0;
@@ -401,7 +326,6 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
           ierr =  VecSetValue(resP, PetscRow, valtoinsert, INSERT_VALUES);
         }
       }
-//      printf("after VecSetValue loop %d\n",ierr);
       ierr = VecAssemblyBegin(resP);
       ierr = VecAssemblyEnd(resP);
       get_time((duration+2), (duration+3));
@@ -414,12 +338,10 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       if(firstpetsccall == 1) {
         ierr = KSPCreate(PETSC_COMM_WORLD, &ksp);
         ierr = KSPSetOperators(ksp, lhsP, lhsP);
-//3.4 ierr = KSPSetOperators(ksp, lhsP, lhsP, SAME_NONZERO_PATTERN);
         ierr = KSPGetPC(ksp, &pc);
         ierr = PCSetType(pc, PCPBJACOBI);
         PetscInt maxits;
         maxits = (PetscInt)  solpar.nGMRES * (PetscInt) solpar.Kspace;
-        //ierr = KSPSetTolerances(ksp, timdat.etol, PETSC_DEFAULT, PETSC_DEFAULT, solpar.nGMRES*solpar.Kspace);
         ierr = KSPSetTolerances(ksp, timdat.etol, PETSC_DEFAULT, PETSC_DEFAULT, maxits);
         ierr = KSPSetFromOptions(ksp); 
       }
@@ -428,12 +350,9 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
                         "KSPSolve \0"); // char(0))
-     //if(myrank .eq. 0) then
-     //!write(*,"(A, E10.3)") "KSPSolve ", elapsed
-     //end if
       get_time((duration),(duration+1));
       if(firstpetsccall == 1) {
-      ierr = VecScatterCreate(DyP, LocalIndexSet, DyPLocal, GlobalIndexSet, &scatter7);
+      ierr = VecScatterCreate(DyP, LocalIndexSet, DyPLocal, NULL, &scatter7);
       }
       ierr = VecScatterBegin(scatter7, DyP, DyPLocal, INSERT_VALUES, SCATTER_FORWARD);
       ierr = VecScatterEnd(scatter7, DyP, DyPLocal, INSERT_VALUES, SCATTER_FORWARD);
@@ -449,14 +368,11 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       ierr = VecRestoreArray(DyPLocal, &parray);
       
       firstpetsccall = 0;
-      // later timer ('Solver  ');
-
 
 // .... output the statistics
 // 
       itrpar.iKs=0; // see rstat()
       PetscInt its;
-      //ierr = KSPGetIterationNumber(ksp, &itrpar.iKs);
       ierr = KSPGetIterationNumber(ksp, &its);
       itrpar.iKs = (int) its;
       get_time((duration+2),(duration+3));
@@ -466,11 +382,6 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       itrpar.ntotGM += (int) its;
       rstat (res, ilwork);
 //    
-// .... stop the timer
-//     
-// 3002 continue                  ! no solve just res.
-      // later call timer ('Back    ')
-//     
 // .... end
 //     
 }
@@ -638,7 +549,6 @@ void     SolGMRpSclr(double* y,         double* ac,
       // TODO: Better arrangment?
 
       PetscInt* indexsetarys = malloc(sizeof(PetscInt)*nshg);
-      PetscInt* gblindexsetarys = malloc(sizeof(PetscInt)*nshg);
       PetscInt nodetoinsert;
 
         nodetoinsert = 0;
@@ -670,23 +580,11 @@ void     SolGMRpSclr(double* y,         double* ac,
           }
         } 
         
-        for (i=0; i<nshg; i++) {
-          gblindexsetarys[i] = i ; //TODO: better option for performance?
-//debug
-         if(workfc.myrank == rankdump) {
-             printf("myrank,i,glbindexsetarys %d %d %d \n",workfc.myrank,i,gblindexsetarys[i]);
-         }
-        }
 //  Create Vector Index Maps
         petsc_n  = (PetscInt) nshg;
         ierr = ISCreateGeneral(PETSC_COMM_SELF, petsc_n, indexsetarys,
      	       PETSC_COPY_VALUES, &LocalIndexSets);
-        ierr = ISCreateGeneral(PETSC_COMM_SELF, petsc_n, gblindexsetarys,
-               PETSC_COPY_VALUES, &GlobalIndexSets);
-        ierr = ISLocalToGlobalMappingCreateIS(LocalIndexSets,&VectorMappings);
-        ierr =  ISLocalToGlobalMappingCreateIS(GlobalIndexSets,&GblVectorMappings);
       free(indexsetarys);
-      free(gblindexsetarys);
       }
       if(genpar.lhs ==1) {
       ierr = MatAssemblyBegin(lhsPs, MAT_FINAL_ASSEMBLY);
@@ -738,7 +636,7 @@ void     SolGMRpSclr(double* y,         double* ac,
       }
       ierr = KSPSolve(ksps, resPs, DyPs);
       if(firstpetsccalls == 1) {
-      ierr = VecScatterCreate(DyPs, LocalIndexSets, DyPLocals, GlobalIndexSets, &scatter7s);
+      ierr = VecScatterCreate(DyPs, LocalIndexSets, DyPLocals, NULL, &scatter7s);
       }
       ierr = VecScatterBegin(scatter7s, DyPs, DyPLocals, INSERT_VALUES, SCATTER_FORWARD);
       ierr = VecScatterEnd(scatter7s, DyPs, DyPLocals, INSERT_VALUES, SCATTER_FORWARD);
