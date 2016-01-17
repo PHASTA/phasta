@@ -302,7 +302,6 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &DyP);
       }
       ierr = VecZeroEntries(resP);
-      ierr = VecZeroEntries(DyP);
       if(firstpetsccall == 1) {
         ierr = VecCreateSeq(PETSC_COMM_SELF, petsc_n, &DyPLocal);
       }
@@ -598,7 +597,6 @@ void     SolGMRpSclr(double* y,         double* ac,
         ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &DyPs);
       }
       ierr = VecZeroEntries(resPs);
-      ierr = VecZeroEntries(DyPs);
       if(firstpetsccalls == 1) {
         ierr = VecCreateSeq(PETSC_COMM_SELF, petsc_n, &DyPLocals);
       }
