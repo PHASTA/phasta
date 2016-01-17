@@ -452,11 +452,11 @@ c
      &             rmes,          BDiag,         iper,      
      &             ilwork,        lhsK,          col, 
      &             row,           rerr )
-!      call rstat (res, ilwork) 
-!      if(ntotGM.eq.0) resfrt=zero  !don't let this mess up scaled dB     
-!      if(myrank.eq.master) then
-!            write(*,*)'residual prior to sbd-preconditioning'
-!      endif
+      call rstat (res, ilwork) 
+      if(ntotGM.eq.0) resfrt=zero  !don't let this mess up scaled dB     
+      if(myrank.eq.master) then
+            write(*,*)'residual prior to sbd-preconditioning'
+      endif
 c    
 
 	call tnanq(res,5, 'res_egmr')
@@ -824,6 +824,11 @@ c
      &                  rest,
      &                  rmest,         Diag,       iper,      
      &                  ilwork,        EGmasst)
+      call rstat (rest, ilwork) 
+      if(ntotGM.eq.0) resfrts=zero  !don't let this mess up scaled dB     
+      if(myrank.eq.master) then
+            write(*,*)'residual prior to sbd-preconditioning'
+      endif
 c
 c.... **********************>>    EBE - GMRES    <<********************
 c

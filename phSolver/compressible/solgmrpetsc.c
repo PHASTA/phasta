@@ -33,7 +33,7 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static Mat lhsP;
       static PC pc;
       static KSP ksp;
-      static Vec DyP, resP, DyPLocal, resPGlobal;
+      static Vec DyP, resP, DyPLocal;
       static PetscErrorCode ierr;
       static PetscInt PetscOne, PetscRow, PetscCol, LocalRow, LocalCol;
       static IS LocalIndexSet, GlobalIndexSet;
@@ -45,7 +45,7 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static Mat lhsPs;
       static PC pcs;
       static KSP ksps;
-      static Vec DyPs, resPs, DyPLocals, resPGlobals;
+      static Vec DyPs, resPs, DyPLocals;
       static IS LocalIndexSets, GlobalIndexSets;
       static ISLocalToGlobalMapping VectorMappings;
       static ISLocalToGlobalMapping GblVectorMappings;
@@ -277,6 +277,9 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
                   shglb,         res,
                   rmes,                   iper,
                   ilwork,        rerr ,         &lhsP);
+//  Below was just to confirm that what is in rstat is the res or b vector given to PETSc
+//      rstat (res, ilwork);
+//      if(workfc.myrank ==0) printf("residual after ElmGMRPETSc\n");
       get_time((duration+2), (duration+3));
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
@@ -373,12 +376,9 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       ierr = VecZeroEntries(resP);
       ierr = VecZeroEntries(DyP);
       if(firstpetsccall == 1) {
-        //ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, nshgt*nflow, &resPGlobal);
-        ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &resPGlobal);
         //ierr = VecCreateSeq(PETSC_COMM_SELF, nshg*nflow, &DyPLocal);
         ierr = VecCreateSeq(PETSC_COMM_SELF, petsc_n, &DyPLocal);
       }
-        ierr = VecZeroEntries(resPGlobal);
 //         call VecZeroEntries(DyPLocal, ierr)
 
       PetscRow=0;
@@ -700,10 +700,8 @@ void     SolGMRpSclr(double* y,         double* ac,
       ierr = VecZeroEntries(resPs);
       ierr = VecZeroEntries(DyPs);
       if(firstpetsccalls == 1) {
-        ierr = VecCreateMPI(PETSC_COMM_WORLD, LocalRow, petsc_M, &resPGlobals);
         ierr = VecCreateSeq(PETSC_COMM_SELF, petsc_n, &DyPLocals);
       }
-        ierr = VecZeroEntries(resPGlobals);
 
       PetscRow=0;
       k = 0;
