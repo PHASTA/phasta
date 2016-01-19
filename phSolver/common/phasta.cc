@@ -164,6 +164,8 @@ int phasta( int argc, char *argv[] ) {
     PetscInitializeFortran();
     PetscPopSignalHandler(); //Let us segfault in peace ;-)
     PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
+// ok with Master    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
+// ok with 3.6x    PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
     if(myrank == 0)
     {
