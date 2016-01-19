@@ -166,6 +166,17 @@ int phasta( int argc, char *argv[] ) {
     PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
 // ok with Master    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
 // ok with 3.6x    PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);
+    if(sizeof(PetscInt) != sizeof(long long int))
+    {
+      //PetscInt and gcorp_t (gen_ncorp.c)
+      //must be the same size. hard-coded for now
+      //FIXME
+	    if(myrank == 0)
+	    {
+		    printf("WARNING: PETSc Index Size Mismatch\n");
+		    printf("WARNING: Proceed at your own risk\n");
+	    }
+    }
     MPI_Barrier(MPI_COMM_WORLD);
     if(myrank == 0)
     {
