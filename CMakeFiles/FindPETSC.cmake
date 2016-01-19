@@ -8,9 +8,18 @@ if(PETSCPKG_FOUND AND (NOT PETSc_DIR))
 #if PETSc_DIR we're probably doing things the old way
 #so just skip to that
 #otherwise, try and use pkg-config
+if(PETSCPKG_STATIC_LIBRARY_DIRS)
+set(PETSC_LIBRARY_DIRS ${PETSCPKG_STATIC_LIBRARY_DIRS})
+set(PETSC_INCLUDE_DIRS ${PETSCPKG_STATIC_INCLUDE_DIRS})
+set(PETSC_LIBRARIES ${PETSCPKG_STATIC_LIBRARIES})
+else()
+message(WARNING "pkg-config with --static didn't work")
+message(WARNING "consider updating pkg-config")
+message(WARNING "and/or building PETSc as a single library")
 set(PETSC_LIBRARY_DIRS ${PETSCPKG_LIBRARY_DIRS})
 set(PETSC_INCLUDE_DIRS ${PETSCPKG_INCLUDE_DIRS})
 set(PETSC_LIBRARIES ${PETSCPKG_LIBRARIES})
+endif()
 set(PETSC_FOUND TRUE)
 
 else()
