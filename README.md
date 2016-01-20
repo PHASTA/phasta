@@ -13,6 +13,7 @@
     -DLESLIB=/path/to/libles.a \
     -DCASES=/path/to/phastaCases/ \
     -DPHASTA_TESTING=ON \
+    -DPHASTA_USE_LESLIB=ON \
     ..
 
     make
