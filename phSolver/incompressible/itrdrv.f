@@ -140,6 +140,13 @@ c
       TYPE(svLS_lsType) svLS_ls_S(4)
 #endif
 
+! Coviz
+!  Flag for VTK CoProcessing
+        integer stringlength, docoprocessing
+        character*200 pyfilename
+        real*8 total_coproc_time, time
+! Coviz END
+
         impistat = 0
         impistat2 = 0
         iISend = 0
@@ -160,6 +167,15 @@ c
         rAllRScal = zero
         rCommu = zero
         rCommuScal = zero
+
+#ifdef USE_CATALYST
+! Coviz
+! set docoprocessing flag so vort computation can be set to true for each time step
+        docoprocessing = 1
+! Coviz END
+#else
+        docoprocessing = 0
+#endif
 
         call initmemstat() 
 
@@ -575,6 +591,37 @@ c.....open the necessary files to gather time series
 c
       lstep0 = lstep+1
       nsteprcr = nstep(1)+lstep
+
+#ifdef USE_CATALYST
+! Coviz
+! Initialize the VTK CoProcessing
+      pyfilename = "../cpscript.py"
+      stringlength = 14
+      docoprocessing = 1
+      time = 0.d0
+      if(docoprocessing .ne. 0) then
+         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         if(myrank.eq.0)  then
+            write(*,*) 'starting coprocessorinitialize()'
+            tcorecp3 = TMRC()
+         endif
+
+         call coprocessorinitializewithpython(pyfilename, stringlength)
+
+         if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+         if(myrank.eq.0)  then
+            tcorecp4 = TMRC()
+            write(6,*) 'coprocessorinitialize(): ',tcorecp4-tcorecp3
+c            total_coproc_time = tcorecp4-tcorecp3
+c....        does not count for initialize time to compare with tcorecpu time
+            total_coproc_time = 0
+         endif
+      else if(myrank .eq. 0) then
+         write(*,*) 'there is no coprocessing being done'
+      endif
+! Coviz END
+#endif
+
 c
 c.... loop through the time sequences
 c
@@ -733,7 +780,8 @@ c
               ! BEWARE: we need here lstep+1 and istep+1 because the lstep and 
               ! istep gets incremened after the flowsolve, further below
               if (((irs .ge. 1) .and. (mod(lstep+1, ntout) .eq. 0)) .or.
-     &                   istep+1.eq.nstep(itseq) .or. ioybar == 1) then
+     &                istep+1.eq.nstep(itseq) .or. ioybar == 1  .or.
+     &                docoprocessing .ne. 0) then
                 icomputevort = 1
               endif
             endif
@@ -907,6 +955,7 @@ c
 
             istep = istep + 1
             lstep = lstep + 1
+            time  = time + delt(itseq)
 c
 c ..  Print memory consumption on BGQ
 c
@@ -941,6 +990,37 @@ c
      &                                    +    strain(:,6)*strain(:,6)))
 
             endif
+
+#ifdef USE_CATALYST
+! Coviz
+!
+! Do VTK CoProcessing for this time step
+!
+            if(docoprocessing .ne. 0) then
+              if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+              if(myrank.eq.0)  then
+                 tcorecp3 = TMRC()
+              endif
+
+c              call phastacoprocessor(istp, X, Y, 0)
+              call phastacoprocessor(lstep, X, Y, 0, icomputevort, 
+     &                                 vorticity, d2wall)
+!              call phastacoprocessor(lstep, X, yold, 0, icomputevort, 
+!     &                                               VORTICITY)
+
+              if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+              if(myrank.eq.0)  then
+                 tcorecp4 = TMRC()
+                 write(6,*) 'phastacoprocessor(): ',tcorecp4-tcorecp3
+                 total_coproc_time = total_coproc_time + 
+     &                               tcorecp4-tcorecp3
+              endif
+            endif
+
+! Coviz END
+#endif
+
+
 c
 c.... update and the aerodynamic forces
 c
@@ -1454,6 +1534,30 @@ c
             deallocate(d2wall)
           endif
         
+
+#ifdef USE_CATALYST
+! Coviz
+!
+! Finalize VTK CoProcessing
+!
+         if(docoprocessing .ne. 0 ) then
+           if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+           if(myrank.eq.0)  then
+             tcorecp3 = TMRC()
+           endif
+
+           call coprocessorfinalize()
+
+           if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+           if(myrank.eq.0)  then
+             tcorecp4 = TMRC()
+             write(6,*) 'coprocessorfinalize(): ',tcorecp4-tcorecp3
+c             total_coproc_time = total_coproc_time + tcorecp4-tcorecp3
+             write(6,*) 'Total coprocessing cpu = ',total_coproc_time
+           endif
+         endif
+! Coviz END
+#endif
 
 CAD         tcorecp2 = second(0)
 CAD         tcorewc2 = second(-1)
@@ -2055,3 +2159,91 @@ c
       return
       end subroutine
 
+
+#ifdef USE_CATALYST
+c...==============================================================
+c... subroutine to do the coprocessing
+c... The subroutine is responsible for determining if coprocessing
+c... is needed this timestep and if it is needed then the
+c... subroutine passes the phasta data structures into
+c... the coprocessor. This is meant to be called at the end of
+c... every time step.
+c... The input is:
+c...    itimestep -- the current simulation time step
+c...    X -- the coordinates array of the nodes
+c...    Y -- the fields array (e.g. velocity, pressure, etc.)
+c...    compressibleflow -- flag to indicate whether or not the
+c...                         flow is compressible.  if it is then
+c...                         temperature will be outputted
+c...    computevort -- flag to indicate whether or not vorticity is computed
+c...    VORTICITY -- the vorticity array
+c... It has no output and should not change any Phasta data.
+c...==============================================================
+
+      subroutine phastacoprocessor(itimestep, X, Y, compressibleflow,
+     &                      computevort, VORTICITY, dwal )
+      use pointer_data
+      include "common.h"
+      integer iblk, nenl, npro, j, needflag, i
+      integer compressibleflow, itimestep, computevort
+      dimension x(numnp,nsd), y(nshg,ndof), vorticity(nshg, 5)
+      dimension dwal(nshg)
+!      dimension ycontainer(nshg,ndof)
+
+      if(nshg .ne. numnp) then
+         print *, 'CoProcessing only setup for when nshg equals numnp'
+         return
+      endif
+
+c  First check if we even need to coprocess this time step/time
+      if(myrank.eq.0)  then
+            write(6,*) 'Before calling requestdatadescription, '//
+     &                  'itimestep:', itimestep, ', time:', time
+      endif
+      call requestdatadescription(itimestep, time, needflag)
+      if(myrank.eq.0)  then
+          write(6,*) 'After calling requestdatadescription, needflag:',
+     &                  needflag
+      endif
+      if(needflag .eq. 0) then
+c  We don't need to do any coprocessing now so we can return
+         return
+      endif
+c  Check if we need to create the grid for the coprocessor
+      call needtocreategrid(needflag)
+      if(needflag .ne. 0) then
+c     We do need the grid.
+         call createpointsandallocatecells(numnp, X, numel)
+
+        do iblk=1,nelblk
+            nenl = lcblk(5,iblk) ! no. of vertices per element
+            npro = lcblk(1,iblk+1) - lcblk(1,iblk) ! no. of elemens in block
+            call insertblockofcells(npro, nenl, mien(iblk)%p(1,1))
+        enddo
+      endif ! if needflag .ne. 0 --
+
+c  Inside addfields we check to see if we really need the field or not
+!      call addfields(nshg, ndof, Y, compressibleflow, computevort,
+!     &                             VORTICITY)
+
+!      do i = 1, nshg
+!         ycontainer(i,:) = Y(i,:)
+!         ycontainer(i,4) = vorticity(i,5) !Replace pressure by Q
+!      enddo
+
+      !call addfields(nshg, ndof, Y, compressibleflow)
+      !call addfields(nshg, ndof, ycontainer, compressibleflow)
+      call addfields(nshg, ndof, Y, compressibleflow,
+     &               vorticity,dwal)
+
+      if(myrank.eq.0)  then
+         tcorecp5 = TMRC() 
+      endif
+      call coprocess()
+      if(myrank.eq.0)  then
+          tcorecp6 = TMRC()
+          write(6,*) 'coprocess: ',tcorecp6-tcorecp5 
+      endif
+      return
+      end
+#endif

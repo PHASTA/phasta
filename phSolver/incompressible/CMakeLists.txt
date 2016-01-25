@@ -28,6 +28,15 @@ set(PHASTAIC_INCLUDE_DIRS
   ${PHASTA_BINARY_DIR}
 )
 
+set(USE_CATALYST OFF CACHE BOOL "Link phasta with Catalyst")
+if(USE_CATALYST)
+        SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	find_package(ParaView REQUIRED COMPONENTS vtkPVPythonCatalyst)
+	find_library(PHASTA_ADAPTOR_LIB PhastaAdaptor)
+	include("${PARAVIEW_USE_FILE}")
+        add_definitions("-DUSE_CATALYST")
+endif()
+
 add_executable(phastaIC.exe main.cc)
 include_directories(${PHASTAIC_INCLUDE_DIRS})
 set_target_properties(phastaIC.exe PROPERTIES HAS_CXX TRUE)
@@ -80,6 +89,12 @@ set(PHASTAIC_LIBS
 )
 endif()
 
+if(USE_CATALYST)
+	target_link_libraries(phastaIC.exe ${PHASTA_ADAPTOR_LIB} vtkPVPythonCatalyst)
+        set_target_properties(phastaIC.exe PROPERTIES LINK_SEARCH_START_STATIC ON)
+        set_target_properties(phastaIC.exe PROPERTIES LINK_SEARCH_END_STATIC ON)
+endif()
+
 set(PHASTAIC_LIBS ${PHASTAIC_LIBS} phastaIO)
 if(PHASTA_BUILD_SHAPEFUNCTION)
   set(PHASTAIC_LIBS ${PHASTAIC_LIBS} shapeFunction)
@@ -96,6 +111,12 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/phastaICConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/phastaICConfig.cmake"
 )
+
+if(USE_CATALYST)
+        target_link_libraries(phastaIC.exe ${PHASTA_ADAPTOR_LIB} vtkPVPythonCatalyst incompressible)
+        set_target_properties(phastaIC.exe PROPERTIES LINK_SEARCH_START_STATIC ON)
+        set_target_properties(phastaIC.exe PROPERTIES LINK_SEARCH_END_STATIC ON)
+endif()
 
 if(PHASTA_TESTING)
   add_subdirectory(test)
