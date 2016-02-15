@@ -1,20 +1,18 @@
-#define OMPI_SKIP_MPICXX 1
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <cassert>
+
+#define OMPI_SKIP_MPICXX 1
+#include <mpi.h>
+
 #ifdef HAVE_PETSC
 #include <petscsys.h>
 #include <petscviewer.h>
 #endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#include "common_c.h"
-#include "Input.h"
-#include "phstream.h"
-#include "streamio.h"
 
 #if !(defined IOSTREAMH)
 #include <iostream>
@@ -22,17 +20,22 @@
 using namespace std;
 #endif
 
-#include <FCMangle.h>
-#define input FortranCInterface_GLOBAL_(input,INPUT)
-#define proces FortranCInterface_GLOBAL_(proces,PROCES)
-#define timer FortranCInterface_GLOBAL_(timer,TIMER)
-
 #ifdef intel
 #include <direct.h>
 #define chdir _chdir
 #else
 #include <unistd.h>
 #endif
+
+#include "common_c.h"
+#include "Input.h"
+#include "phstream.h"
+#include "streamio.h"
+
+#include <FCMangle.h>
+#define input FortranCInterface_GLOBAL_(input,INPUT)
+#define proces FortranCInterface_GLOBAL_(proces,PROCES)
+#define timer FortranCInterface_GLOBAL_(timer,TIMER)
 
 extern "C" char phasta_iotype[80];
 char phasta_iotype[80];
