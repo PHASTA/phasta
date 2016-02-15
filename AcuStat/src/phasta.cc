@@ -9,13 +9,6 @@
 #include <sstream>
 using namespace std;
 
-#ifdef intel
-#include <direct.h>
-#define chdir _chdir
-#else
-#include <unistd.h>
-#endif
-
 #define OMPI_SKIP_MPICXX 1
 #include <mpi.h>
 
