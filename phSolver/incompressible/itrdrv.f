@@ -31,9 +31,8 @@ c
       use timedata   !allows collection of time series
       use convolImpFlow !for Imp bc
       use convolRCRFlow !for RCR bc
-!MR CHANGE
       use turbsa          ! used to access d2wall
-!MR CHANGE END
+      use wallData
       use fncorpmod
       use iso_c_binding
 
@@ -1480,6 +1479,8 @@ CAD     &                                        tcorewc2-tcorewc1
 !         return
 c         call MPI_Finalize()
 c         call MPI_ABORT(MPI_COMM_WORLD, ierr)
+
+         call destroyWallData
 
  3000 continue
  
