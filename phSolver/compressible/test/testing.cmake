@@ -14,7 +14,14 @@ macro(c_serial_test name exe)
 endmacro(c_serial_test)
 
 set(CDIR ${CASES}/compressible)
+
 c_serial_test(inpCfg cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
+
+if(PHASTA_USE_PETSC)
+  c_serial_test(solverInp ln -snf ${CDIR}/solver.inp.petsc ${CDIR}/solver.inp)
+else()
+  c_serial_test(solverInp ln -snf ${CDIR}/solver.inp.native ${CDIR}/solver.inp)
+endif()
 
 c_serial_test(linkProcsDir-sync
   ln -snf ${CDIR}/2-procs_case-SyncIO-1 ${CDIR}/2-procs_case)
