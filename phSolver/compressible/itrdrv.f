@@ -788,6 +788,7 @@ c         tcorewc2 = secs(0.0)
 c     call wtime
 
       call destroyWallData
+      call destroyfncorp
 
  3000 continue !end of NTSEQ loop
 c     

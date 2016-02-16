@@ -1481,6 +1481,7 @@ c         call MPI_Finalize()
 c         call MPI_ABORT(MPI_COMM_WORLD, ierr)
 
          call destroyWallData
+         call destroyfncorp
 
  3000 continue
  
