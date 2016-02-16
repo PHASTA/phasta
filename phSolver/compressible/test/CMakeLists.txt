@@ -18,11 +18,11 @@ set(CDIR ${CASES}/compressible)
 c_serial_test(inpCfg cp ${PHASTA_SOURCE_DIR}/phSolver/common/input.config ${CDIR})
 
 if(PHASTA_USE_PETSC)
-  c_serial_test(solverInp ln -snf ${CDIR}/solver.inp.petsc ${CDIR}/solver.inp)
   set(solver petsc)
+  c_serial_test(solverInp ln -snf ${CDIR}/solver.inp.petsc ${CDIR}/solver.inp)
   include(testing.cmake)
 endif()
 
-c_serial_test(solverInp ln -snf ${CDIR}/solver.inp.native ${CDIR}/solver.inp)
 set(solver native)
+c_serial_test(solverInp ln -snf ${CDIR}/solver.inp.native ${CDIR}/solver.inp)
 include(testing.cmake)
