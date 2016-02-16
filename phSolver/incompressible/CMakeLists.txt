@@ -17,6 +17,13 @@ else()
  list(REMOVE_ITEM SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/ftools.f )
 endif()
 
+if(NOT PHASTA_USE_SVLS AND NOT PHASTA_USE_LESLIB)
+  message(FATAL_ERROR
+"At least one of the incompressible solvers must be enabled \
+via PHASTA_USE_SVLS and/or PHASTA_USE_LESLIB"
+  )
+endif()
+
 
 add_library(incompressible ${SRC_FILES})
 
