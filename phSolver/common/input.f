@@ -136,7 +136,7 @@ c
         endif
 
         if (iLSet .gt. 0 .and. myrank .eq. master)then 
-           write(iecho,1900)iLSet, epsilon_ls, dtlset
+           write(iecho,1900)iLSet, epsilon_ls
         endif
 c
 c.... generate the spatial integration rules

@@ -166,9 +166,9 @@ int phasta( int argc, char *argv[] ) {
     PetscInitialize(&argc,&argv,PETSC_NULL,PETSC_NULL);
     PetscInitializeFortran();
     PetscPopSignalHandler(); //Let us segfault in peace ;-)
-    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
 // ok with Master    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
 // ok with 3.6x    PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);
+    PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);
     if(sizeof(PetscInt) != sizeof(long long int))
     {
       //PetscInt and gcorp_t (gen_ncorp.c)
