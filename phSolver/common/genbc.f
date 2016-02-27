@@ -87,7 +87,8 @@ c
       if(myrank.eq.0) write(*,*) 'Navier is set to ', navier
       if(navier.eq.1)then ! zero navier means Euler simulation
          call genBC1 (BCtmp,  iBC,  BC)
-      elseif(matflg(1,1).eq.0)then !  compressible code 
+      else   !enabling for IC code now
+c      elseif(matflg(1,1).eq.0)then !  compressible code 
          allocate(BCtmpg(nshg,ndof+7))
          allocate(BCg(nshg,ndofBC))
          allocate(iBCg(nshg))
@@ -108,8 +109,8 @@ c... apply slip wall condition to wall nodes
      &               wlnorm(nn,:,:)                     )
          enddo
          icd=icdg
-      else
-         if(myrank.eq.0) write(*,*) 'Incompressible code not able to do inviscid at this time'
+!      else
+!         if(myrank.eq.0) write(*,*) 'Incompressible code not able to do inviscid at this time'
       endif
 
 
