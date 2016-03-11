@@ -71,13 +71,13 @@ c
 c.... ----------------------> Wall Normals  <--------------------------
 c (calculate the normal and adjust BCinp to the true normal as needed)
 c
-      if(navier.eq.1)then
+!needed either way      if(navier.eq.1)then
          call genwnm (iBC,  BCtmp,   x,   ilwork, iper, nsurf)
-      endif
+!needed either way      endif
 c  determine the first point off the wall for each wall node
-      if(navier.eq.1)then
+!needed either way      if(navier.eq.1)then
          call genotwn (x,BCtmp, iBC, nsurf)
-      endif
+!needed either way      endif
 c.... ------------------------>  Conversion  <-------------------------
 c
 c.... convert the input boundary conditions to condensed version
