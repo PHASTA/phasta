@@ -263,7 +263,13 @@ c..... ftn to stretch x at exit
 c
 c.... read in and block out the connectivity
 c
-      call genblk (IBKSIZ)
+      if( input_mode .eq. -1 ) then
+        call genblk (IBKSIZ)
+      else if( input_mode .eq. 0 ) then
+        call genblkPosix (IBKSIZ)
+      else if( input_mode .ge. 1 ) then
+        call genblk (IBKSIZ)
+      end if
 c
 c.... read the boundary condition mapping array
 c
@@ -351,7 +357,13 @@ c
 c
 c.... generate the boundary element blocks
 c
-      call genbkb (ibksiz)
+      if( input_mode .eq. -1 ) then
+        call genbkb (IBKSIZ)
+      else if( input_mode .eq. 0 ) then
+        call genbkbPosix (IBKSIZ)
+      else if( input_mode .ge. 1 ) then
+        call genbkb (IBKSIZ)
+      end if
 c
 c  Read in the nsons and ifath arrays if needed
 c

@@ -1,4 +1,4 @@
-        subroutine genblk (IBKSZ)
+        subroutine genblkPosix (IBKSZ)
 c
 c----------------------------------------------------------------------
 c
@@ -9,14 +9,27 @@ c Zdenek Johan, Fall 1991.
 c----------------------------------------------------------------------
 c
         use pointer_data
-c
+        use phio
+        use iso_c_binding
         include "common.h"
-c
-        integer, allocatable :: ientp(:,:)
+        include "mpif.h" !Required to determine the max for itpblk
+
+        integer, target, allocatable :: ientp(:,:)
         integer mater(ibksz)
-        integer intfromfile(50) ! integers read from headers
+        integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
-c
+        integer :: descriptor, descriptorG, GPID, color
+        integer ::  numparts, writeLock
+        integer :: ierr_io, numprocs
+        integer, target :: itpblktot,ierr,iseven
+        character*255 fname2
+        character(len=30) :: dataInt
+        dataInt = c_char_'integer'//c_null_char
+        numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
+        ione=1
+        itwo=2
+        iseven=7
+        ieleven=11
         iel=1
         itpblk=nelblk
 
@@ -25,15 +38,9 @@ c
         ndofl = ndof
         nsymdl = nsymdf
         do iblk = 1, itpblk
-c
-c           read(igeom) neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst
-           iseven=7
-c           call creadlist(igeom,iseven,
-c     &          neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst)
-           iseven=7
-           fname1='connectivity interior?'
-           call readheader(igeom,fname1,intfromfile,iseven,
-     &                     "integer", iotype)
+        write (fname2,"('connectivity interior?')") 
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), iseven, dataInt, iotype)
            neltp  =intfromfile(1)
            nenl   =intfromfile(2)
            ipordl =intfromfile(3)
@@ -42,10 +49,9 @@ c     &          neltp,nenl,ipordl,nshl, ijunk, ijunk, lcsyst)
            ijunk  =intfromfile(6)
            lcsyst =intfromfile(7)
            allocate (ientp(neltp,nshl))
-c           read(igeom) ientp
            iientpsiz=neltp*nshl
-           call readdatablock(igeom,fname1,ientp,iientpsiz,
-     &                     "integer", iotype)
+           call phio_readdatablock(fhandle,fname2 // char(0),
+     &      c_loc(ientp), iientpsiz, dataInt, iotype)
 
            do n=1,neltp,ibksz 
              
@@ -67,28 +73,34 @@ c.... allocate memory for stack arrays
 c
               allocate (mmat(nelblk)%p(npro))
 c
-              allocate (mien(nelblk)%p(npro,nshl))
-              allocate (mxmudmi(nelblk)%p(npro,maxsh))
+                allocate (mien(nelblk)%p(npro,nshl))
+                allocate (mxmudmi(nelblk)%p(npro,maxsh))
+                if(usingpetsc.eq.0) then
+                    allocate (mienG(nelblk)%p(1,1))
+                else
+                    allocate (mienG(nelblk)%p(npro,nshl))
+                endif
+                ! note mienG will be passed to gensav but nothing filled if not 
+                ! using PETSc so this is safe
 c
 c.... save the element block
 c
-              n1=n
-              n2=n+npro-1
-              mater=1   ! all one material for now
-              call gensav (ientp(n1:n2,1:nshl),
-     &                     mater,           mien(nelblk)%p,
-     &                     mmat(nelblk)%p)
-              iel=iel+npro
-c
-           enddo
+                n1=n
+                n2=n+npro-1
+                mater=1   ! all one material for now
+                call gensav (ientp(n1:n2,1:nshl),
+     &                       mater,           mien(nelblk)%p,
+     &                       mienG(nelblk)%p,
+     &                       mmat(nelblk)%p)
+                iel=iel+npro
+             enddo
            deallocate(ientp)
         enddo
         lcblk(1,nelblk+1) = iel
 c
 c.... return
 c
-CAD        call timer ('Back    ')
-c
+
         return
 c
 1000    format(a80,//,

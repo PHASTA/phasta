@@ -1,4 +1,4 @@
-        subroutine genbkb (ibksz)
+        subroutine genbkbPosix (ibksz)
 c
 c----------------------------------------------------------------------
 c
@@ -10,25 +10,42 @@ c----------------------------------------------------------------------
 c
         use dtnmod
         use pointer_data
-c
+        use phio
+        use iso_c_binding
         include "common.h"
-c
+        include "mpif.h" !Required to determine the max for itpblk
 
-        integer, allocatable :: ientp(:,:),iBCBtp(:,:)
-        real*8, allocatable :: BCBtp(:,:)
+        integer, target, allocatable :: ientp(:,:),iBCBtp(:,:)
+        real*8, target, allocatable :: BCBtp(:,:)
         integer materb(ibksz)
-        integer intfromfile(50) ! integers read from headers
+        integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
+        integer :: descriptor, descriptorG, GPID, color, nfields
+        integer :: numparts, nppp, nprocs, writeLock
+        integer :: ierr_io, numprocs, itmp, itmp2 
+        integer, target :: itpblktot,ierr
+        character*255 fname2
+        character(len=30) :: dataInt, dataDbl
+        dataInt = c_char_'integer'//c_null_char
+        dataDbl = c_char_'double'//c_null_char
+
+        nfields = nsynciofieldsreadgeombc
+        numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
+        nppp = numparts/numpe
+        ione=1
+        itwo=2
+        ieight=8
+        ieleven=11
+        itmp = int(log10(float(myrank+1)))+1
         iel=1
         itpblk=nelblb
         nelblb=0
         mattyp=0
         ndofl = ndof
         do iblk = 1, itpblk
-           ieight=8
-           fname1='connectivity boundary?'
-           call readheader(igeom,fname1,intfromfile,ieight,
-     &                     'integer',iotype)
+           write (fname2,"('connectivity boundary?')") 
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            neltp =intfromfile(1)
            nenl  =intfromfile(2)
            ipordl=intfromfile(3)
@@ -37,32 +54,37 @@ c
            nenbl =intfromfile(6)
            lcsyst=intfromfile(7)
            numnbc=intfromfile(8)
-c
+
            allocate (ientp(neltp,nshl))
            allocate (iBCBtp(neltp,ndiBCB))
            allocate (BCBtp(neltp,ndBCB))
            iientpsiz=neltp*nshl
-           call readdatablock(igeom,fname1,ientp,iientpsiz,
-     &                     'integer',iotype)
+
+
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(ientp),iientpsiz,dataInt,iotype)
 c     
 c.... Read the boundary flux codes
-c     
-           fname1='nbc codes?'
-           call readheader(igeom,fname1,intfromfile,ieight,
-     &                     'integer',iotype)
+c
+
+               write (fname2,"('nbc codes?')")
+
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            iiBCBtpsiz=neltp*ndiBCB
-           call readdatablock(igeom,fname1,iBCBtp,iiBCBtpsiz,
-     &                     'integer',iotype)
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(iBCBtp),iiBCBtpsiz,dataInt,iotype)
 c     
 c.... read the boundary condition data
 c     
-           fname1='nbc values?'
-           call readheader(igeom,fname1,intfromfile,ieight,
-     &                     'integer',iotype)
+               write (fname2,"('nbc values?')")
+
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
-           call readdatablock(igeom,fname1,BCBtp,iBCBtpsiz,
-     &                     'double',iotype)
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(BCBtp),iBCBtpsiz,dataDbl,iotype)
 c
 c This is a temporary fix until NSpre properly zeros this array where it
 c is not set.  DEC has indigestion with these arrays though the
@@ -109,11 +131,8 @@ c.... allocate memory for stack arrays
 c
 
               allocate (mienb(nelblb)%p(npro,nshl))
-c
               allocate (miBCB(nelblb)%p(npro,ndiBCB))
-c
               allocate (mBCB(nelblb)%p(npro,nshlb,ndBCB))
-c
               allocate (mmatb(nelblb)%p(npro))
 c
 c.... save the boundary element block
