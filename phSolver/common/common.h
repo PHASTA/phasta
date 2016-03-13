@@ -125,7 +125,10 @@ c
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
      &                  ncorpsize, iownnodes, usingpetsc
-
+c......................NASA Inlet Woolwine.................................
+        common /nasavari/ BCdtKW, tsBase
+        common /nasavar/  PresFreq, PresAmp, AlphaFreq, AlphaAmp
+c..........................................................................
 c...........................................................................
         common /ctrlvari/ iI2Binlet, isetOutPres, isetInitial
         

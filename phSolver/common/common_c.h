@@ -259,6 +259,19 @@ extern "C" {
     int iownnodes;
     int usingpetsc;
   } conpar ;
+
+/*Woolwine June 4 2014 NASA Inlet*/
+  extern struct{
+    int BCdtKW;
+    int tsBase;
+  } nasavari;
+
+  extern struct{
+    double PresFreq;
+    double PresAmp;
+    double AlphaFreq;
+    double AlphaAmp;
+  } nasavar;
  
 /*chen Sep 25 2009  Flow Control Parameters*/
   extern struct{
