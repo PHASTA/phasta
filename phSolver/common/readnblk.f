@@ -268,7 +268,7 @@ c
       else if( input_mode .eq. 0 ) then
         call genblkPosix (IBKSIZ)
       else if( input_mode .ge. 1 ) then
-        call genblk (IBKSIZ)
+        call genblkSyncIO (IBKSIZ)
       end if
 c
 c.... read the boundary condition mapping array
@@ -362,7 +362,7 @@ c
       else if( input_mode .eq. 0 ) then
         call genbkbPosix (IBKSIZ)
       else if( input_mode .ge. 1 ) then
-        call genbkb (IBKSIZ)
+        call genbkbSyncIO (IBKSIZ)
       end if
 c
 c  Read in the nsons and ifath arrays if needed

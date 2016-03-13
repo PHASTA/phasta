@@ -1,4 +1,4 @@
-        subroutine genbkb (ibksz)
+        subroutine genbkbSyncIO (ibksz)
 c
 c----------------------------------------------------------------------
 c
@@ -10,66 +10,42 @@ c----------------------------------------------------------------------
 c
         use dtnmod
         use pointer_data
-c
+        use phio
+        use iso_c_binding
         include "common.h"
         include "mpif.h" !Required to determine the max for itpblk
-c
 
-        integer, allocatable :: ientp(:,:),iBCBtp(:,:)
-        real*8, allocatable :: BCBtp(:,:)
+        integer, target, allocatable :: ientp(:,:),iBCBtp(:,:)
+        real*8, target, allocatable :: BCBtp(:,:)
         integer materb(ibksz)
-        integer intfromfile(50) ! integers read from headers
+        integer, target :: intfromfile(50) ! integers read from headers
         character*255 fname1
-
-cccccccccccccc New Phasta IO starts here cccccccccccccccccccccccccccccc
-
-        integer :: descriptor, descriptorG, GPID, color, nfiles, nfields
-        integer :: numparts, nppf, nppp, nprocs, writeLock
+        integer :: descriptor, descriptorG, GPID, color, nfields
+        integer :: numparts, nppp, nprocs, writeLock
         integer :: ierr_io, numprocs, itmp, itmp2 
-        integer :: itpblktot,ierr
+        integer, target :: itpblktot,ierr
+        character*255 fname2
+        character(len=30) :: dataInt, dataDbl
+        dataInt = c_char_'integer'//c_null_char
+        dataDbl = c_char_'double'//c_null_char
 
-        character*255 fnamer, fname2, temp2
-        character*64 temp1, temp3
-
-        nfiles = nsynciofiles
         nfields = nsynciofieldsreadgeombc
         numparts = numpe !This is the common settings. Beware if you try to compute several parts per process
-
         nppp = numparts/numpe
-        nppf = numparts/nfiles
-
-        color = int(myrank/(numparts/nfiles))
-        itmp2 = int(log10(float(color+1)))+1
-        write (temp2,"('(''geombc-dat.'',i',i1,')')") itmp2
-        temp2=trim(temp2)
-        write (fnamer,temp2) (color+1)
-        fnamer=trim(fnamer)
-
         ione=1
         itwo=2
         ieight=8
         ieleven=11
         itmp = int(log10(float(myrank+1)))+1
-
-
-cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
         iel=1
         itpblk=nelblb
 
-
-!MR CHANGE
         ! Get the total number of different interior topologies in the whole domain. 
         ! Try to read from a field. If the field does not exist, scan the geombc file.
         itpblktot=-1
-        write(temp1,
-     &   "('(''total number of boundary tpblocks@'',i',i1,',A1)')") itmp
-        write (fname2,temp1) (myrank+1),'?'
-        call readheader(igeom,fname2 // char(0) ,itpblktot,ione,
-     &  'integer' // char(0),iotype) 
-
-!        write (*,*) 'Rank: ',myrank,' boundary itpblktot intermediate:',
-!     &               itpblktot
+        call phio_readheader(fhandle,
+     &   c_char_'total number of boundary tpblocks' // char(0),
+     &   c_loc(itpblktot), ione, dataInt, iotype)
 
         if (itpblktot == -1) then 
           ! The field 'total number of different boundary tpblocks' was not found in the geombc file.
@@ -84,14 +60,11 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
             intfromfile(:)=-1
             iblk = iblk+1
-            write (temp1,"('connectivity boundary',i1)") iblk
-            temp1 = trim(temp1)
-            write (temp3,"('(''@'',i',i1,',A1)')") itmp
-            write (fname2, temp3) (myrank+1), '?'
-            fname2 = trim(temp1)//trim(fname2)
-            !write(*,*) 'rank, fname2',myrank, trim(adjustl(fname2))
-            call readheader(igeom,fname2 // char(0),intfromfile,
-     &      ieight,'integer' // char(0),iotype)
+            write (fname2,"('connectivity boundary',i1)") iblk
+
+ 
+            call phio_readheader(fhandle, fname2 // char(0),
+     &       c_loc(intfromfile), ieight, dataInt, iotype)
             neltp = intfromfile(1) ! -1 if fname2 was not found, >=0 otherwise
           end do
           itpblktot = iblk-1   
@@ -106,28 +79,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         nelblb=0
         mattyp=0
         ndofl = ndof
+
         do iblk = 1, itpblktot
            writeLock=0;
-
-           fname1='connectivity boundary?'
-
-!           print *, "Loop ",iblk, myrank, itpblk, trim(fnamer)
-
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-           write (temp1,"('connectivity boundary',i1)") iblk
-           temp1 = trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
-           fname2 = trim(fname2)
-
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
+           write (fname2,"('connectivity boundary',i1)") iblk         
            ! Synchronization for performance monitoring, as some parts do not include some topologies
            call MPI_Barrier(MPI_COMM_WORLD,ierr) 
-           call readheader(igeom,fname2 // char(0),intfromfile,ieight,
-     &                     'integer' // char(0),iotype)
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            neltp =intfromfile(1)
            nenl  =intfromfile(2)
            ipordl=intfromfile(3)
@@ -146,67 +105,36 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
               writeLock=1;
            endif
 
-!           print *, "neltp is ", neltp
-
-           call readdatablock(igeom,fname2 // char(0),ientp,iientpsiz,
-     &                     'integer' // char(0),iotype)
-
-
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(ientp),iientpsiz,dataInt,iotype)
 c     
 c.... Read the boundary flux codes
 c
-     
-
-
-           fname1='nbc codes?'
-
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-           write (temp1,"('nbc codes',i1)") iblk
-           temp1=trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-           
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+           write (fname2,"('nbc codes',i1)") iblk
 
-           call readheader(igeom,fname2 // char(0) ,intfromfile,
-     &      ieight,'integer' // char(0),iotype)
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            iiBCBtpsiz=neltp*ndiBCB
-           call readdatablock(igeom,fname2 // char(0) ,iBCBtp,
-     &      iiBCBtpsiz,'integer' // char(0),iotype)
-
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(iBCBtp),iiBCBtpsiz,dataInt,iotype)
 c     
 c.... read the boundary condition data
 c     
-           fname1='nbc values?'
-           
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-
-           write (temp1,"('nbc values',i1)") iblk
-           temp1=trim(temp1)
-           write (temp3,"('(''@'',i',i1,',A1)')") itmp
-           write (fname2, temp3) (myrank+1), '?'
-           fname2 = trim(temp1)//trim(fname2)
            call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+           write (fname2,"('nbc values',i1)") iblk
 
-           call readheader(igeom,fname2 // char(0) ,intfromfile,
-     &      ieight,'integer' // char(0) ,iotype)
+           call phio_readheader(fhandle, fname2 // char(0),
+     &      c_loc(intfromfile), ieight, dataInt, iotype)
            BCBtp    = zero
            iBCBtpsiz=neltp*ndBCB
-           call readdatablock(igeom,fname2 // char(0),BCBtp,iBCBtpsiz,
-     &                     'double' // char(0) ,iotype)
-
-
+           call phio_readdatablock(fhandle, fname2 // char(0),
+     &      c_loc(BCBtp),iBCBtpsiz,dataDbl,iotype)
 c
 c This is a temporary fix until NSpre properly zeros this array where it
 c is not set.  DEC has indigestion with these arrays though the
 c result is never used (never effects solution).
 c
-
-
            if(writeLock==0) then
               where(.not.btest(iBCBtp(:,1),0)) BCBtp(:,1)=zero
               where(.not.btest(iBCBtp(:,1),1)) BCBtp(:,2)=zero
@@ -225,7 +153,6 @@ c
               do n=1,neltp,ibksz 
                  nelblb=nelblb+1
                  npro= min(IBKSZ, neltp - n + 1)
-c     
                  lcblkb(1,nelblb)  = iel
                  lcblkb(3,nelblb)  = lcsyst
                  lcblkb(4,nelblb)  = ipordl
@@ -244,13 +171,9 @@ c
 c     
 c.... allocate memory for stack arrays
 c
-
                  allocate (mienb(nelblb)%p(npro,nshl))
-c
                  allocate (miBCB(nelblb)%p(npro,ndiBCB))
-c 
                  allocate (mBCB(nelblb)%p(npro,nshlb,ndBCB))
-c 
                  allocate (mmatb(nelblb)%p(npro))
 c 
 c.... save the boundary element block
@@ -260,10 +183,8 @@ c
      &                materb,        mienb(nelblb)%p,
      &                miBCB(nelblb)%p,        mBCB(nelblb)%p,
      &                mmatb(nelblb)%p)
-c 
                  iel=iel+npro
               enddo
-
            endif
            deallocate(ientp)
            deallocate(iBCBtp)
