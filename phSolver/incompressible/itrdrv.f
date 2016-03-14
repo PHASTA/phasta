@@ -82,10 +82,6 @@ c
         dimension ifath(numnp),    velbar(nfath,ndof),  nsons(nfath)
 
         dimension wallubar(2),walltot(2)
-c     
-c.... For linear solver Library
-c
-        integer eqnType, prjFlag, presPrjFlag, verbose
 c
         real*8, allocatable, dimension(:,:) :: aperm,  atemp, atempS
         real*8, allocatable, dimension(:,:,:) :: apermS
@@ -93,7 +89,6 @@ c
         real*8, allocatable, dimension(:,:) :: lhsP, lhsK, lhsS
         real*8   almit, alfit, gamit
 c
-        character*1024    servername
         character*20    fname1,fmt1
         character*20    fname2,fmt2
         character*60    fnamepold, fvarts
@@ -101,28 +96,17 @@ c
         integer         iarray(50) ! integers for headers
         integer         isgn(ndof), isgng(ndof)
 
-!MR CHANGE
-!        real*8 rerr(nshg,10), ybar(nshg,13) ! including 7 sq. terms with 3 cross terms of uv, uw and vw
-!        real*8 rerr(nshg,10), ybar(nshg,12) ! including 7 sq. terms with 3 cross terms of uv, uw and vw
-        real*8 rerr(nshg,10)
+        real*8, allocatable, dimension(:,:) :: rerr
         real*8, allocatable, dimension(:,:) :: ybar, strain, vorticity
         real*8, allocatable, dimension(:,:) :: wallssVec, wallssVecbar
-!MR CHANGE
 
         real*8 tcorecp(2), tcorecpscal(2)
 
-        integer, allocatable, dimension(:) :: ivarts
-        integer, allocatable, dimension(:) :: ivartsg
-        integer, allocatable, dimension(:) :: iv_rank
-        real*8, allocatable, dimension(:) :: vartssoln
-        real*8, allocatable, dimension(:) :: vartssolng
         real*8, allocatable, dimension(:,:,:) :: yphbar
         real*8 CFLworst(numel)
 
-!MR CHANGE
         integer :: iv_rankpernode, iv_totnodes, iv_totcores
         integer :: iv_node, iv_core, iv_thread
-!MR CHANGE 
 !--------------------------------------------------------------------
 !     Setting up svLS
 #ifdef HAVE_SVLS
@@ -138,43 +122,13 @@ c
       TYPE(svLS_lhsType) svLS_lhs_S(4)
       TYPE(svLS_lsType) svLS_ls_S(4)
 #endif
+      call initmpistat()  ! see bottom of code to see just how easy it is
 
-        impistat = 0
-        impistat2 = 0
-        iISend = 0
-        iISendScal = 0
-        iIRecv = 0
-        iIRecvScal = 0
-        iWaitAll = 0
-        iWaitAllScal = 0
-        iAllR = 0
-        iAllRScal = 0
-        rISend = zero
-        rISendScal = zero
-        rIRecv = zero
-        rIRecvScal = zero
-        rWaitAll = zero
-        rWaitAllScal = zero
-        rAllR = zero
-        rAllRScal = zero
-        rCommu = zero
-        rCommuScal = zero
+      call initmemstat() 
 
-        call initmemstat() 
-
-c
-c  hack SA variable
-c
-cHack        BC(:,7)=BC(:,7)*0.001
-cHack        if(lstep.eq.0) y(:,6)=y(:,6)*0.001
 !--------------------------------------------------------------------
 !     Setting up svLS Moved down for better org
 
-#ifdef HAVE_LESLIB
-!      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
-        call SolverLicenseServer(servername)
-!      ENDIF
-#endif
 c
 c only master should be verbose
 c
@@ -184,79 +138,7 @@ c
 
         lskeep=lstep 
 
-        inquire(file='xyzts.dat',exist=exts)
-        if(exts) then
-           
-           open(unit=626,file='xyzts.dat',status='old')
-           read(626,*) ntspts, freq, tolpt, iterat, varcod
-           call sTD             ! sets data structures
-           
-           do jj=1,ntspts       ! read coordinate data where solution desired
-              read(626,*) ptts(jj,1),ptts(jj,2),ptts(jj,3)
-           enddo
-           close(626)
-
-           statptts(:,:) = 0
-           parptts(:,:) = zero
-           varts(:,:) = zero           
-
-           allocate (ivarts(ntspts*ndof))
-           allocate (ivartsg(ntspts*ndof))
-           allocate (iv_rank(ntspts))
-           allocate (vartssoln(ntspts*ndof))
-           allocate (vartssolng(ntspts*ndof))
-
-           iv_rankpernode = iv_rankpercore*iv_corepernode
-           iv_totnodes = numpe/iv_rankpernode
-           iv_totcores = iv_corepernode*iv_totnodes
-           if (myrank .eq. 0) then
-             write(*,*) 'Info for probes:'
-             write(*,*) '  Ranks per core:',iv_rankpercore
-             write(*,*) '  Cores per node:',iv_corepernode 
-             write(*,*) '  Ranks per node:',iv_rankpernode
-             write(*,*) '  Total number of nodes:',iv_totnodes
-             write(*,*) '  Total number of cores',iv_totcores
-           endif
-
-!           if (myrank .eq. numpe-1) then
-            do jj=1,ntspts
-
-               ! Compute the adequate rank which will take care of probe jj
-               jjm1 = jj-1
-               iv_node = (iv_totnodes-1)-mod(jjm1,iv_totnodes)
-               iv_core = (iv_corepernode-1) - mod((jjm1 - 
-     &              mod(jjm1,iv_totnodes))/iv_totnodes,iv_corepernode)
-               iv_thread = (iv_rankpercore-1) - mod((jjm1- 
-     &              (mod(jjm1,iv_totcores)))/iv_totcores,iv_rankpercore)
-               iv_rank(jj) = iv_node*iv_rankpernode 
-     &                     + iv_core*iv_rankpercore
-     &                     + iv_thread
-                 
-               if(myrank == 0) then
-                 write(*,*) '  Probe', jj, 'handled by rank',
-     &                         iv_rank(jj), ' on node', iv_node
-               endif
-
-               ! Verification just in case
-               if(iv_rank(jj) .lt.0 .or. iv_rank(jj) .ge. numpe) then 
-                 write(*,*) 'WARNING: iv_rank(',jj,') is ', iv_rank(jj),
-     &                      ' and reset to numpe-1'
-                 iv_rank(jj) = numpe-1
-               endif
-
-               ! Open the varts files
-               if(myrank == iv_rank(jj)) then
-                 fvarts='varts/varts'
-                 fvarts=trim(fvarts)//trim(cname2(jj))
-                 fvarts=trim(fvarts)//trim(cname2(lstep))
-                 fvarts=trim(fvarts)//'.dat'
-                 fvarts=trim(fvarts)
-                 open(unit=1000+jj, file=fvarts, status='unknown')
-               endif
-            enddo
-!           endif
-
-        endif
+        call initTimeSeries()
 c
 c.... open history and aerodynamic forces files
 c
@@ -280,6 +162,11 @@ c
         yold   = y
         acold  = ac
 
+!!!!!!!!!!!!!!!!!!!
+!Init output fields
+!!!!!!!!!!!!!!!!!!
+        numerr=10+isurf
+        allocate(rerr(nshg,numerr)) 
         rerr = zero
 
         if(ierrcalc.eq.1 .or. ioybar.eq.1) then ! we need ybar for error too
@@ -316,253 +203,19 @@ c
           yphbar = zero
         endif
 
-!MR CHANGE END
+!!!!!!!!!!!!!!!!!!!
+!END Init output fields
+!!!!!!!!!!!!!!!!!!
 
         vbc_prof(:,1:3) = BC(:,3:5)
         if(iramp.eq.1) then
           call BCprofileInit(vbc_prof,x)
         endif
-
-c
-c.... ---------------> initialize LesLib Library <---------------
-c
-c.... assign parameter values
-c     
-        do i = 1, 100
-           numeqns(i) = i
-        enddo
-        nKvecs       = Kspace
-        prjFlag      = iprjFlag
-        presPrjFlag  = ipresPrjFlag
-        verbose      = iverbose
-c
-c.... determine how many scalar equations we are going to need to solve
-c
-      nsolt=mod(impl(1),2)      ! 1 if solving temperature
-      nsclrsol=nsolt+nsclr      ! total number of scalars solved At
-                                ! some point we probably want to create
-                                ! a map, considering stepseq(), to find
-                                ! what is actually solved and only
-                                ! dimension lhs to the appropriate
-                                ! size. (see 1.6.1 and earlier for a
-                                ! "failed" attempt at this).
-
-
-      nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
       
 c
-c.... Now, call lesNew routine to initialize
-c     memory space
+c.... ---------------> initialize Equation Solver <---------------
 c
-      call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
-
-      nnz_tot=icnt ! this is exactly the number of non-zero blocks on
-                   ! this proc
-
-      if (nsolflow.eq.1) then  ! start of setup for the flow
-         lesId   = numeqns(1)
-         eqnType = 1
-         nDofs   = 4
-
-!--------------------------------------------------------------------
-!     Rest of configuration of svLS is added here, where we have LHS
-!     pointers
-
-         nPermDims = 1
-         nTmpDims = 1
-
-         allocate (lhsP(4,nnz_tot))
-         allocate (lhsK(9,nnz_tot))
-
-!     Setting up svLS or leslib for flow
-
-      IF (svLSFlag .EQ. 1) THEN
-#ifdef HAVE_SVLS
-        IF(nPrjs.eq.0) THEN
-           svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
-         ELSE
-           svLSType=3 !NS solver
-         ENDIF
-!  reltol for the NSSOLVE is the stop criterion on the outer loop
-!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
-!  for now we are using 
-!  Tolerance on ACUSIM Pressure Projection for CG and
-!  Tolerance on Momentum Equations for GMRES
-! also using Kspaceand maxIters from setup for ACUSIM
-!
-         eps_outer=40.0*epstol(1)  !following papers soggestion for now
-         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
-     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
-     3      maxItr=maxIters, 
-     4      maxItrIn=(/maxIters,maxIters/))
-
-         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
-            nNo=nshg
-            gnNo=nshgt
-            IF  (ipvsq .GE. 2) THEN
-
-#if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
-               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
-     2            + numImpSrfs + numRCRSrfs + numCORSrfs
-#elif((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 0))
-               svLS_nFaces = 1 + numResistSrfs
-     2            + numImpSrfs + numRCRSrfs + numCORSrfs
-#elif((VER_CORONARY == 0)&&(VER_CLOSEDLOOP == 1))
-               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
-     2            + numImpSrfs + numRCRSrfs
-#else
-               svLS_nFaces = 1 + numResistSrfs
-     2            + numImpSrfs + numRCRSrfs
-#endif
-
-            ELSE
-               svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for array size issues
-            END IF
-
-            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
-     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
-            
-            faIn = 1
-            facenNo = 0
-            DO i=1, nshg
-               IF (IBITS(iBC(i),3,3) .NE. 0)  facenNo = facenNo + 1
-            END DO
-            ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
-            sV = 0D0
-            j = 0
-            DO i=1, nshg
-               IF (IBITS(iBC(i),3,3) .NE. 0) THEN
-                  j = j + 1
-                  gNodes(j) = i
-                  IF (.NOT.BTEST(iBC(i),3)) sV(1,j) = 1D0
-                  IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
-                  IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
-               END IF
-            END DO
-            CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
-     2         nsd, BC_TYPE_Dir, gNodes, sV)
-            DEALLOCATE(gNodes)
-            DEALLOCATE(sV)
-#else
-         if(myrank.eq.0) write(*,*) 'your input requests svLS but your cmake did not build for it'
-         call error('itrdrv  ','nosVLS',svLSFlag)  
-#endif
-           ENDIF
-
-           if(leslib.eq.1) then
-#ifdef HAVE_LESLIB 
-!--------------------------------------------------------------------
-           call myfLesNew( lesId,   41994,
-     &                 eqnType,
-     &                 nDofs,          minIters,       maxIters,
-     &                 nKvecs,         prjFlag,        nPrjs,
-     &                 presPrjFlag,    nPresPrjs,      epstol(1),
-     &                 prestol,        verbose,        statsflow,
-     &                 nPermDims,      nTmpDims,      servername  )
-         
-           allocate (aperm(nshg,nPermDims))
-           allocate (atemp(nshg,nTmpDims))
-           call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
-     &                        nPermDims )
-#else
-         if(myrank.eq.0) write(*,*) 'your input requests leslib but your cmake did not build for it'
-         call error('itrdrv  ','nolslb',leslib)       
-#endif
-         endif !leslib=1
-
-      else   ! not solving flow just scalar
-         nPermDims = 0
-         nTempDims = 0
-      endif
-
-
-      if(nsclrsol.gt.0) then
-       do isolsc=1,nsclrsol
-         lesId       = numeqns(isolsc+1)
-         eqnType     = 2
-         nDofs       = 1
-         presPrjflag = 0        
-         nPresPrjs   = 0       
-         prjFlag     = 1
-         indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
-                             ! temperature followed by scalars
-!     Setting up svLS or leslib for scalar
-#ifdef HAVE_SVLS
-      IF (svLSFlag .EQ. 1) THEN
-           svLSType=2  !only option for scalars
-!  reltol for the GMRES is the stop criterion 
-! also using Kspaceand maxIters from setup for ACUSIM
-!
-         CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, dimKry=Kspace,
-     2      relTol=epstol(indx), 
-     3      maxItr=maxIters 
-     4      )
-
-         CALL svLS_COMMU_CREATE(communicator_S(isolsc), MPI_COMM_WORLD)
- 
-               svLS_nFaces = 1   !not sure about this...should try it with zero
-
-            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo, 
-     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
-            
-              faIn = 1
-              facenNo = 0
-              ib=5+isolsc
-              DO i=1, nshg
-                 IF (btest(iBC(i),ib))  facenNo = facenNo + 1
-              END DO
-              ALLOCATE(gNodes(facenNo), sV(1,facenNo))
-              sV = 0D0
-              j = 0
-              DO i=1, nshg
-               IF (btest(iBC(i),ib)) THEN
-                  j = j + 1
-                  gNodes(j) = i
-               END IF
-              END DO
-           
-            CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
-     2         1, BC_TYPE_Dir, gNodes, sV(1,:))
-            DEALLOCATE(gNodes)
-            DEALLOCATE(sV)
-
-            if( isolsc.eq.1) then ! if multiple scalars make sure done once
-              allocate (apermS(1,1,1))
-              allocate (atempS(1,1))  !they can all share this
-            endif
-         ENDIF  !svLS handing scalar solve
-#endif        
-        
-
-#ifdef HAVE_LESLIB
-         if (leslib.eq.1) then
-         call myfLesNew( lesId,            41994,
-     &                 eqnType,
-     &                 nDofs,          minIters,       maxIters,
-     &                 nKvecs,         prjFlag,        nPrjs,
-     &                 presPrjFlag,    nPresPrjs,      epstol(indx),
-     &                 prestol,        verbose,        statssclr,
-     &                 nPermDimsS,     nTmpDimsS,   servername )
-        endif
-#endif
-       enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
-       allocate (lhsS(nnz_tot,nsclrsol))
-#ifdef HAVE_LESLIB       
-       if(leslib.eq.1) then  ! we just prepped scalar solves for leslib so allocate arrays
-c
-c  Assume all scalars have the same size needs
-c
-       allocate (apermS(nshg,nPermDimsS,nsclrsol))
-       allocate (atempS(nshg,nTmpDimsS))  !they can all share this
-       endif
-#endif
-c
-c actually they could even share with atemp but leave that for later
-c
-      else !no scalar solves at all so zero dims not used
-         nPermDimsS = 0
-         nTmpDimsS  = 0
-      endif
+       call initEQS(iBC, rowp, colm)
 c
 c...  prepare lumped mass if needed
 c
@@ -582,8 +235,6 @@ c
       do 3000 itsq = 1, ntseq
          itseq = itsq
 
-CAD         tcorecp1 = second(0)
-CAD         tcorewc1 = second(-1)
 c
 c.... set up the time integration parameters
 c         
@@ -593,6 +244,7 @@ c
          dtol(:)= deltol(itseq,:)
 
          call itrSetup ( y, acold )
+        
 c
 c...initialize the coefficients for the impedance convolution,
 c   which are functions of alphaf so need to do it after itrSetup
@@ -662,9 +314,6 @@ c
              endif
            endif
 
-            xi=istp*1.0/nstp
-            datmat(1,2,1)=rmub*(1.0-xi)+xi*rmue
-c            write(*,*) "current mol. visc = ", datmat(1,2,1)
 c.... if we have time varying boundary conditions update the values of BC.
 c     these will be for time step n+1 so use lstep+1
 c     
@@ -677,8 +326,6 @@ c
             if(numImpSrfs.gt.0) then 
                call pHist(poldImp,QHistImp,ImpConvCoef,
      &                    ntimeptpT,numImpSrfs)
-               if (myrank.eq.master) 
-     &             write(8177,*) (poldImp(n), n=1,numImpSrfs)
             endif
 c
 c ... calc the pressure contribution that depends on the history for the RCR BC
@@ -688,19 +335,7 @@ c
                call CalcRCRConvCoef(lstep,numRCRSrfs)
                call pHist(poldRCR,QHistRCR,RCRConvCoef,nsteprcr,
      &              numRCRSrfs)
-               if (myrank.eq.master) 
-     &             write(8177,*) (poldRCR(n), n=1,numRCRSrfs)
             endif
-c
-c Decay of scalars
-c
-           if(nsclr.gt.0 .and. tdecay.ne.1) then
-              yold(:,6:ndof)=y(:,6:ndof)*tdecay
-              BC(:,7:6+nsclr)= BC(:,7:6+nsclr)*tdecay
-           endif
-
-           if(nosource.eq.1) BC(:,7:6+nsclr)= BC(:,7:6+nsclr)*0.8
-
 
             if(iLES.gt.0) then  !complicated stuff has moved to
                                         !routine below
@@ -719,29 +354,10 @@ c
      &                      iper,   ilwork,  ifath,  velbar)
             endif
 
-!MR CHANGE
 c
 c.... Determine whether the vorticity field needs to be computed for this time step or not
 c
-            icomputevort = 0
-            if (ivort == 1) then ! Print vorticity = True in solver.inp
-              ! We then compute the vorticity only if we 
-              ! 1) we write an intermediate checkpoint
-              ! 2) we reach the last time step and write the last checkpoint
-              ! 3) we accumulate statistics in ybar for every time step
-              ! BEWARE: we need here lstep+1 and istep+1 because the lstep and 
-              ! istep gets incremened after the flowsolve, further below
-              if (((irs .ge. 1) .and. (mod(lstep+1, ntout) .eq. 0)) .or.
-     &                   istep+1.eq.nstep(itseq) .or. ioybar == 1) then
-                icomputevort = 1
-              endif
-            endif
-
-!            write(*,*) 'icomputevort: ',icomputevort, ' - istep: ',
-!     &                istep,' - nstep(itseq):',nstep(itseq),'- lstep:',
-!     &                lstep, '- ntout:', ntout
-!MR CHANGE
-
+            call seticomputevort
 c
 c.... -----------------------> predictor phase <-----------------------
 c
@@ -914,32 +530,8 @@ c
 c
 c ..  Compute vorticity 
 c
-            if ( icomputevort == 1) then
- 
-              ! vorticity components and magnitude
-              vorticity(:,1) = GradV(:,8)-GradV(:,6) !omega_x
-              vorticity(:,2) = GradV(:,3)-GradV(:,7) !omega_y
-              vorticity(:,3) = GradV(:,4)-GradV(:,2) !omega_z
-              vorticity(:,4) = sqrt(   vorticity(:,1)*vorticity(:,1)
-     &                               + vorticity(:,2)*vorticity(:,2)
-     &                               + vorticity(:,3)*vorticity(:,3) )
-              ! Q
-              strain(:,1) = GradV(:,1)                  !S11
-              strain(:,2) = 0.5*(GradV(:,2)+GradV(:,4)) !S12
-              strain(:,3) = 0.5*(GradV(:,3)+GradV(:,7)) !S13
-              strain(:,4) = GradV(:,5)                  !S22
-              strain(:,5) = 0.5*(GradV(:,6)+GradV(:,8)) !S23
-              strain(:,6) = GradV(:,9)                  !S33
- 
-              vorticity(:,5) = 0.25*( vorticity(:,4)*vorticity(:,4)  !Q
-     &                            - 2.0*(      strain(:,1)*strain(:,1)
-     &                                    + 2* strain(:,2)*strain(:,2)
-     &                                    + 2* strain(:,3)*strain(:,3)
-     &                                    +    strain(:,4)*strain(:,4)
-     &                                    + 2* strain(:,5)*strain(:,5)
-     &                                    +    strain(:,6)*strain(:,6)))
-
-            endif
+            if ( icomputevort == 1) 
+     &        call computeVort( vorticity, GradV,strain)
 c
 c.... update and the aerodynamic forces
 c
@@ -962,13 +554,6 @@ c
 !              that is needed as other fields are written in append mode
 
            call restar ('out ',  yold  ,ac)
-           if(ideformwall == 1) then
-!              call write_displ(myrank, lstep, nshg, 3, uold )
-             if(myrank.eq.master) then
-               write(*,*) 'ideformwall is 1 and is a dead code path... exiting'
-             endif
-             stop
-           endif
 
            if(ivort == 1) then 
              call write_field(myrank,'a','vorticity',9,vorticity,
@@ -1012,84 +597,7 @@ c
 
 c...  dump TIME SERIES
             
-            if (exts) then
-               if (mod(lstep-1,freq).eq.0) then
-                  
-                  if (numpe > 1) then
-                     do jj = 1, ntspts
-                        vartssoln((jj-1)*ndof+1:jj*ndof)=varts(jj,:)
-                        ivarts=zero
-                     enddo
-                     do k=1,ndof*ntspts
-                        if(vartssoln(k).ne.zero) ivarts(k)=1
-                     enddo
-
-!                     call MPI_REDUCE(vartssoln, vartssolng, ndof*ntspts,
-!     &                    MPI_DOUBLE_PRECISION, MPI_SUM, master,
-!     &                    MPI_COMM_WORLD, ierr)
-
-                     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-                     call MPI_ALLREDUCE(vartssoln, vartssolng, 
-     &                    ndof*ntspts,
-     &                    MPI_DOUBLE_PRECISION, MPI_SUM,
-     &                    MPI_COMM_WORLD, ierr)
-
-!                     call MPI_REDUCE(ivarts, ivartsg, ndof*ntspts,
-!     &                    MPI_INTEGER, MPI_SUM, master,
-!     &                    MPI_COMM_WORLD, ierr)
-
-                     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
-                     call MPI_ALLREDUCE(ivarts, ivartsg, ndof*ntspts,
-     &                    MPI_INTEGER, MPI_SUM,
-     &                    MPI_COMM_WORLD, ierr)
-
-!                     if (myrank.eq.zero) then
-                     do jj = 1, ntspts
-
-                        if(myrank .eq. iv_rank(jj)) then 
-                           ! No need to update all varts components, only the one treated by the expected rank
-                           ! Note: keep varts as a vector, as multiple probes could be treated by one rank
-                           indxvarts = (jj-1)*ndof
-                           do k=1,ndof
-                              if(ivartsg(indxvarts+k).ne.0) then ! none of the vartssoln(parts) were non zero
-                                 varts(jj,k)=vartssolng(indxvarts+k)/
-     &                                             ivartsg(indxvarts+k)
-                              endif
-                           enddo
-                       endif !only if myrank eq iv_rank(jj)
-                     enddo
-!                     endif !only on master
-                  endif !only if numpe > 1
-
-!                  if (myrank.eq.zero) then
-                  do jj = 1, ntspts
-                     if(myrank .eq. iv_rank(jj)) then
-                        ifile = 1000+jj
-                        write(ifile,555) lstep, (varts(jj,k),k=1,ndof) !Beware of format 555 - check ndof 
-c                        call flush(ifile)
-                        if (((irs .ge. 1) .and. 
-     &                       (mod(lstep, ntout) .eq. 0))) then
-                           close(ifile)                     
-                           fvarts='varts/varts'
-                           fvarts=trim(fvarts)//trim(cname2(jj))
-                           fvarts=trim(fvarts)//trim(cname2(lskeep))
-                           fvarts=trim(fvarts)//'.dat'
-                           fvarts=trim(fvarts)
-                           open(unit=ifile, file=fvarts,
-     &                          position='append')
-                        endif !only when dumping restart
-                     endif
-                  enddo
-!                  endif !only on master
-
-                  varts(:,:) = zero ! reset the array for next step
-
-
-!555              format(i6,5(2x,E12.5e2))
-555               format(i6,6(2x,E20.12e2)) !assuming ndof = 6 here 
-
-               endif
-            endif
+            if (exts .and. ( mod(lstep-1,freq).eq.0)) call dumpTimeSeries()
 
             if((irscale.ge.0).or.(itwmod.gt.0)) 
      &           call getvel (yold,     ilwork, iBC,
@@ -1118,188 +626,9 @@ c
 c
 c.... -------------------> error calculation  <-----------------
 c 
-            if(ierrcalc.eq.1 .or. ioybar.eq.1) then
-c$$$c
-c$$$c compute average
-c$$$c
-c$$$               tfact=one/istep
-c$$$               ybar =tfact*yold + (one-tfact)*ybar
-
-c compute average
-c ybar(:,1:3) are average velocity components
-c ybar(:,4) is average pressure
-c ybar(:,5) is average speed
-c ybar(:,6:8) is average of sq. of each vel. component
-c ybar(:,9) is average of sq. of pressure
-c ybar(:,10:12) is average of cross vel. components : uv, uw and vw
-c averaging procedure justified only for identical time step sizes
-c ybar(:,13) is average of eddy viscosity
-c ybar(:,14:16) is average vorticity components
-c ybar(:,17) is average vorticity magnitude
-c istep is number of time step
-c
-               icollectybar = 0
-          if(nphasesincycle.eq.0 .or.
-     &            istep.gt.ncycles_startphaseavg*nstepsincycle) then
-                 icollectybar = 1
-                  if((istep-1).eq.ncycles_startphaseavg*nstepsincycle)
-     &               istepsinybar = 0 ! init. to zero in first cycle in avg.
-               endif
-
-               if(icollectybar.eq.1) then
-                  istepsinybar = istepsinybar+1
-                  tfact=one/istepsinybar
-
-                  if(myrank.eq.master .and. nphasesincycle.ne.0 .and.
-     &               mod((istep-1),nstepsincycle).eq.0)
-     &               write(*,*)'nsamples in phase average:',istepsinybar
-
-c ybar to contain the averaged ((u,v,w),p)-fields
-c and speed average, i.e., sqrt(u^2+v^2+w^2)
-c and avg. of sq. terms including
-c u^2, v^2, w^2, p^2 and cross terms of uv, uw and vw
-
-                  ybar(:,1) = tfact*yold(:,1) + (one-tfact)*ybar(:,1)
-                  ybar(:,2) = tfact*yold(:,2) + (one-tfact)*ybar(:,2)
-                  ybar(:,3) = tfact*yold(:,3) + (one-tfact)*ybar(:,3)
-                  ybar(:,4) = tfact*yold(:,4) + (one-tfact)*ybar(:,4)
-                  ybar(:,5) = tfact*sqrt(yold(:,1)**2+yold(:,2)**2+
-     &                        yold(:,3)**2) + (one-tfact)*ybar(:,5)
-                  ybar(:,6) = tfact*yold(:,1)**2 +
-     &                        (one-tfact)*ybar(:,6)
-                  ybar(:,7) = tfact*yold(:,2)**2 +
-     &                        (one-tfact)*ybar(:,7)
-                  ybar(:,8) = tfact*yold(:,3)**2 +
-     &                        (one-tfact)*ybar(:,8)
-                  ybar(:,9) = tfact*yold(:,4)**2 +
-     &                        (one-tfact)*ybar(:,9)
-                  ybar(:,10) = tfact*yold(:,1)*yold(:,2) + !uv
-     &                         (one-tfact)*ybar(:,10)
-                  ybar(:,11) = tfact*yold(:,1)*yold(:,3) + !uw
-     &                         (one-tfact)*ybar(:,11)
-                  ybar(:,12) = tfact*yold(:,2)*yold(:,3) + !vw
-     &                         (one-tfact)*ybar(:,12)
-!MR CHANGE
-                  if(nsclr.gt.0) !nut
-     &             ybar(:,13) = tfact*yold(:,6) + (one-tfact)*ybar(:,13)
-                  
-                  if(ivort == 1) then !vorticity
-                    ybar(:,14) = tfact*vorticity(:,1) + 
-     &                           (one-tfact)*ybar(:,14)
-                    ybar(:,15) = tfact*vorticity(:,2) + 
-     &                           (one-tfact)*ybar(:,15)
-                    ybar(:,16) = tfact*vorticity(:,3) + 
-     &                           (one-tfact)*ybar(:,16)
-                    ybar(:,17) = tfact*vorticity(:,4) + 
-     &                           (one-tfact)*ybar(:,17)
-                  endif
-
-                  if(abs(itwmod).ne.1 .and. iowflux.eq.1) then 
-                    wallssVecBar(:,1) = tfact*wallssVec(:,1)
-     &                                  +(one-tfact)*wallssVecBar(:,1)
-                    wallssVecBar(:,2) = tfact*wallssVec(:,2)
-     &                                  +(one-tfact)*wallssVecBar(:,2)
-                    wallssVecBar(:,3) = tfact*wallssVec(:,3)
-     &                                  +(one-tfact)*wallssVecBar(:,3)
-                  endif
-!MR CHANGE END
-               endif
-c
-c compute phase average
-c
-               if(nphasesincycle.ne.0 .and.
-     &            istep.gt.ncycles_startphaseavg*nstepsincycle) then
-
-c beginning of cycle is considered as ncycles_startphaseavg*nstepsincycle+1
-                  if((istep-1).eq.ncycles_startphaseavg*nstepsincycle)
-     &               icyclesinavg = 0 ! init. to zero in first cycle in avg.
-
-                  ! find number of steps between phases
-                  nstepsbtwphase = nstepsincycle/nphasesincycle ! integer value
-                  if(mod(istep-1,nstepsincycle).eq.0) then
-                     iphase = 1 ! init. to one in beginning of every cycle
-                     icyclesinavg = icyclesinavg + 1
-                  endif
-
-                  icollectphase = 0
-                  istepincycle = mod(istep,nstepsincycle)
-                  if(istepincycle.eq.0) istepincycle=nstepsincycle
-                  if(istepincycle.eq.iphase*nstepsbtwphase) then
-                     icollectphase = 1
-                     iphase = iphase+1 ! use 'iphase-1' below
-                  endif
-
-                  if(icollectphase.eq.1) then
-                     tfactphase = one/icyclesinavg
-
-                     if(myrank.eq.master) then
-                       write(*,*) 'nsamples in phase ',iphase-1,': ',
-     &                             icyclesinavg
-                     endif
-
-                     yphbar(:,1,iphase-1) = tfactphase*yold(:,1) +
-     &                          (one-tfactphase)*yphbar(:,1,iphase-1)
-                     yphbar(:,2,iphase-1) = tfactphase*yold(:,2) +
-     &                          (one-tfactphase)*yphbar(:,2,iphase-1)
-                     yphbar(:,3,iphase-1) = tfactphase*yold(:,3) +
-     &                          (one-tfactphase)*yphbar(:,3,iphase-1)
-                     yphbar(:,4,iphase-1) = tfactphase*yold(:,4) +
-     &                          (one-tfactphase)*yphbar(:,4,iphase-1)
-                     yphbar(:,5,iphase-1) = tfactphase*sqrt(yold(:,1)**2
-     &                          +yold(:,2)**2+yold(:,3)**2) +
-     &                          (one-tfactphase)*yphbar(:,5,iphase-1)
-!MR CHANGE
-                     yphbar(:,6,iphase-1) = 
-     &                              tfactphase*yold(:,1)*yold(:,1) 
-     &                           +(one-tfactphase)*yphbar(:,6,iphase-1)
-
-                     yphbar(:,7,iphase-1) = 
-     &                              tfactphase*yold(:,1)*yold(:,2)
-     &                           +(one-tfactphase)*yphbar(:,7,iphase-1)
-
-                     yphbar(:,8,iphase-1) = 
-     &                              tfactphase*yold(:,1)*yold(:,3)
-     &                           +(one-tfactphase)*yphbar(:,8,iphase-1)
-
-                     yphbar(:,9,iphase-1) = 
-     &                              tfactphase*yold(:,2)*yold(:,2)
-     &                           +(one-tfactphase)*yphbar(:,9,iphase-1)
-
-                     yphbar(:,10,iphase-1) = 
-     &                              tfactphase*yold(:,2)*yold(:,3)
-     &                           +(one-tfactphase)*yphbar(:,10,iphase-1)
-
-                     yphbar(:,11,iphase-1) = 
-     &                              tfactphase*yold(:,3)*yold(:,3)
-     &                           +(one-tfactphase)*yphbar(:,11,iphase-1)
-
-                     if(ivort == 1) then
-                       yphbar(:,12,iphase-1) = 
-     &                              tfactphase*vorticity(:,1)
-     &                           +(one-tfactphase)*yphbar(:,12,iphase-1)
-                       yphbar(:,13,iphase-1) = 
-     &                              tfactphase*vorticity(:,2)
-     &                           +(one-tfactphase)*yphbar(:,13,iphase-1)
-                       yphbar(:,14,iphase-1) = 
-     &                              tfactphase*vorticity(:,3)
-     &                           +(one-tfactphase)*yphbar(:,14,iphase-1)
-                       yphbar(:,15,iphase-1) = 
-     &                              tfactphase*vorticity(:,4)
-     &                           +(one-tfactphase)*yphbar(:,15,iphase-1)
-                    endif
-!MR CHANGE END
-                  endif
-               endif
-c
-c compute rms
-c
-               if(icollectybar.eq.1) then
-                  rerr(:, 7)=rerr(:, 7)+(yold(:,1)-ybar(:,1))**2
-                  rerr(:, 8)=rerr(:, 8)+(yold(:,2)-ybar(:,2))**2
-                  rerr(:, 9)=rerr(:, 9)+(yold(:,3)-ybar(:,3))**2
-                  rerr(:,10)=rerr(:,10)+(yold(:,4)-ybar(:,4))**2
-               endif
-            endif
+            if(ierrcalc.eq.1 .or. ioybar.eq.1) 
+     &       call collectErrorYbar(ybar,yold,wallssVec,wallssVecBar,
+     &               vorticity,yphbar,rerr)
  2003       continue ! we get here if stopjob equals lstep and this jumped over
 !           the statistics computation because we have no new data to average in
 !           rather we are just trying to output the last state that was not already
@@ -1313,13 +642,6 @@ c
 !
         if (((irs .ge. 1) .and. (mod(lstep, ntout) .eq. 0)) .or.
      &      istep.eq.nstep(itseq)) then
-          if ((irs .ge. 1) .and. ((mod(lstep, ntout) .ne. 0) .or.
-     &         (nstp .eq. 0))) then
-             if(
-     &          ((irscale.ge.0).or.(itwmod.gt.0) .or. 
-     &          ((nsonmax.eq.1).and.iLES.gt.0)))
-     &          call rwvelb  ('out ',  velbar  ,ifail)
-          endif
 
           lesId   = numeqns(1)
           if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
@@ -1396,20 +718,6 @@ c
             endif !nphasesincyle
           endif !ioybar
 
-          if ( ( ihessian .eq. 1 ) .and. ( numpe < 2 )  )then
-            uhess = zero
-            gradu = zero
-            tf = zero
-
-            do ku=1,nshg
-              tf(ku,1) = x(ku,1)**3
-            end do
-            call hessian( yold, x,     shp,  shgl,   iBC, 
-     &              shpb, shglb, iper, ilwork, uhess, gradu )
-
-            call write_hessian( uhess, gradu, nshg )
-          endif
-
           if(iRANS.lt.0) then
             if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
             if(myrank.eq.0)  then
@@ -1434,6 +742,7 @@ c
 
 ! done with time stepping so deallocate fields already written
 !
+ 
           if(ioybar.eq.1) then
             deallocate(ybar)
             if(abs(itwmod).ne.1 .and. iowflux.eq.1) then
@@ -1452,13 +761,6 @@ c
           if(iRANS.lt.0) then
             deallocate(d2wall)
           endif
-        
-
-CAD         tcorecp2 = second(0)
-CAD         tcorewc2 = second(-1)
-         
-CAD         write(6,*) 'T(core) cpu-wallclock = ',tcorecp2-tcorecp1,
-CAD     &                                        tcorewc2-tcorewc1
 
          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
          if(myrank.eq.0)  then
@@ -1506,22 +808,15 @@ c
             close(1000+jj)
           endif
         enddo
-        deallocate (ivarts)
-        deallocate (ivartsg)
-        deallocate (iv_rank)
-        deallocate (vartssoln)
-        deallocate (vartssolng)
+        call dTD   ! deallocates time series arrays
       endif
 
-!MR CHANGE
       if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       if(myrank.eq.0)  then
           write(*,*) 'itrdrv - done with aerodynamic forces'
       endif
-!MR CHANGE
 
       do isrf = 0,MAXSURF
-!        if ( nsrflist(isrf).ne.0 ) then
         if ( nsrflist(isrf).ne.0 .and.
      &                     myrank.eq.irankfilesforce(isrf)) then
           iunit=60+isrf
@@ -1529,12 +824,10 @@ c
         endif
       enddo
 
-!MR CHANGE
       if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       if(myrank.eq.0)  then
           write(*,*) 'itrdrv - done with MAXSURF'
       endif
-!MR CHANGE
 
 
  5    format(1X,F15.10,3X,F15.10,3X,F15.10,3X,F15.10)
@@ -1550,7 +843,7 @@ c
          deallocate (atemp)
          ENDIF
       endif
-      if(nsclrsol.gt.0) then
+      if((nsclr+nsolt).gt.0) then
          deallocate (lhsS)
          deallocate (apermS)
          deallocate (atempS)
@@ -1558,14 +851,10 @@ c
 
       if(iabc==1) deallocate(acs)
 
-!MR CHANGE
       if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       if(myrank.eq.0)  then
           write(*,*) 'itrdrv - done - BACK TO process.f'
       endif
-!MR CHANGE
-
-
 
       return
       end
@@ -2054,6 +1343,682 @@ c
       call phstr_appendStr(timing_msg, c_char_' = '//c_null_char)
       call phstr_appendDbl(timing_msg, timing)
       write(6,*) trim(timing_msg)
+      return
+      end subroutine
+
+      subroutine initmpistat()
+        include "common.h"
+
+        impistat = 0
+        impistat2 = 0
+        iISend = 0
+        iISendScal = 0
+        iIRecv = 0
+        iIRecvScal = 0
+        iWaitAll = 0
+        iWaitAllScal = 0
+        iAllR = 0
+        iAllRScal = 0
+        rISend = zero
+        rISendScal = zero
+        rIRecv = zero
+        rIRecvScal = zero
+        rWaitAll = zero
+        rWaitAllScal = zero
+        rAllR = zero
+        rAllRScal = zero
+        rCommu = zero
+        rCommuScal = zero
+      return
+      end subroutine
+
+      subroutine initTimeSeries()
+      use timedata   !allows collection of time series
+        include "common.h"
+       character*60    fvarts
+       character*10    cname2
+
+
+        inquire(file='xyzts.dat',exist=exts)
+        if(exts) then
+           
+           open(unit=626,file='xyzts.dat',status='old')
+           read(626,*) ntspts, freq, tolpt, iterat, varcod
+           call sTD             ! sets data structures
+           
+           do jj=1,ntspts       ! read coordinate data where solution desired
+              read(626,*) ptts(jj,1),ptts(jj,2),ptts(jj,3)
+           enddo
+           close(626)
+
+           statptts(:,:) = 0
+           parptts(:,:) = zero
+           varts(:,:) = zero           
+
+
+           iv_rankpernode = iv_rankpercore*iv_corepernode
+           iv_totnodes = numpe/iv_rankpernode
+           iv_totcores = iv_corepernode*iv_totnodes
+           if (myrank .eq. 0) then
+             write(*,*) 'Info for probes:'
+             write(*,*) '  Ranks per core:',iv_rankpercore
+             write(*,*) '  Cores per node:',iv_corepernode 
+             write(*,*) '  Ranks per node:',iv_rankpernode
+             write(*,*) '  Total number of nodes:',iv_totnodes
+             write(*,*) '  Total number of cores',iv_totcores
+           endif
+
+!           if (myrank .eq. numpe-1) then
+            do jj=1,ntspts
+
+               ! Compute the adequate rank which will take care of probe jj
+               jjm1 = jj-1
+               iv_node = (iv_totnodes-1)-mod(jjm1,iv_totnodes)
+               iv_core = (iv_corepernode-1) - mod((jjm1 - 
+     &              mod(jjm1,iv_totnodes))/iv_totnodes,iv_corepernode)
+               iv_thread = (iv_rankpercore-1) - mod((jjm1- 
+     &              (mod(jjm1,iv_totcores)))/iv_totcores,iv_rankpercore)
+               iv_rank(jj) = iv_node*iv_rankpernode 
+     &                     + iv_core*iv_rankpercore
+     &                     + iv_thread
+                 
+               if(myrank == 0) then
+                 write(*,*) '  Probe', jj, 'handled by rank',
+     &                         iv_rank(jj), ' on node', iv_node
+               endif
+
+               ! Verification just in case
+               if(iv_rank(jj) .lt.0 .or. iv_rank(jj) .ge. numpe) then 
+                 write(*,*) 'WARNING: iv_rank(',jj,') is ', iv_rank(jj),
+     &                      ' and reset to numpe-1'
+                 iv_rank(jj) = numpe-1
+               endif
+
+               ! Open the varts files
+               if(myrank == iv_rank(jj)) then
+                 fvarts='varts/varts'
+                 fvarts=trim(fvarts)//trim(cname2(jj))
+                 fvarts=trim(fvarts)//trim(cname2(lstep))
+                 fvarts=trim(fvarts)//'.dat'
+                 fvarts=trim(fvarts)
+                 open(unit=1000+jj, file=fvarts, status='unknown')
+               endif
+            enddo
+!           endif
+
+        endif
+c
+      return
+      end subroutine
+
+       subroutine initEQS(iBC, rowp, colm)
+
+        use solvedata
+        include "common.h"
+#ifdef HAVE_SVLS        
+        include "svLS.h"
+#endif
+        character*1024    servername
+#ifdef HAVE_LESLIB
+        integer eqnType
+!      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
+        call SolverLicenseServer(servername)
+!      ENDIF
+#endif
+c     
+c.... For linear solver Library
+c
+c
+c.... assign parameter values
+c     
+        do i = 1, 100
+           numeqns(i) = i
+        enddo
+c
+c.... determine how many scalar equations we are going to need to solve
+c
+      nsolt=mod(impl(1),2)      ! 1 if solving temperature
+      nsclrsol=nsolt+nsclr      ! total number of scalars solved At
+                                ! some point we probably want to create
+                                ! a map, considering stepseq(), to find
+                                ! what is actually solved and only
+                                ! dimension lhs to the appropriate
+                                ! size. (see 1.6.1 and earlier for a
+                                ! "failed" attempt at this).
+
+
+      nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
+      
+c
+c.... Now, call lesNew routine to initialize
+c     memory space
+c
+      call genadj(colm, rowp, icnt )  ! preprocess the adjacency list
+
+      nnz_tot=icnt ! this is exactly the number of non-zero blocks on
+                   ! this proc
+
+      if (nsolflow.eq.1) then  ! start of setup for the flow
+         lesId   = numeqns(1)
+         eqnType = 1
+         nDofs   = 4
+
+!--------------------------------------------------------------------
+!     Rest of configuration of svLS is added here, where we have LHS
+!     pointers
+
+         nPermDims = 1
+         nTmpDims = 1
+    
+
+         allocate (lhsP(4,nnz_tot))
+         allocate (lhsK(9,nnz_tot))
+
+!     Setting up svLS or leslib for flow
+
+      IF (svLSFlag .EQ. 1) THEN
+#ifdef HAVE_SVLS
+        IF(nPrjs.eq.0) THEN
+           svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
+         ELSE
+           svLSType=3 !NS solver
+         ENDIF
+!  reltol for the NSSOLVE is the stop criterion on the outer loop
+!  reltolIn is (eps_GM, eps_CG) from the CompMech paper
+!  for now we are using 
+!  Tolerance on ACUSIM Pressure Projection for CG and
+!  Tolerance on Momentum Equations for GMRES
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         eps_outer=40.0*epstol(1)  !following papers soggestion for now
+         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
+     2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
+     3      maxItr=maxIters, 
+     4      maxItrIn=(/maxIters,maxIters/))
+
+         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
+            nNo=nshg
+            gnNo=nshgt
+            IF  (ipvsq .GE. 2) THEN
+
+#if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 0))
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs + numCORSrfs
+#elif((VER_CORONARY == 0)&&(VER_CLOSEDLOOP == 1))
+               svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
+     2            + numImpSrfs + numRCRSrfs
+#else
+               svLS_nFaces = 1 + numResistSrfs
+     2            + numImpSrfs + numRCRSrfs
+#endif
+
+            ELSE
+               svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for array size issues
+            END IF
+
+            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            
+            faIn = 1
+            facenNo = 0
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0)  facenNo = facenNo + 1
+            END DO
+            ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
+            sV = 0D0
+            j = 0
+            DO i=1, nshg
+               IF (IBITS(iBC(i),3,3) .NE. 0) THEN
+                  j = j + 1
+                  gNodes(j) = i
+                  IF (.NOT.BTEST(iBC(i),3)) sV(1,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
+                  IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
+               END IF
+            END DO
+            CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
+     2         nsd, BC_TYPE_Dir, gNodes, sV)
+            DEALLOCATE(gNodes)
+            DEALLOCATE(sV)
+#else
+         if(myrank.eq.0) write(*,*) 'your input requests svLS but your cmake did not build for it'
+         call error('itrdrv  ','nosVLS',svLSFlag)  
+#endif
+           ENDIF
+
+           if(leslib.eq.1) then
+#ifdef HAVE_LESLIB 
+!--------------------------------------------------------------------
+           call myfLesNew( lesId,   41994,
+     &                 eqnType,
+     &                 nDofs,          minIters,       maxIters,
+     &                 Kspace,         iprjFlag,        nPrjs,
+     &                 ipresPrjFlag,    nPresPrjs,      epstol(1),
+     &                 prestol,        iverbose,        statsflow,
+     &                 nPermDims,      nTmpDims,      servername  )
+         
+           allocate (aperm(nshg,nPermDims))
+           allocate (atemp(nshg,nTmpDims))
+           call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
+     &                        nPermDims )
+#else
+         if(myrank.eq.0) write(*,*) 'your input requests leslib but your cmake did not build for it'
+         call error('itrdrv  ','nolslb',leslib)       
+#endif
+         endif !leslib=1
+
+      else   ! not solving flow just scalar
+         nPermDims = 0
+         nTmpDims = 0
+      endif
+
+
+      if(nsclrsol.gt.0) then
+       do isolsc=1,nsclrsol
+         lesId       = numeqns(isolsc+1)
+         eqnType     = 2
+         nDofs       = 1
+         isclpresPrjflag = 0        
+         nPresPrjs   = 0       
+         isclprjFlag     = 1
+         indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
+                             ! temperature followed by scalars
+!     Setting up svLS or leslib for scalar
+#ifdef HAVE_SVLS
+      IF (svLSFlag .EQ. 1) THEN
+           svLSType=2  !only option for scalars
+!  reltol for the GMRES is the stop criterion 
+! also using Kspaceand maxIters from setup for ACUSIM
+!
+         CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, dimKry=Kspace,
+     2      relTol=epstol(indx), 
+     3      maxItr=maxIters 
+     4      )
+
+         CALL svLS_COMMU_CREATE(communicator_S(isolsc), MPI_COMM_WORLD)
+ 
+               svLS_nFaces = 1   !not sure about this...should try it with zero
+
+            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo, 
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+            
+              faIn = 1
+              facenNo = 0
+              ib=5+isolsc
+              DO i=1, nshg
+                 IF (btest(iBC(i),ib))  facenNo = facenNo + 1
+              END DO
+              ALLOCATE(gNodes(facenNo), sV(1,facenNo))
+              sV = 0D0
+              j = 0
+              DO i=1, nshg
+               IF (btest(iBC(i),ib)) THEN
+                  j = j + 1
+                  gNodes(j) = i
+               END IF
+              END DO
+           
+            CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
+     2         1, BC_TYPE_Dir, gNodes, sV(1,:))
+            DEALLOCATE(gNodes)
+            DEALLOCATE(sV)
+
+            if( isolsc.eq.1) then ! if multiple scalars make sure done once
+              allocate (apermS(1,1,1))
+              allocate (atempS(1,1))  !they can all share this
+            endif
+         ENDIF  !svLS handing scalar solve
+#endif        
+        
+
+#ifdef HAVE_LESLIB
+         if (leslib.eq.1) then
+         call myfLesNew( lesId,            41994,
+     &                 eqnType,
+     &                 nDofs,          minIters,       maxIters,
+     &                 Kspace,         isclprjFlag,        nPrjs,
+     &                 isclpresPrjFlag,    nPresPrjs,      epstol(indx),
+     &                 prestol,        iverbose,        statssclr,
+     &                 nPermDimsS,     nTmpDimsS,   servername )
+        endif
+#endif
+       enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
+       allocate (lhsS(nnz_tot,nsclrsol))
+#ifdef HAVE_LESLIB       
+       if(leslib.eq.1) then  ! we just prepped scalar solves for leslib so allocate arrays
+c
+c  Assume all scalars have the same size needs
+c
+       allocate (apermS(nshg,nPermDimsS,nsclrsol))
+       allocate (atempS(nshg,nTmpDimsS))  !they can all share this
+       endif
+#endif
+c
+c actually they could even share with atemp but leave that for later
+c
+      else !no scalar solves at all so zero dims not used
+         nPermDimsS = 0
+         nTmpDimsS  = 0
+      endif
+      return
+      end subroutine
+      subroutine seticomputevort
+        include "common.h"
+            icomputevort = 0
+            if (ivort == 1) then ! Print vorticity = True in solver.inp
+              ! We then compute the vorticity only if we 
+              ! 1) we write an intermediate checkpoint
+              ! 2) we reach the last time step and write the last checkpoint
+              ! 3) we accumulate statistics in ybar for every time step
+              ! BEWARE: we need here lstep+1 and istep+1 because the lstep and 
+              ! istep gets incremened after the flowsolve, further below
+              if (((irs .ge. 1) .and. (mod(lstep+1, ntout) .eq. 0)) .or.
+     &                   istep+1.eq.nstep(itseq) .or. ioybar == 1) then
+                icomputevort = 1
+              endif
+            endif
+
+!            write(*,*) 'icomputevort: ',icomputevort, ' - istep: ',
+!     &                istep,' - nstep(itseq):',nstep(itseq),'- lstep:',
+!     &                lstep, '- ntout:', ntout
+      return
+      end subroutine
+      subroutine computeVort( vorticity, GradV,strain)
+
+        real*8, allocatable, dimension(:,:) :: gradV, strain, vorticity
+ 
+              ! vorticity components and magnitude
+              vorticity(:,1) = GradV(:,8)-GradV(:,6) !omega_x
+              vorticity(:,2) = GradV(:,3)-GradV(:,7) !omega_y
+              vorticity(:,3) = GradV(:,4)-GradV(:,2) !omega_z
+              vorticity(:,4) = sqrt(   vorticity(:,1)*vorticity(:,1)
+     &                               + vorticity(:,2)*vorticity(:,2)
+     &                               + vorticity(:,3)*vorticity(:,3) )
+              ! Q
+              strain(:,1) = GradV(:,1)                  !S11
+              strain(:,2) = 0.5*(GradV(:,2)+GradV(:,4)) !S12
+              strain(:,3) = 0.5*(GradV(:,3)+GradV(:,7)) !S13
+              strain(:,4) = GradV(:,5)                  !S22
+              strain(:,5) = 0.5*(GradV(:,6)+GradV(:,8)) !S23
+              strain(:,6) = GradV(:,9)                  !S33
+ 
+              vorticity(:,5) = 0.25*( vorticity(:,4)*vorticity(:,4)  !Q
+     &                            - 2.0*(      strain(:,1)*strain(:,1)
+     &                                    + 2* strain(:,2)*strain(:,2)
+     &                                    + 2* strain(:,3)*strain(:,3)
+     &                                    +    strain(:,4)*strain(:,4)
+     &                                    + 2* strain(:,5)*strain(:,5)
+     &                                    +    strain(:,6)*strain(:,6)))
+
+      return
+      end subroutine
+
+      subroutine dumpTimeSeries()
+      use timedata   !allows collection of time series
+      include "common.h"
+   
+                  
+                  if (numpe > 1) then
+                     do jj = 1, ntspts
+                        vartssoln((jj-1)*ndof+1:jj*ndof)=varts(jj,:)
+                        ivarts=zero
+                     enddo
+                     do k=1,ndof*ntspts
+                        if(vartssoln(k).ne.zero) ivarts(k)=1
+                     enddo
+
+!                     call MPI_REDUCE(vartssoln, vartssolng, ndof*ntspts,
+!     &                    MPI_DOUBLE_PRECISION, MPI_SUM, master,
+!     &                    MPI_COMM_WORLD, ierr)
+
+                     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+                     call MPI_ALLREDUCE(vartssoln, vartssolng, 
+     &                    ndof*ntspts,
+     &                    MPI_DOUBLE_PRECISION, MPI_SUM,
+     &                    MPI_COMM_WORLD, ierr)
+
+!                     call MPI_REDUCE(ivarts, ivartsg, ndof*ntspts,
+!     &                    MPI_INTEGER, MPI_SUM, master,
+!     &                    MPI_COMM_WORLD, ierr)
+
+                     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
+                     call MPI_ALLREDUCE(ivarts, ivartsg, ndof*ntspts,
+     &                    MPI_INTEGER, MPI_SUM,
+     &                    MPI_COMM_WORLD, ierr)
+
+!                     if (myrank.eq.zero) then
+                     do jj = 1, ntspts
+
+                        if(myrank .eq. iv_rank(jj)) then 
+                           ! No need to update all varts components, only the one treated by the expected rank
+                           ! Note: keep varts as a vector, as multiple probes could be treated by one rank
+                           indxvarts = (jj-1)*ndof
+                           do k=1,ndof
+                              if(ivartsg(indxvarts+k).ne.0) then ! none of the vartssoln(parts) were non zero
+                                 varts(jj,k)=vartssolng(indxvarts+k)/
+     &                                             ivartsg(indxvarts+k)
+                              endif
+                           enddo
+                       endif !only if myrank eq iv_rank(jj)
+                     enddo
+!                     endif !only on master
+                  endif !only if numpe > 1
+
+!                  if (myrank.eq.zero) then
+                  do jj = 1, ntspts
+                     if(myrank .eq. iv_rank(jj)) then
+                        ifile = 1000+jj
+                        write(ifile,555) lstep, (varts(jj,k),k=1,ndof) !Beware of format 555 - check ndof 
+c                        call flush(ifile)
+                        if (((irs .ge. 1) .and. 
+     &                       (mod(lstep, ntout) .eq. 0))) then
+                           close(ifile)                     
+                           fvarts='varts/varts'
+                           fvarts=trim(fvarts)//trim(cname2(jj))
+                           fvarts=trim(fvarts)//trim(cname2(lskeep))
+                           fvarts=trim(fvarts)//'.dat'
+                           fvarts=trim(fvarts)
+                           open(unit=ifile, file=fvarts,
+     &                          position='append')
+                        endif !only when dumping restart
+                     endif
+                  enddo
+!                  endif !only on master
+
+                  varts(:,:) = zero ! reset the array for next step
+
+
+!555              format(i6,5(2x,E12.5e2))
+555               format(i6,6(2x,E20.12e2)) !assuming ndof = 6 here 
+
+      return
+      end subroutine
+
+      subroutine collectErrorYbar(ybar,yold,wallssVec,wallssVecBar,
+     &               vorticity,yphbar,rerr)
+      include "common.h"
+      real*8, allocatable, dimension(:,:) :: ybar, yold, vorticity
+      real*8, allocatable, dimension(:,:) :: yphbar,wallssVec
+      real*8, allocatable, dimension(:,:) :: wallssVecBar,rerr
+c$$$c
+c$$$c compute average
+c$$$c
+c$$$               tfact=one/istep
+c$$$               ybar =tfact*yold + (one-tfact)*ybar
+
+c compute average
+c ybar(:,1:3) are average velocity components
+c ybar(:,4) is average pressure
+c ybar(:,5) is average speed
+c ybar(:,6:8) is average of sq. of each vel. component
+c ybar(:,9) is average of sq. of pressure
+c ybar(:,10:12) is average of cross vel. components : uv, uw and vw
+c averaging procedure justified only for identical time step sizes
+c ybar(:,13) is average of eddy viscosity
+c ybar(:,14:16) is average vorticity components
+c ybar(:,17) is average vorticity magnitude
+c istep is number of time step
+c
+      icollectybar = 0
+      if(nphasesincycle.eq.0 .or.
+     &            istep.gt.ncycles_startphaseavg*nstepsincycle) then
+               icollectybar = 1
+               if((istep-1).eq.ncycles_startphaseavg*nstepsincycle)
+     &               istepsinybar = 0 ! init. to zero in first cycle in avg.
+               endif
+
+               if(icollectybar.eq.1) then
+                  istepsinybar = istepsinybar+1
+                  tfact=one/istepsinybar
+
+!                  if(myrank.eq.master .and. nphasesincycle.ne.0 .and.
+!     &               mod((istep-1),nstepsincycle).eq.0)
+!     &               write(*,*)'nsamples in phase average:',istepsinybar
+
+c ybar to contain the averaged ((u,v,w),p)-fields
+c and speed average, i.e., sqrt(u^2+v^2+w^2)
+c and avg. of sq. terms including
+c u^2, v^2, w^2, p^2 and cross terms of uv, uw and vw
+
+                  ybar(:,1) = tfact*yold(:,1) + (one-tfact)*ybar(:,1)
+                  ybar(:,2) = tfact*yold(:,2) + (one-tfact)*ybar(:,2)
+                  ybar(:,3) = tfact*yold(:,3) + (one-tfact)*ybar(:,3)
+                  ybar(:,4) = tfact*yold(:,4) + (one-tfact)*ybar(:,4)
+                  ybar(:,5) = tfact*sqrt(yold(:,1)**2+yold(:,2)**2+
+     &                        yold(:,3)**2) + (one-tfact)*ybar(:,5)
+                  ybar(:,6) = tfact*yold(:,1)**2 +
+     &                        (one-tfact)*ybar(:,6)
+                  ybar(:,7) = tfact*yold(:,2)**2 +
+     &                        (one-tfact)*ybar(:,7)
+                  ybar(:,8) = tfact*yold(:,3)**2 +
+     &                        (one-tfact)*ybar(:,8)
+                  ybar(:,9) = tfact*yold(:,4)**2 +
+     &                        (one-tfact)*ybar(:,9)
+                  ybar(:,10) = tfact*yold(:,1)*yold(:,2) + !uv
+     &                         (one-tfact)*ybar(:,10)
+                  ybar(:,11) = tfact*yold(:,1)*yold(:,3) + !uw
+     &                         (one-tfact)*ybar(:,11)
+                  ybar(:,12) = tfact*yold(:,2)*yold(:,3) + !vw
+     &                         (one-tfact)*ybar(:,12)
+                  if(nsclr.gt.0) !nut
+     &             ybar(:,13) = tfact*yold(:,6) + (one-tfact)*ybar(:,13)
+                  
+                  if(ivort == 1) then !vorticity
+                    ybar(:,14) = tfact*vorticity(:,1) + 
+     &                           (one-tfact)*ybar(:,14)
+                    ybar(:,15) = tfact*vorticity(:,2) + 
+     &                           (one-tfact)*ybar(:,15)
+                    ybar(:,16) = tfact*vorticity(:,3) + 
+     &                           (one-tfact)*ybar(:,16)
+                    ybar(:,17) = tfact*vorticity(:,4) + 
+     &                           (one-tfact)*ybar(:,17)
+                  endif
+
+                  if(abs(itwmod).ne.1 .and. iowflux.eq.1) then 
+                    wallssVecBar(:,1) = tfact*wallssVec(:,1)
+     &                                  +(one-tfact)*wallssVecBar(:,1)
+                    wallssVecBar(:,2) = tfact*wallssVec(:,2)
+     &                                  +(one-tfact)*wallssVecBar(:,2)
+                    wallssVecBar(:,3) = tfact*wallssVec(:,3)
+     &                                  +(one-tfact)*wallssVecBar(:,3)
+                  endif
+               endif !icollectybar.eq.1
+c
+c compute phase average
+c
+               if(nphasesincycle.ne.0 .and.
+     &            istep.gt.ncycles_startphaseavg*nstepsincycle) then
+
+c beginning of cycle is considered as ncycles_startphaseavg*nstepsincycle+1
+                  if((istep-1).eq.ncycles_startphaseavg*nstepsincycle)
+     &               icyclesinavg = 0 ! init. to zero in first cycle in avg.
+
+                  ! find number of steps between phases
+                  nstepsbtwphase = nstepsincycle/nphasesincycle ! integer value
+                  if(mod(istep-1,nstepsincycle).eq.0) then
+                     iphase = 1 ! init. to one in beginning of every cycle
+                     icyclesinavg = icyclesinavg + 1
+                  endif
+
+                  icollectphase = 0
+                  istepincycle = mod(istep,nstepsincycle)
+                  if(istepincycle.eq.0) istepincycle=nstepsincycle
+                  if(istepincycle.eq.iphase*nstepsbtwphase) then
+                     icollectphase = 1
+                     iphase = iphase+1 ! use 'iphase-1' below
+                  endif
+
+                  if(icollectphase.eq.1) then
+                     tfactphase = one/icyclesinavg
+
+                     if(myrank.eq.master) then
+                       write(*,*) 'nsamples in phase ',iphase-1,': ',
+     &                             icyclesinavg
+                     endif
+
+                     yphbar(:,1,iphase-1) = tfactphase*yold(:,1) +
+     &                          (one-tfactphase)*yphbar(:,1,iphase-1)
+                     yphbar(:,2,iphase-1) = tfactphase*yold(:,2) +
+     &                          (one-tfactphase)*yphbar(:,2,iphase-1)
+                     yphbar(:,3,iphase-1) = tfactphase*yold(:,3) +
+     &                          (one-tfactphase)*yphbar(:,3,iphase-1)
+                     yphbar(:,4,iphase-1) = tfactphase*yold(:,4) +
+     &                          (one-tfactphase)*yphbar(:,4,iphase-1)
+                     yphbar(:,5,iphase-1) = tfactphase*sqrt(yold(:,1)**2
+     &                          +yold(:,2)**2+yold(:,3)**2) +
+     &                          (one-tfactphase)*yphbar(:,5,iphase-1)
+                     yphbar(:,6,iphase-1) = 
+     &                              tfactphase*yold(:,1)*yold(:,1) 
+     &                           +(one-tfactphase)*yphbar(:,6,iphase-1)
+
+                     yphbar(:,7,iphase-1) = 
+     &                              tfactphase*yold(:,1)*yold(:,2)
+     &                           +(one-tfactphase)*yphbar(:,7,iphase-1)
+
+                     yphbar(:,8,iphase-1) = 
+     &                              tfactphase*yold(:,1)*yold(:,3)
+     &                           +(one-tfactphase)*yphbar(:,8,iphase-1)
+
+                     yphbar(:,9,iphase-1) = 
+     &                              tfactphase*yold(:,2)*yold(:,2)
+     &                           +(one-tfactphase)*yphbar(:,9,iphase-1)
+
+                     yphbar(:,10,iphase-1) = 
+     &                              tfactphase*yold(:,2)*yold(:,3)
+     &                           +(one-tfactphase)*yphbar(:,10,iphase-1)
+
+                     yphbar(:,11,iphase-1) = 
+     &                              tfactphase*yold(:,3)*yold(:,3)
+     &                           +(one-tfactphase)*yphbar(:,11,iphase-1)
+
+                     if(ivort == 1) then
+                       yphbar(:,12,iphase-1) = 
+     &                              tfactphase*vorticity(:,1)
+     &                           +(one-tfactphase)*yphbar(:,12,iphase-1)
+                       yphbar(:,13,iphase-1) = 
+     &                              tfactphase*vorticity(:,2)
+     &                           +(one-tfactphase)*yphbar(:,13,iphase-1)
+                       yphbar(:,14,iphase-1) = 
+     &                              tfactphase*vorticity(:,3)
+     &                           +(one-tfactphase)*yphbar(:,14,iphase-1)
+                       yphbar(:,15,iphase-1) = 
+     &                              tfactphase*vorticity(:,4)
+     &                           +(one-tfactphase)*yphbar(:,15,iphase-1)
+                    endif
+                  endif !compute phase average
+      endif !if(nphasesincycle.eq.0 .or. istep.gt.ncycles_startphaseavg*nstepsincycle) 
+c
+c compute rms
+c
+      if(icollectybar.eq.1) then
+                  rerr(:, 7)=rerr(:, 7)+(yold(:,1)-ybar(:,1))**2
+                  rerr(:, 8)=rerr(:, 8)+(yold(:,2)-ybar(:,2))**2
+                  rerr(:, 9)=rerr(:, 9)+(yold(:,3)-ybar(:,3))**2
+                  rerr(:,10)=rerr(:,10)+(yold(:,4)-ybar(:,4))**2
+      endif
       return
       end subroutine
 

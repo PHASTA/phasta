@@ -10,6 +10,12 @@
       real*8,  allocatable :: parptts(:,:)
       real*8,  allocatable :: varts(:,:)
 
+      integer,  allocatable :: iv_rank(:)
+      integer,  allocatable :: ivarts(:)
+      integer,  allocatable :: ivartsg(:)
+      real*8,  allocatable :: vartssoln(:)
+      real*8,  allocatable :: vartssolng(:)
+
       end module
 
       module pp_data
@@ -36,6 +42,12 @@ c-----------------------------------------------------------------------
       allocate (parptts(ntspts,nsd))
       allocate (varts(ntspts,ndof))
 
+      allocate (ivarts(ntspts*ndof))
+      allocate (ivartsg(ntspts*ndof))
+      allocate (iv_rank(ntspts))
+      allocate (vartssoln(ntspts*ndof))
+      allocate (vartssolng(ntspts*ndof))
+
       return
       end
 c-----------------------------------------------------------------------
@@ -49,6 +61,14 @@ c-----------------------------------------------------------------------
 
       deallocate (ptts)
       deallocate (varts)
+      deallocate (statptts)
+      deallocate (parptts)
+
+      deallocate (ivarts)
+      deallocate (ivartsg)
+      deallocate (iv_rank)
+      deallocate (vartssoln)
+      deallocate (vartssolng)
 
       return
       end
