@@ -118,13 +118,13 @@ c
      &                  numflx, ndof,   nelblk, nelblb,ntopsh, nlwork,
      &                  nedof,
      &                  nshg,   nnz,    nflow,
-     &                  nfath, ncorpsize, iownnodes, usingpetsc
+     &                  nfath, ncorpsize, iownnodes, usingpetsc, numerr
 
         common /conpar/ numnp,  numel,  numelb, numpbc, nen,    nfaces,
      &                  numflx, ndof,   iALE,   icoord, navier,
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
-     &                  ncorpsize, iownnodes, usingpetsc
+     &                  ncorpsize, iownnodes, usingpetsc, numerr
 c......................NASA Inlet Woolwine.................................
         common /nasavari/ BCdtKW, tsBase
         common /nasavar/  PresFreq, PresAmp, AlphaFreq, AlphaAmp

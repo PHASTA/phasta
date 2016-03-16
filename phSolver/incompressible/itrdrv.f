@@ -34,6 +34,7 @@ c
       use turbsa          ! used to access d2wall
       use wallData
       use fncorpmod
+      use solvedata
       use iso_c_binding
 
 c      use readarrays !reads in uold and acold
@@ -83,10 +84,6 @@ c
 
         dimension wallubar(2),walltot(2)
 c
-        real*8, allocatable, dimension(:,:) :: aperm,  atemp, atempS
-        real*8, allocatable, dimension(:,:,:) :: apermS
-
-        real*8, allocatable, dimension(:,:) :: lhsP, lhsK, lhsS
         real*8   almit, alfit, gamit
 c
         character*20    fname1,fmt1
@@ -171,9 +168,11 @@ c
 
         if(ierrcalc.eq.1 .or. ioybar.eq.1) then ! we need ybar for error too
           if (ivort == 1) then
-            allocate(ybar(nshg,17)) ! more space for vorticity if requested
+            irank2ybar=17
+            allocate(ybar(nshg,irank2ybar)) ! more space for vorticity if requested
           else
-            allocate(ybar(nshg,13))
+            irank2ybar=13
+            allocate(ybar(nshg,irank2ybar))
           endif
           ybar = zero ! Initialize ybar to zero, which is essential
         endif
@@ -196,9 +195,11 @@ c
         if(nphasesincycle.ne.0) then
 !     &     allocate(yphbar(nshg,5,nphasesincycle))
           if (ivort == 1) then
-            allocate(yphbar(nshg,15,nphasesincycle)) ! more space for vorticity
+            irank2yphbar=15
+            allocate(yphbar(nshg,irank2yphbar,nphasesincycle)) ! more space for vorticity
           else
-            allocate(yphbar(nshg,11,nphasesincycle))
+            irank2yphbar=11
+            allocate(yphbar(nshg,irank2yphbar,nphasesincycle))
           endif
           yphbar = zero
         endif
@@ -628,7 +629,7 @@ c.... -------------------> error calculation  <-----------------
 c 
             if(ierrcalc.eq.1 .or. ioybar.eq.1) 
      &       call collectErrorYbar(ybar,yold,wallssVec,wallssVecBar,
-     &               vorticity,yphbar,rerr)
+     &               vorticity,yphbar,rerr,irank2ybar,irank2yphbar)
  2003       continue ! we get here if stopjob equals lstep and this jumped over
 !           the statistics computation because we have no new data to average in
 !           rather we are just trying to output the last state that was not already
@@ -1460,6 +1461,8 @@ c
 #endif
         character*1024    servername
 #ifdef HAVE_LESLIB
+        integer   rowp(nshg,nnz),         colm(nshg+1),
+     &            iBC(nshg)
         integer eqnType
 !      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
         call SolverLicenseServer(servername)
@@ -1726,9 +1729,11 @@ c
 !     &                lstep, '- ntout:', ntout
       return
       end subroutine
-      subroutine computeVort( vorticity, GradV,strain)
 
-        real*8, allocatable, dimension(:,:) :: gradV, strain, vorticity
+      subroutine computeVort( vorticity, GradV,strain)
+        include "common.h"
+
+        real*8 gradV(nshg,nsdsq), strain(nshg,6), vorticity(nshg,5)
  
               ! vorticity components and magnitude
               vorticity(:,1) = GradV(:,8)-GradV(:,6) !omega_x
@@ -1759,6 +1764,8 @@ c
       subroutine dumpTimeSeries()
       use timedata   !allows collection of time series
       include "common.h"
+       character*60    fvarts
+       character*10    cname2
    
                   
                   if (numpe > 1) then
@@ -1838,11 +1845,11 @@ c                        call flush(ifile)
       end subroutine
 
       subroutine collectErrorYbar(ybar,yold,wallssVec,wallssVecBar,
-     &               vorticity,yphbar,rerr)
+     &               vorticity,yphbar,rerr,irank2ybar,irank2yphbar)
       include "common.h"
-      real*8, allocatable, dimension(:,:) :: ybar, yold, vorticity
-      real*8, allocatable, dimension(:,:) :: yphbar,wallssVec
-      real*8, allocatable, dimension(:,:) :: wallssVecBar,rerr
+      real*8 ybar(nshg,irank2yphbar),yold(nshg,ndof),vorticity(nshg,5)
+      real*8 yphbar(nshg,irank2yphbar,nphasesincycle)
+      real*8 wallssvec(nshg,3),wallssVecBar(nshg,3), rerr(nshg,numerr)
 c$$$c
 c$$$c compute average
 c$$$c
