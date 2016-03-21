@@ -1459,6 +1459,8 @@ c
 #ifdef HAVE_SVLS        
         include "svLS.h"
 #endif
+        integer, allocatable :: gNodes(:)
+        real*8, allocatable :: sV(:,:)
         character*1024    servername
 #ifdef HAVE_LESLIB
         integer   rowp(nshg,nnz),         colm(nshg+1),
