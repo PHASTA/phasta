@@ -111,11 +111,9 @@ c
       INTEGER, ALLOCATABLE :: gNodes(:)
       REAL*8, ALLOCATABLE :: sV(:,:)
 
-      TYPE(svLS_commuType) communicator
       TYPE(svLS_lhsType) svLS_lhs
       TYPE(svLS_lsType) svLS_ls
 ! repeat for scalar solves (up to 4 at this time which is consistent with rest of PHASTA)
-      TYPE(svLS_commuType) communicator_S(4)
       TYPE(svLS_lhsType) svLS_lhs_S(4)
       TYPE(svLS_lsType) svLS_ls_S(4)
 #endif
@@ -1458,6 +1456,14 @@ c
         include "common.h"
 #ifdef HAVE_SVLS        
         include "svLS.h"
+
+        TYPE(svLS_lhsType) svLS_lhs
+        TYPE(svLS_lsType) svLS_ls
+        TYPE(svLS_commuType) communicator
+        TYPE(svLS_lsType) svLS_ls_S(4)
+        TYPE(svLS_lhsType) svLS_lhs_S(4)
+        TYPE(svLS_commuType) communicator_S(4)
+        INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
 #endif
         integer, allocatable :: gNodes(:)
         real*8, allocatable :: sV(:,:)
@@ -1564,9 +1570,6 @@ c
                svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for array size issues
             END IF
 
-            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo, 
-     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
-            
             faIn = 1
             facenNo = 0
             DO i=1, nshg
@@ -1584,6 +1587,8 @@ c
                   IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
                END IF
             END DO
+            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
+     2         nnz_tot, gNodes, colm, rowp, svLS_nFaces)
             CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
      2         nsd, BC_TYPE_Dir, gNodes, sV)
             DEALLOCATE(gNodes)
@@ -1645,11 +1650,6 @@ c
 
          CALL svLS_COMMU_CREATE(communicator_S(isolsc), MPI_COMM_WORLD)
  
-               svLS_nFaces = 1   !not sure about this...should try it with zero
-
-            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo, 
-     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
-            
               faIn = 1
               facenNo = 0
               ib=5+isolsc
@@ -1665,6 +1665,10 @@ c
                   gNodes(j) = i
                END IF
               END DO
+
+            svLS_nFaces = 1   !not sure about this...should try it with zero
+            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo,
+     2         nnz_tot, gNodes, colm, rowp, svLS_nFaces)
            
             CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
      2         1, BC_TYPE_Dir, gNodes, sV(1,:))
@@ -1710,6 +1714,8 @@ c
       endif
       return
       end subroutine
+
+
       subroutine seticomputevort
         include "common.h"
             icomputevort = 0
