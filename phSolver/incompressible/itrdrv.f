@@ -596,7 +596,11 @@ c
 
 c...  dump TIME SERIES
             
-            if (exts .and. ( mod(lstep-1,freq).eq.0)) call dumpTimeSeries()
+            if (exts) then
+              ! Note: freq is only defined if exts is true,
+              ! i.e. if xyzts.dat is present in the #-procs_case
+              if ( mod(lstep-1,freq).eq.0) call dumpTimeSeries()
+            endif
 
             if((irscale.ge.0).or.(itwmod.gt.0)) 
      &           call getvel (yold,     ilwork, iBC,
