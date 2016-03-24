@@ -45,6 +45,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES XL)
 	#force preprocessing of solfar.f
 	set_source_files_properties(solfar.f PROPERTIES COMPILE_FLAGS "-qsuffix=cpp=f")
 	set_source_files_properties(itrdrv.f PROPERTIES COMPILE_FLAGS "-qsuffix=cpp=f")
+	set_source_files_properties(filters.f PROPERTIES COMPILE_FLAGS "-qsuffix=cpp=f")
 endif(CMAKE_Fortran_COMPILER_ID MATCHES XL)
 if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 	#force preprocessing of solfar.f
