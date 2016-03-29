@@ -805,14 +805,7 @@ c
 c
 c.... close varts file for probes
 c
-      if(exts) then
-        do jj=1,ntspts
-          if (myrank == iv_rank(jj)) then
-            close(1000+jj)
-          endif
-        enddo
-        call dTD   ! deallocates time series arrays
-      endif
+      call finalizeTimeSeries()
 
       if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
       if(myrank.eq.0)  then
@@ -1381,10 +1374,8 @@ c
        character*60    fvarts
        character*10    cname2
 
-
         inquire(file='xyzts.dat',exist=exts)
         if(exts) then
-           
            open(unit=626,file='xyzts.dat',status='old')
            read(626,*) ntspts, freq, tolpt, iterat, varcod
            call sTD             ! sets data structures
@@ -1453,6 +1444,22 @@ c
 c
       return
       end subroutine
+
+      subroutine finalizeTimeSeries()
+      use timedata   !allows collection of time series
+      include "common.h"
+      if(exts) then
+        do jj=1,ntspts
+          if (myrank == iv_rank(jj)) then
+            close(1000+jj)
+          endif
+        enddo
+        call dTD   ! deallocates time series arrays
+      endif
+      return
+      end subroutine
+
+
 
        subroutine initEQS(iBC, rowp, colm)
 
@@ -1776,6 +1783,7 @@ c
       subroutine dumpTimeSeries()
       use timedata   !allows collection of time series
       include "common.h"
+      include "mpif.h"
        character*60    fvarts
        character*10    cname2
    
