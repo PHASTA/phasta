@@ -1479,9 +1479,9 @@ c
         integer, allocatable :: gNodes(:)
         real*8, allocatable :: sV(:,:)
         character*1024    servername
-#ifdef HAVE_LESLIB
         integer   rowp(nshg,nnz),         colm(nshg+1),
      &            iBC(nshg)
+#ifdef HAVE_LESLIB
         integer eqnType
 !      IF (svLSFlag .EQ. 0) THEN  !When we get a PETSc option it also could block this or a positive leslib
         call SolverLicenseServer(servername)
