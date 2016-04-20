@@ -210,10 +210,22 @@ c
          ltg(:)=fncorp(:)
        endif
       else
+       if((usingPETSc.eq.1)) then
+         fncorpsize = nshg
+         allocate(fncorp(fncorpsize))
+         maxowned=nshg
+         minowned=1
+         iownnodes=nshg
+           do i =1,nshg
+             fncorp(i)=i
+           enddo
+       endif
+       if((svLSFlag.eq.1)) then
            allocate(ltg(nshg))
            do i =1,nshg
              ltg(i)=i
            enddo
+       endif
            nlwork=1
            allocate( point2ilwork(1))
            nshg0 = nshg

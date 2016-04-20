@@ -610,7 +610,7 @@ void     SolGMRpSclr(double* y,         double* ac,
             PetscRow = (fncorp[i]-1);
           }
           else {
-            PetscRow = i-1;
+            PetscRow = i;
           }
           assert(fncorp[i]<=nshgt);
           assert(fncorp[i]>0);

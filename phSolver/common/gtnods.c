@@ -25,7 +25,7 @@ void gtnods()
 		newdim.nshgt = loc_nshgt;	
 	}
 	else {
-		newdim.nshgt = (long long) newdim.nshg0;
+		newdim.nshgt = (long long) conpar.nshg;
 	}
 
 	if (workfc.myrank == workfc.master) {
