@@ -151,7 +151,8 @@ c
         subroutine itrFDISclr (y,         ypre,      x,
      &                         rmes,      uBrg,      BDiag,
      &                         iBC,       BC,        engBC,     iper,
-     &                         ilwork)
+     &                         ilwork,    shp,       shgl,      wght,
+     &                         shpb,      shglb,     wghtb)
 c
 c----------------------------------------------------------------------
 c
@@ -205,10 +206,10 @@ c       call tnanq(ytmp,ndof,"ytmp       ")
         iabres = 1
 c
         call itrRes (ytmp,            y,             
-     &               x,               a(mshp),
-     &               a(mshgl),        a(mwght),      iBC,
-     &               BC,              engBC,         a(mshpb),
-     &               a(mshglb),       a(mwghtb),     rtmp,
+     &               x,               shp,
+     &               shgl,            wght,      iBC,
+     &               BC,              engBC,         shpb,
+     &               shglb,           wghtb,     rtmp,
      &               iper,            ilwork, ac)
 !Added ac to the end if itrRes, but not tested - Nicholas
 c
@@ -231,10 +232,10 @@ c
         ytmp = ypre + epsSD * uBrg
 c
         call itrRes (ytmp,            y,
-     &               x,               a(mshp),
-     &               a(mshgl),        a(mwght),      iBC,
-     &               BC,              engBC,         a(mshpb),
-     &               a(mshglb),       a(mwghtb),     rtmp,
+     &               x,               shp,
+     &               shgl,            wght,      iBC,
+     &               BC,              engBC,         shpb,
+     &               shglb,           wghtb,     rtmp,
      &               iper,            ilwork, ac)
 !Added ac to the end if itrRes, but not tested - Nicholas
 c
@@ -243,10 +244,10 @@ c
         ytmp = ypre - epsSD * uBrg
 c
         call itrRes (ytmp,            y,
-     &               x,               a(mshp),
-     &               a(mshgl),        a(mwght),      iBC,
-     &               BC,              engBC,         a(mshpb),
-     &               a(mshglb),       a(mwghtb),     rtmp,
+     &               x,               shp,
+     &               shgl,            wght,      iBC,
+     &               BC,              engBC,         shpb,
+     &               shglb,           wghtb,     rtmp,
      &               iper,            ilwork, ac)
 !Added ac to the end if itrRes, but not tested - Nicholas
 c
