@@ -229,9 +229,6 @@ c
         write (23,*)" nshape, nshapeb, maxshb,"
         write (23,*) nshape, nshapeb, maxshb,
      &                  nshl, nshlb,nfath,  ntopsh,  nsonmax
-        write (23,*) " mshp,   mshgl,  mwght,  mshpb,  mshglb, mwghtb,"
-        write (23,*)  mshp,   mshgl,  mwght,  mshpb,  mshglb, mwghtb,
-     &                  mmut,   mrhot,  mxst
         write (23,*)" mcsyst, melCat, nenCat(8,3),    nfaCat(8,3)"
         write (23,*) mcsyst, melCat, nenCat(8,3),    nfaCat(8,3)
  

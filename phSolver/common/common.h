@@ -108,8 +108,6 @@ c
      &                  flxIDsclr(4,MAXSURF),
      &                  irankfilesforce(0:MAXSURF)
 c
-        common /astore/ a(100000)
-c
         common /blkdat/ lcblk(10,MAXBLK+1),      lcblkb(10,MAXBLK+1)
 c
         common /mbndnod/ mnodeb(9,8,3)
@@ -173,9 +171,6 @@ c
 c 
         common /shpdat/ nshape, nshapeb, maxshb,
      &                  nshl, nshlb,nfath,  ntopsh,  nsonmax
-c
-        common /datpnt/ mshp,   mshgl,  mwght,  mshpb,  mshglb, mwghtb,
-     &                  mmut,   mrhot,  mxst
 c
         common /melmcat/ mcsyst, melCat, nenCat(8,3),    nfaCat(8,3)
 c
@@ -324,14 +319,6 @@ c
 c Force(3)      : components of the aerodynamic forces
 c HFlux         : total heat flux
 c
-c----------------------------------------------------------------------
-c
-c.... common /astore/   : the dynamic memory allocation area
-c
-c a(...)        : the blank array used for front-end data storage
-c
-c----------------------------------------------------------------------
-c
 c.... common /blkdat/   : blocking data
 c
 c lcblk  (10,MAXBLK+1) : blocking data for the interior elements
@@ -368,20 +355,6 @@ c nshg          : global number of shape functions (degrees of freedom,
 c                 or equations). Computed from the specified p-order,
 c                 the number of edges, and the number of faces (in the
 c                 entire mesh)
-c
-c----------------------------------------------------------------------
-c
-c.... common /datpnt/   : front-end data pointers
-c
-c mshp          : pointer to shape-functions 
-c mshgl         : pointer to local-grad-shape-functions
-c mwght         : pointer to quadrature weights
-c mshpb         : pointer to shape-functions of boundary elements
-c mshglb        : pointer to local-grad-shape-functions of bound. elem.
-c mwghtb        : pointer to quadrature weights of bound. elements
-c mmut          : pointer to table mu  = mu  (p,T)
-c mrhot         : pointer to table rho = rho (p,T)
-c mxst          : pointer to table xs  = xs  (p,T)
 c
 c----------------------------------------------------------------------
 c

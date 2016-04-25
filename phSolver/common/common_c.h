@@ -19,14 +19,12 @@
 #define memstats FortranCInterface_GLOBAL_(memstats,MEMSTATS)
 #define spebcvr FortranCInterface_GLOBAL_(spebcvr,SPEBCVR)
 #define aerfrc FortranCInterface_GLOBAL_(aerfrc,AERFRC)
-#define astore FortranCInterface_GLOBAL_(astore,ASTORE)
 #define conpar FortranCInterface_GLOBAL_(conpar,CONPAR)
 #define ctrlvari FortranCInterface_GLOBAL_(ctrlvari,CTRLVARI)
 #define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
 #define ctrlvar FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
 #define ductvar FortranCInterface_GLOBAL_(ductvar,DUCTVAR)
 #define shpdat FortranCInterface_GLOBAL_(shpdat,SHPDAT)
-#define datpnt FortranCInterface_GLOBAL_(datpnt,DATPNT)
 #define elmpar FortranCInterface_GLOBAL_(elmpar,ELMPAR)
 #define genpar FortranCInterface_GLOBAL_(genpar,GENPAR)
 #define inpdat FortranCInterface_GLOBAL_(inpdat,INPDAT)
@@ -228,10 +226,6 @@ extern "C" {
   } aerfrc ;
 
   extern struct { 
-    double a[100000];
-  } astore ;
-
-  extern struct { 
     int numnp;
     int numel;
     int numelb;
@@ -346,18 +340,6 @@ extern "C" {
     int ntopsh;
     int nsonmax;
   } shpdat ;
-
-  extern struct { 
-    int mshp;
-    int mshgl;
-    int mwght;
-    int mshpb;
-    int mshglb;
-    int mwghtb;
-    int mmut;
-    int mrhot;
-    int mxst;
-  } datpnt ;
 
   extern struct { 
     int lelCat;
