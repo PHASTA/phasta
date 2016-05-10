@@ -515,7 +515,7 @@ extern "C" {
   } propar ;
 
   extern struct { 
-    double resfrt;
+    double resfrt[2];
     double resfrts;
   } resdat ;
 

@@ -80,6 +80,7 @@ c
      &               shglb,         res,
      &               rmes,          BDiag,         iper,      
      &               ilwork,        EGmass,        rerr )
+      rmes=res  ! saving the b vector (residual)
 c
 c.... **********************>>    EBE - GMRES    <<********************
 c
@@ -348,7 +349,7 @@ c
 c
 c.... output the statistics
 c
-              call rstat (res, ilwork) 
+              call rstat (res, ilwork,rmes) 
 c    
 c.... stop the timer
 c     
@@ -452,11 +453,7 @@ c
      &             rmes,          BDiag,         iper,      
      &             ilwork,        lhsK,          col, 
      &             row,           rerr )
-      call rstat (res, ilwork) 
-      if(ntotGM.eq.0) resfrt=zero  !don't let this mess up scaled dB     
-      if(myrank.eq.master) then
-            write(*,*)'residual prior to sbd-preconditioning'
-      endif
+      rmes=res  ! saving the b vector (residual) 
 c    
 
 	call tnanq(res,5, 'res_egmr')
@@ -481,6 +478,7 @@ c
 c.... block diagonal precondition residual
 c
       call i3LU (BDiag, res,  'forward ')
+!  from this point forward b is btilde (Preconditioned residual)
 c
 c Check the residual for divering trend
 c
@@ -724,7 +722,7 @@ c
 c
 c.... output the statistics
 c
-      call rstat (res, ilwork) 
+      call rstat (res, ilwork,rmes) 
       
       if(myrank.eq.master) then
         if (echeck .le. epsnrm) then

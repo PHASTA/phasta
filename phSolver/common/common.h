@@ -242,7 +242,7 @@ c
 c
         common /propar/ npro
 c
-        common /resdat/ resfrt, resfrts
+        common /resdat/ resfrt(2), resfrts
 c
         common /solpar/ imap,   ivart,  iDC,    iPcond, Kspace, nGMRES,
      &                  iconvflow, iconvsclr, idcsclr(2)
