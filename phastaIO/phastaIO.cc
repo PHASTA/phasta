@@ -921,7 +921,10 @@ void openfile(const char filename[], const char mode[], int*  fileDescriptor )
       if(rc)
       {
         *fileDescriptor = UNABLE_TO_OPEN_FILE;
-        printf("Error openfile: Unable to open file %s! File descriptor = %d\n",fname,*fileDescriptor);
+        int error_string_length;
+        char error_string[4096];
+        MPI_Error_string(rc, error_string, &error_string_length);
+        fprintf(stderr, "Error openfile: Unable to open file %s! MPI reports \"%s\"\n",fname,error_string);
         endTimer(&timer_end);
         printPerf("openfile", timer_start, timer_end, 0, 0, "");
         return;
@@ -1031,9 +1034,13 @@ void openfile(const char filename[], const char mode[], int*  fileDescriptor )
           MPI_MODE_WRONLY | MPI_MODE_CREATE,
           MPI_INFO_NULL,
           &(PhastaIOActiveFiles[i]->file_handle) );
-      if(rc)
+      if(rc != MPI_SUCCESS)
       {
         *fileDescriptor = UNABLE_TO_OPEN_FILE;
+        int error_string_length;
+        char error_string[4096];
+        MPI_Error_string(rc, error_string, &error_string_length);
+        fprintf(stderr, "Error openfile: Unable to open file %s! MPI reports \"%s\"\n",fname,error_string);
         return;
       }
     } // end of if "write"
