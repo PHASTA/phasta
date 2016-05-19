@@ -40,6 +40,8 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
       static ISLocalToGlobalMapping VectorMapping;
       static  VecScatter scatter7;
       static int firstpetsccall = 1;
+      static  PetscInt maxitsHist;
+      static  PetscReal* resHist;
    
       static Mat lhsPs;
       static PC pcs;
@@ -345,8 +347,13 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
         maxits = (PetscInt)  solpar.nGMRES * (PetscInt) solpar.Kspace;
         ierr = KSPSetTolerances(ksp, timdat.etol, PETSC_DEFAULT, PETSC_DEFAULT, maxits);
         ierr = KSPSetFromOptions(ksp); 
+        maxitsHist=1000;
+        resHist= (PetscReal*) malloc(sizeof(PetscReal)*maxitsHist);
+        ierr = KSPSetResidualHistory(ksp,resHist,maxitsHist, PETSC_TRUE); 
       }
       ierr = KSPSolve(ksp, resP, DyP);
+      ierr = KSPGetResidualHistory(ksp,&resHist,&maxitsHist); 
+      PetscReal resNrmP=resHist[0];
       get_time((duration+2),(duration+3));
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
@@ -376,12 +383,21 @@ void     SolGMRp(double* y,         double* ac,        double* yold,
       PetscInt its;
       ierr = KSPGetIterationNumber(ksp, &its);
       itrpar.iKs = (int) its;
+      /*
+      PetscReal scale=1.0/sqrt(1.0*nshgt);
+      if(workfc.myrank ==0) {
+        printf("node resNrmP rosqrtNshgt\n");
+        for ( node = 0; node<its; node++) {
+          printf(" %d %f %f \n",node,resHist[node],scale*resHist[node]);
+        }
+      }  
+*/      
       get_time((duration+2),(duration+3));
       get_max_time_diff((duration), (duration+2), 
                         (duration+1), (duration+3),
                         "solWork \0"); // char(0))
       itrpar.ntotGM += (int) its;
-      rstatp (&resNrm);
+      rstatp (&resNrm,&resNrmP);
 //    
 // .... end
 //     

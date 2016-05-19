@@ -107,10 +107,7 @@ c
 !--------------------------------------------------------------------
 !     Setting up svLS
 #ifdef HAVE_SVLS
-      INTEGER svLS_nFaces, gnNo, nNo, faIn, facenNo
-      INTEGER, ALLOCATABLE :: gNodes(:)
-      REAL*8, ALLOCATABLE :: sV(:,:)
-
+      INTEGER svLS_nFaces
       TYPE(svLS_lhsType) svLS_lhs
       TYPE(svLS_lsType) svLS_ls
 ! repeat for scalar solves (up to 4 at this time which is consistent with rest of PHASTA)
@@ -214,7 +211,9 @@ c
 c
 c.... ---------------> initialize Equation Solver <---------------
 c
-       call initEQS(iBC, rowp, colm)
+       call initEQS(iBC, rowp, colm,svLS_nFaces,
+     2               svLS_LHS,svLS_ls,
+     3               svLS_LHS_S,svLS_ls_S)
 c
 c...  prepare lumped mass if needed
 c
@@ -391,11 +390,10 @@ c
      &                         yold,          acold,     uold,
      &                         x,             iBC,
      &                         BC,            res,
-     &                         nPermDims,     nTmpDims,  aperm,
-     &                         atemp,         iper,          
+     &                         iper,          
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
-     &                         colm,          lhsK,      lhsP,
+     &                         colm,          
      &                         solinc,        rerr,      tcorecp,
      &                         GradV,      sumtime
 #ifdef HAVE_SVLS
@@ -444,11 +442,11 @@ c     Delt(1)= Deltt ! Give a pseudo time step
                      call SolSclr(y,          ac,        u,
      &                         yold,          acold,     uold,
      &                         x,             iBC,
-     &                         BC,            nPermDimsS,nTmpDimsS,  
-     &                         apermS(1,1,j), atempS,    iper,          
+     &                         BC,            
+     &                         iper,          
      &                         ilwork,        shp,       shgl,
      &                         shpb,          shglb,     rowp,     
-     &                         colm,          lhsS(1,j), 
+     &                         colm,          
      &                         solinc(1,isclr+5), tcorecpscal
 #ifdef HAVE_SVLS
      &                         ,svLS_lhs_S(isclr),   svLS_ls_S(isclr), svls_nfaces)
@@ -832,17 +830,10 @@ c
 c.... end
 c
       if(nsolflow.eq.1) then
-         deallocate (lhsK)
-         deallocate (lhsP)
-         IF (svLSFlag .NE. 1) THEN
-         deallocate (aperm)
-         deallocate (atemp)
-         ENDIF
+         call dsdF
       endif
       if((nsclr+nsolt).gt.0) then
-         deallocate (lhsS)
-         deallocate (apermS)
-         deallocate (atempS)
+         call dsdS
       endif
 
       if(iabc==1) deallocate(acs)
@@ -1461,12 +1452,17 @@ c
 
 
 
-       subroutine initEQS(iBC, rowp, colm)
+       subroutine initEQS(iBC, rowp, colm,svLS_nFaces,
+     2               svLS_LHS,svLS_ls,
+     3               svLS_LHS_S,svLS_ls_S)
 
         use solvedata
+        use fncorpmod
         include "common.h"
 #ifdef HAVE_SVLS        
         include "svLS.h"
+        include "mpif.h"
+        include "auxmpi.h"
 
         TYPE(svLS_lhsType) svLS_lhs
         TYPE(svLS_lsType) svLS_ls
@@ -1501,16 +1497,11 @@ c.... determine how many scalar equations we are going to need to solve
 c
       nsolt=mod(impl(1),2)      ! 1 if solving temperature
       nsclrsol=nsolt+nsclr      ! total number of scalars solved At
-                                ! some point we probably want to create
-                                ! a map, considering stepseq(), to find
-                                ! what is actually solved and only
-                                ! dimension lhs to the appropriate
-                                ! size. (see 1.6.1 and earlier for a
-                                ! "failed" attempt at this).
-
+! some point we probably want to create a map, considering stepseq(), to find
+! what is actually solved and only  dimension lhs to the appropriate
+! size. (see 1.6.1 and earlier for a "failed" attempt at this).
 
       nsolflow=mod(impl(1),100)/10  ! 1 if solving flow
-      
 c
 c.... Now, call lesNew routine to initialize
 c     memory space
@@ -1521,30 +1512,19 @@ c
                    ! this proc
 
       if (nsolflow.eq.1) then  ! start of setup for the flow
-         lesId   = numeqns(1)
-         eqnType = 1
-         nDofs   = 4
-
-!--------------------------------------------------------------------
-!     Rest of configuration of svLS is added here, where we have LHS
-!     pointers
-
-         nPermDims = 1
-         nTmpDims = 1
-    
-
-         allocate (lhsP(4,nnz_tot))
-         allocate (lhsK(9,nnz_tot))
-
+        lesId   = numeqns(1)
+        eqnType = 1
+        nDofs   = 4
 !     Setting up svLS or leslib for flow
-
-      IF (svLSFlag .EQ. 1) THEN
-#ifdef HAVE_SVLS
-        IF(nPrjs.eq.0) THEN
-           svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
-         ELSE
-           svLSType=3 !NS solver
-         ENDIF
+        IF (svLSFlag .EQ. 1) THEN
+! ifdef svLS_1 : opening large ifdef for svLS solver setup
+#ifdef HAVE_SVLS 
+          call aSDf
+          IF(nPrjs.eq.0) THEN
+            svLSType=2  !GMRES if borrowed ACUSIM projection vectors variable set to zero
+          ELSE
+            svLSType=3 !NS solver
+          ENDIF
 !  reltol for the NSSOLVE is the stop criterion on the outer loop
 !  reltolIn is (eps_GM, eps_CG) from the CompMech paper
 !  for now we are using 
@@ -1552,16 +1532,16 @@ c
 !  Tolerance on Momentum Equations for GMRES
 ! also using Kspaceand maxIters from setup for ACUSIM
 !
-         eps_outer=40.0*epstol(1)  !following papers soggestion for now
-         CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
+          eps_outer=40.0*epstol(1)  !following papers soggestion for now
+          CALL svLS_LS_CREATE(svLS_ls, svLSType, dimKry=Kspace,
      2      relTol=eps_outer, relTolIn=(/epstol(1),prestol/), 
      3      maxItr=maxIters, 
      4      maxItrIn=(/maxIters,maxIters/))
 
-         CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
-            nNo=nshg
-            gnNo=nshgt
-            IF  (ipvsq .GE. 2) THEN
+          CALL svLS_COMMU_CREATE(communicator, MPI_COMM_WORLD)
+          nNo=nshg
+          gnNo=nshgt
+          IF  (ipvsq .GE. 2) THEN
 
 #if((VER_CORONARY == 1)&&(VER_CLOSEDLOOP == 1))
                svLS_nFaces = 1 + numResistSrfs + numNeumannSrfs 
@@ -1577,19 +1557,22 @@ c
      2            + numImpSrfs + numRCRSrfs
 #endif
 
-            ELSE
+          ELSE
                svLS_nFaces = 1   !not sure about this...looks like 1 means 0 for array size issues
-            END IF
+          END IF
 
-            faIn = 1
-            facenNo = 0
-            DO i=1, nshg
+          CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
+     2         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+
+          faIn = 1
+          facenNo = 0
+          DO i=1, nshg
                IF (IBITS(iBC(i),3,3) .NE. 0)  facenNo = facenNo + 1
-            END DO
-            ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
-            sV = 0D0
-            j = 0
-            DO i=1, nshg
+          END DO
+          ALLOCATE(gNodes(facenNo), sV(nsd,facenNo))
+          sV = 0D0
+          j = 0
+          DO i=1, nshg
                IF (IBITS(iBC(i),3,3) .NE. 0) THEN
                   j = j + 1
                   gNodes(j) = i
@@ -1597,48 +1580,50 @@ c
                   IF (.NOT.BTEST(iBC(i),4)) sV(2,j) = 1D0
                   IF (.NOT.BTEST(iBC(i),5)) sV(3,j) = 1D0
                END IF
-            END DO
-            CALL svLS_LHS_CREATE(svLS_lhs, communicator, gnNo, nNo,
-     2         nnz_tot, gNodes, colm, rowp, svLS_nFaces)
-            CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
+          END DO
+          CALL svLS_BC_CREATE(svLS_lhs, faIn, facenNo, 
      2         nsd, BC_TYPE_Dir, gNodes, sV)
-            DEALLOCATE(gNodes)
-            DEALLOCATE(sV)
+          DEALLOCATE(gNodes)
+          DEALLOCATE(sV)
+! else of ifdef svLS_1 
 #else
-         if(myrank.eq.0) write(*,*) 'your input requests svLS but your cmake did not build for it'
-         call error('itrdrv  ','nosVLS',svLSFlag)  
+          if(myrank.eq.0) write(*,*) 'your input requests svLS but your cmake did not build for it'
+          call error('itrdrv  ','nosVLS',svLSFlag)  
+! endif of ifdef svLS_1 
 #endif
-           ENDIF
-
-           if(leslib.eq.1) then
+        ENDIF !of svLS init. inside ifdef so we can trap above else
+! note input_fform does not allow svLSFlag=1 AND leslib=1 so above or below only
+        if(leslib.eq.1) then
+! ifdef leslib_1 : setup for leslib
 #ifdef HAVE_LESLIB 
 !--------------------------------------------------------------------
-           call myfLesNew( lesId,   41994,
+          call myfLesNew( lesId,   41994,
      &                 eqnType,
      &                 nDofs,          minIters,       maxIters,
      &                 Kspace,         iprjFlag,        nPrjs,
      &                 ipresPrjFlag,    nPresPrjs,      epstol(1),
      &                 prestol,        iverbose,        statsflow,
      &                 nPermDims,      nTmpDims,      servername  )
-         
-           allocate (aperm(nshg,nPermDims))
-           allocate (atemp(nshg,nTmpDims))
-           call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
-     &                        nPermDims )
+          call aSDf  
+          call readLesRestart( lesId,  aperm, nshg, myrank, lstep,
+     &                        nPermDims ) 
+! else leslib_1 
 #else
-         if(myrank.eq.0) write(*,*) 'your input requests leslib but your cmake did not build for it'
-         call error('itrdrv  ','nolslb',leslib)       
+          if(myrank.eq.0) write(*,*) 'your input requests leslib but your cmake did not build for it'
+          call error('itrdrv  ','nolslb',leslib)       
+! endif leslib_1 
 #endif
-         endif !leslib=1
+        endif !leslib=1
 
-      else   ! not solving flow just scalar
+      else   ! not solving flow at all so set it solverDims to zero
          nPermDims = 0
          nTmpDims = 0
       endif
 
-
+!Above is setup for flow now we do scalar
+ 
       if(nsclrsol.gt.0) then
-       do isolsc=1,nsclrsol
+       do isolsc=1,nsclrsol ! this loop sets up unique data for each scalar solved
          lesId       = numeqns(isolsc+1)
          eqnType     = 2
          nDofs       = 1
@@ -1647,19 +1632,28 @@ c
          isclprjFlag     = 1
          indx=isolsc+2-nsolt ! complicated to keep epstol(2) for
                              ! temperature followed by scalars
-!     Setting up svLS or leslib for scalar
+!  ifdef svLS_2 :   Setting up svLS for scalar
 #ifdef HAVE_SVLS
-      IF (svLSFlag .EQ. 1) THEN
+         IF (svLSFlag .EQ. 1) THEN
            svLSType=2  !only option for scalars
 !  reltol for the GMRES is the stop criterion 
 ! also using Kspaceand maxIters from setup for ACUSIM
 !
-         CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, dimKry=Kspace,
-     2      relTol=epstol(indx), 
-     3      maxItr=maxIters 
-     4      )
+           CALL svLS_LS_CREATE(svLS_ls_S(isolsc), svLSType, 
+     2      dimKry=Kspace,
+     3      relTol=epstol(indx), 
+     4      maxItr=maxIters 
+     5      )
 
-         CALL svLS_COMMU_CREATE(communicator_S(isolsc), MPI_COMM_WORLD)
+           CALL svLS_COMMU_CREATE(communicator_S(isolsc), 
+     2       MPI_COMM_WORLD)
+           
+           svLS_nFaces = 1   !not sure about this...should try it with zero
+
+           CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), 
+     2         communicator_S(isolsc), gnNo, nNo,
+     3         nnz_tot, ltg, colm, rowp, svLS_nFaces)
+           
  
               faIn = 1
               facenNo = 0
@@ -1677,19 +1671,11 @@ c
                END IF
               END DO
 
-            svLS_nFaces = 1   !not sure about this...should try it with zero
-            CALL svLS_LHS_CREATE(svLS_lhs_S(isolsc), communicator_S(isolsc), gnNo, nNo,
-     2         nnz_tot, gNodes, colm, rowp, svLS_nFaces)
-           
-            CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
+           CALL svLS_BC_CREATE(svLS_lhs_S(isolsc), faIn, facenNo, 
      2         1, BC_TYPE_Dir, gNodes, sV(1,:))
-            DEALLOCATE(gNodes)
-            DEALLOCATE(sV)
+           DEALLOCATE(gNodes)
+           DEALLOCATE(sV)
 
-            if( isolsc.eq.1) then ! if multiple scalars make sure done once
-              allocate (apermS(1,1,1))
-              allocate (atempS(1,1))  !they can all share this
-            endif
          ENDIF  !svLS handing scalar solve
 #endif        
         
@@ -1705,20 +1691,8 @@ c
      &                 nPermDimsS,     nTmpDimsS,   servername )
         endif
 #endif
-       enddo  !loop over scalars to solve  (not yet worked out for multiple svLS solves
-       allocate (lhsS(nnz_tot,nsclrsol))
-#ifdef HAVE_LESLIB       
-       if(leslib.eq.1) then  ! we just prepped scalar solves for leslib so allocate arrays
-c
-c  Assume all scalars have the same size needs
-c
-       allocate (apermS(nshg,nPermDimsS,nsclrsol))
-       allocate (atempS(nshg,nTmpDimsS))  !they can all share this
-       endif
-#endif
-c
-c actually they could even share with atemp but leave that for later
-c
+       enddo  !loop over scalars to solve  (not checked to worked out for multiple svLS solves
+       call aSDs(nsclrsol)
       else !no scalar solves at all so zero dims not used
          nPermDimsS = 0
          nTmpDimsS  = 0

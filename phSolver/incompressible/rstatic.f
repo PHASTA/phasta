@@ -156,8 +156,8 @@ c
         totres = resnrm / float(nshgt)
         totres = sqrt(totres)
         resmax = sqrt(resmax)
-        if (resfrt .eq. zero) resfrt = totres
-        jtotrs = int  ( 10.d0 * log10 ( totres / resfrt ) )
+        if (resfrt(1) .eq. zero) resfrt(1) = totres
+        jtotrs = int  ( 10.d0 * log10 ( totres / resfrt(1) ) )
         jresmx = int  ( 10.d0 * log10 ( resmax / totres ) )
 c     
 c.... get the CPU-time

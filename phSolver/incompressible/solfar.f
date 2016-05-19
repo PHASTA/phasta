@@ -1,12 +1,10 @@
       subroutine SolFlow(y,          ac,         u,
      &                   yold,       acold,      uold,
      &                   x,          iBC,
-     &                   BC,         res,             
-     &                   nPermDims,  nTmpDims,  aperm,
-     &                   atemp,      iper,       
+     &                   BC,         res,        iper,       
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
-     &                   colm,       lhsK,       lhsP, 
+     &                   colm,       
      &                   solinc,     rerr,       tcorecp,
      &                   GradV,       sumtime
 #ifdef HAVE_SVLS     
@@ -62,6 +60,7 @@ c Alberto Figueroa.  CMM-FSI
 c----------------------------------------------------------------------
 c
       use pointer_data
+      use solvedata
 #ifdef AMG      
       use ramg_data
 #endif     
@@ -72,16 +71,6 @@ c
 #ifdef HAVE_SVLS      
         include "svLS.h"
 #endif        
-c 
-C
-C     Argument variables
-C
-      INTEGER            npermdims
-      INTEGER             ntmpdims
-C
-C     Local variables
-C
-      INTEGER              lesid
 C
       REAL*8                rdtmp
 C    
@@ -96,9 +85,7 @@ C
      &          x(numnp,nsd),             BC(nshg,ndofBC),
      &          res(nshg,nflow),          tmpres(nshg,nflow),
      &          flowDiag(nshg,4),         
-     &          aperm(nshg,nPermDims),    atemp(nshg,nTmpDims),
      &          sclrDiag(nshg,1),         
-     &          lhsK(9,nnz_tot),          lhsP(4,nnz_tot),
      &          GradV(nshg,nsdsq)
 c
       real*8    shp(MAXTOP,maxsh,MAXQPT),  
@@ -354,11 +341,10 @@ c
       subroutine SolSclr(y,          ac,         u,
      &                   yold,       acold,      uold,
      &                   x,          iBC,
-     &                   BC,         nPermDimsS,  nTmpDimsS,  
-     &                   apermS,     atempS,     iper,       
+     &                   BC,         iper,       
      &                   ilwork,     shp,        shgl, 
      &                   shpb,       shglb,      rowp,     
-     &                   colm,       lhsS,       solinc,
+     &                   colm,       solinc,
      &                   tcorecpscal
 #ifdef HAVE_SVLS     
      &                   ,svLS_lhs,  svLS_ls,   svLS_nFaces)
@@ -393,6 +379,7 @@ c
 c----------------------------------------------------------------------
 c
       use pointer_data
+      use solvedata
         
       include "common.h"
       include "mpif.h"
@@ -407,9 +394,7 @@ c
      &          x(numnp,nsd),             BC(nshg,ndofBC),
      &          res(nshg,1),
      &          flowDiag(nshg,4),
-     &          sclrDiag(nshg,1),           lhsS(nnz_tot),
-     &          apermS(nshg,nPermDimsS),  atempS(nshg,nTmpDimsS)
-
+     &          sclrDiag(nshg,1)           
 c
       real*8    shp(MAXTOP,maxsh,MAXQPT),  
      &          shgl(MAXTOP,nsd,maxsh,MAXQPT), 
@@ -450,6 +435,7 @@ c
       impistat=2
       impistat2=1
       telmcp1 = TMRC()
+      jsol=nsolt+isclr
       call ElmGMRSclr(yAlpha,acAlpha,    x,
      &             shp,       shgl,       iBC,       
      &             BC,        shpb,       shglb,
@@ -478,7 +464,7 @@ c####################################################################
       END DO
 
       DO i=1, nnz_tot
-         Val1(1,i)    = lhsS(i)
+         Val1(1,i)    = lhsS(i,jsol) ! see above jsol indexs for scalars
       END DO
 
       CALL svLS_SOLVE(svLS_lhs, svLS_ls, dof, Res1, Val1, incL, 
@@ -503,7 +489,7 @@ c
       impistat=2
       impistat2=1
       tlescp1 = TMRC()
-      call usrNew ( usr,        eqnType,          apermS,
+      call usrNew ( usr,        eqnType,          apermS(1,1,jsol),
      &              atempS,     res,              solinc,          
      &              flowDiag,   sclrDiag,         lesP,   
      &              lesQ,       iBC,              BC,
@@ -537,8 +523,3 @@ c.... end
 c     
       return
       end
-
-
-
-
-
