@@ -11,6 +11,7 @@
         !  2014-04-18   Code moved from itrdrv to here
 
         use timedataC
+        use mkdir_mod
         include "common.h"
         include "mpif.h"
 
@@ -47,9 +48,7 @@
         if(myrank .eq. master) then
           inquire(file="./varts/.", exist=exVarts)
           if(.not. exVarts) then
-            call system("mkdir varts")    !Only works on *nix, but we
-                                          !never really run on Windows
-                                          !anymore so...
+            call mkdir("varts")
           endif
         endif
 

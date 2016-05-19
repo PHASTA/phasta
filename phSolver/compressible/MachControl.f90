@@ -36,6 +36,7 @@
       subroutine MC_init(dt, tstep, BC)
         use MachControl
         use turbSA
+        use mkdir_mod
         include "common.h"
         include "mpif.h"
 
@@ -49,7 +50,7 @@
         if(myrank == master) then 
           inquire(file="./MachControl/.", exist=MC_existDir)
           if(.not. MC_existDir) then
-            call system("mkdir ./MachControl")  !Doesn't seem to work on BGQ.
+            call mkdir("./MachControl")
           endif
         endif
 
