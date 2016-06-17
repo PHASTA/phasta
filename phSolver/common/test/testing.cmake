@@ -12,7 +12,7 @@ common_parallel_test(readHeader 4 ${CASES}/incompressible
 common_parallel_test(readIlwork 1
   ${CASES}/crossflow/4-1chef/4-procs_case
   ${PHASTA_BINARY_DIR}/bin/phIOreadIlwork
-  geombc.dat.1)
+  geombc.dat.1 1)
 common_parallel_test(readHeaderMultiTopo 4
   ${CASES}/crossflow/4-1chef/4-procs_case
   ${PHASTA_BINARY_DIR}/bin/phIOposixMultiTopo)

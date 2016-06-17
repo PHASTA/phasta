@@ -9,12 +9,13 @@
 
 int main(int argc, char* argv[]) {
   MPI_Init(&argc,&argv);
-  if( argc != 2 ) {
-    fprintf(stderr, "Usage: %s <geombc posix file>\n",argv[0]);
+  if( argc != 3 ) {
+    fprintf(stderr, "Usage: %s <geombc posix file> <write ilwork=0|1>\n",argv[0]);
     MPI_Finalize();
     return 1;
   }
   const char* filename = argv[1];
+  const int writeilwork = atoi(argv[2]);
   const char* phrase = "ilwork";
   const char* type = "integer";
   const char* iotype = "binary";
@@ -76,9 +77,11 @@ int main(int argc, char* argv[]) {
 
   // Print now the raw ilwork array
   printf("\n");
-  printf("ilwork array:\n");
-  for(int i=0;i<len;i++) {
-    printf("%d\n",ilwork[i]);
+  if( writeilwork ) {
+    printf("ilwork array:\n");
+    for(int i=0;i<len;i++) {
+      printf("%d\n",ilwork[i]);
+    }
   }
 
   free(ilwork);
