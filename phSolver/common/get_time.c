@@ -40,11 +40,10 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
 /*
 #ifdef __APPLE__
 #include <mach/time.h>
-//todo
 #endif
 */
 
-//#if defined(__bgq__) || defined(__APPLE__)
+/*#if defined(__bgq__) || defined(__APPLE__)*/
 #if (1)
 #include <sys/time.h>
 void get_time(uint64_t* rv, uint64_t* cycle)
@@ -54,7 +53,7 @@ void get_time(uint64_t* rv, uint64_t* cycle)
 	ret = gettimeofday(&time, NULL);
 	if(ret != 0) perror("gettimeofday failed: ");
 	*rv = ((time.tv_sec*1000000)+(time.tv_usec));
-	multiplier=0.000001;//10.0e-6;
+	multiplier=0.000001;/*10.0e-6;*/
 #ifdef __bgq__
 	*cycle = GetTimeBase();
 #endif
