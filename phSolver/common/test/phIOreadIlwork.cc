@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <set>
+#include <string>
+#include <sstream>
 #include "phIO.h"
 #include "posixio.h"
 #include "phio_posix.h"
@@ -12,15 +14,18 @@ int main(int argc, char* argv[]) {
   int commrank,commsize;
   MPI_Comm_rank(MPI_COMM_WORLD,&commrank);
   MPI_Comm_size(MPI_COMM_WORLD,&commsize);
-  if( argc != 4 ) {
+  if( argc != 5 ) {
     if( !commrank )
-      fprintf(stderr, "Usage: %s <geombc posix file> <verbosity=0|1|2> <rankoffset>\n",argv[0]);
+      fprintf(stderr, "Usage: %s <geombc posix file> <verbosity=0|1|2> <rankoffset> <outfile>\n",argv[0]);
+      fprintf(stderr, "verbosity=0 will only write to the specified \'outfile\'\n",argv[0]);
+      fprintf(stderr, "verbosity>0 will write to the specified \'outfile\' and to stdout\n",argv[0]);
     MPI_Finalize();
     return 1;
   }
   const char* filename = argv[1];
   const int verbosity = atoi(argv[2]);
   const int rankoffset = atoi(argv[3]);
+  char* outfilename = argv[4];
   const char* phrase = "ilwork";
   const char* type = "integer";
   const char* iotype = "binary";
@@ -42,7 +47,7 @@ int main(int argc, char* argv[]) {
   phio_readdatablock(file, phrase, ilwork, &len, type, iotype);
   phio_closefile(file);
 
-  // Initialization 
+  // Initialization
   int itkbeg = 0;
   int m = 0;
   int idl = 0;
@@ -59,16 +64,26 @@ int main(int argc, char* argv[]) {
     neighbors.insert(iother);
     itkbeg = itkbeg + 4 + 2*numseg;
   }
-  if( !commrank )
-      printf("rank peers tasks owned notowned\n");
-  MPI_Barrier(MPI_COMM_WORLD);
-  for(int i=0; i<commsize; i++) {
-    if( i == commrank )
-      printf("%d %d %d %d %d\n",
-          phastarank,neighbors.size(),numtask,numowner,numtask-numowner);
-    MPI_Barrier(MPI_COMM_WORLD);
-  }
-
+  const int numints = 5;
+  MPI_Status status;
+  MPI_File outfile;
+  MPI_File_open(MPI_COMM_WORLD,outfilename,
+      MPI_MODE_CREATE|MPI_MODE_WRONLY,MPI_INFO_NULL,&outfile);
+  std::string header("rank peers tasks owned notowned\n");
+  if( !commrank ) //write header
+    MPI_File_write_at(outfile,0,(void*)header.c_str(),header.size(),MPI_CHAR,&status);
+  std::stringstream ss;
+  ss << phastarank << "," 
+     << neighbors.size() << ","
+     << numtask << ","
+     << numowner << ","
+     << numtask-numowner << "\n";
+  std::string s = ss.str();
+  int size = s.size();
+  int offset = 0;
+  MPI_Exscan(&size,&offset,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
+  offset += header.size();
+  MPI_File_write_at(outfile,offset,(void*)s.c_str(),s.size(),MPI_CHAR,&status);
   if( verbosity > 0 ) {
     // Print now communication info
     printf("\n");
@@ -102,7 +117,7 @@ int main(int argc, char* argv[]) {
   }
 
   free(ilwork);
-
+  MPI_File_close(&outfile);
   MPI_Finalize();
   return 0;
 }
