@@ -9,10 +9,10 @@ endmacro(common_parallel_test)
 
 common_parallel_test(readHeader 4 ${CASES}/incompressible
   ${PHASTA_BINARY_DIR}/bin/phIOreadheader 2)
-common_parallel_test(readIlwork 1
+common_parallel_test(readIlwork 4
   ${CASES}/crossflow/4-1chef/4-procs_case
   ${PHASTA_BINARY_DIR}/bin/phIOreadIlwork
-  geombc.dat.1 1)
+  . 0 0 foo)
 common_parallel_test(readHeaderMultiTopo 4
   ${CASES}/crossflow/4-1chef/4-procs_case
   ${PHASTA_BINARY_DIR}/bin/phIOposixMultiTopo)
