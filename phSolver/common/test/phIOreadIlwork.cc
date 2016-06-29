@@ -34,11 +34,11 @@ int main(int argc, char* argv[]) {
   int len = 0;
   int one = 2;
 
-
-  int phastarank = commrank+1+rankoffset;
+  const int phastarank = commrank+1+rankoffset;
+  const int group = (commrank+rankoffset)/2048;
 
   char geomfilename[4096];
-  sprintf(geomfilename, "%s/geombc.dat.%d",filename,phastarank);
+  sprintf(geomfilename, "%s/%d/geombc.dat.%d",filename,group,phastarank);
 
   phio_fp file;
   posixio_setup(&(file), 'r');
