@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include <cassert>
 #include "phIO.h"
 #include "posixio.h"
 #include "phio_posix.h"
@@ -64,12 +65,12 @@ int main(int argc, char* argv[]) {
     neighbors.insert(iother);
     itkbeg = itkbeg + 4 + 2*numseg;
   }
-  const int numints = 5;
+  assert(neighbors.size() != 0);
   MPI_Status status;
   MPI_File outfile;
   MPI_File_open(MPI_COMM_WORLD,outfilename,
       MPI_MODE_CREATE|MPI_MODE_WRONLY,MPI_INFO_NULL,&outfile);
-  std::string header("rank peers tasks owned notowned\n");
+  std::string header("rank,peers,tasks,owned,notowned\n");
   if( !commrank ) //write header
     MPI_File_write_at(outfile,0,(void*)header.c_str(),header.size(),MPI_CHAR,&status);
   std::stringstream ss;
@@ -83,7 +84,8 @@ int main(int argc, char* argv[]) {
   int offset = 0;
   MPI_Exscan(&size,&offset,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
   offset += header.size();
-  MPI_File_write_at(outfile,offset,(void*)s.c_str(),s.size(),MPI_CHAR,&status);
+  int ret = MPI_File_write_at(outfile,offset,(void*)s.c_str(),s.size(),MPI_CHAR,&status);
+  assert(ret == MPI_SUCCESS);
   if( verbosity > 0 ) {
     // Print now communication info
     printf("\n");
