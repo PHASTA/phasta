@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
       MPI_MODE_CREATE|MPI_MODE_WRONLY,MPI_INFO_NULL,&outfile);
   std::string header("rank,peers,tasks,owned,notowned\n");
   if( !commrank ) //write header
-    MPI_File_write_at(outfile,0,(void*)header.c_str(),header.size(),MPI_CHAR,&status);
+    MPI_File_write_at(outfile,0,(void*)header.c_str(),header.size(),MPI_BYTE,&status);
   std::stringstream ss;
   ss << phastarank << "," 
      << neighbors.size() << ","
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
   int offset = 0;
   MPI_Exscan(&size,&offset,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
   offset += header.size();
-  int ret = MPI_File_write_at(outfile,offset,(void*)s.c_str(),s.size(),MPI_CHAR,&status);
+  int ret = MPI_File_write_at(outfile,offset,(void*)s.c_str(),s.size(),MPI_BYTE,&status);
   assert(ret == MPI_SUCCESS);
   if( verbosity > 0 ) {
     // Print now communication info
