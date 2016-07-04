@@ -10,6 +10,17 @@
 #include "posixio.h"
 #include "phio_posix.h"
 
+int openfile(const char* geomfilename, phio_fp& file) {
+  int commrank;
+  MPI_Comm_rank(MPI_COMM_WORLD,&commrank);
+  int err = posix_openfile_single(geomfilename, file);
+  int globalerr = 0;
+  MPI_Allreduce(&err, &globalerr, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  if(err > 0 && !commrank)
+    fprintf(stderr, "failed to open file %s\n", geomfilename);
+  return globalerr;
+}
+
 int main(int argc, char* argv[]) {
   MPI_Init(&argc,&argv);
   int commrank,commsize;
@@ -42,7 +53,15 @@ int main(int argc, char* argv[]) {
 
   phio_fp file;
   posixio_setup(&(file), 'r');
-  posix_openfile_single(geomfilename, file);
+  int err = openfile(geomfilename, file);
+  if(err > 0) {
+    if(!commrank) fprintf(stderr, "trying again without the sub-directory...\n");
+    sprintf(geomfilename, "%s/geombc.dat.%d",filename,phastarank);
+    err = openfile(geomfilename, file);
+    assert(!err);
+    if(!commrank)
+      fprintf(stderr, "geombc files opened successfully\n");
+  }
   phio_readheader(file, phrase, &len, &one, type, iotype);
   ilwork = (int*) malloc(len*sizeof(int));
   phio_readdatablock(file, phrase, ilwork, &len, type, iotype);
