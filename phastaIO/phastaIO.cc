@@ -888,7 +888,7 @@ void openfile(const char filename[], const char mode[], int*  fileDescriptor )
     else if( cscompare( "append", imode ) ) file = fopen(fname, "ab" );
 
     if ( !file ){
-      fprintf(stderr,"Error openfile: unable to open file %s",fname ) ;
+      fprintf(stderr,"Error openfile: unable to open file %s\n",fname);
     } else {
       fileArray.push_back( file );
       byte_order.push_back( false );
