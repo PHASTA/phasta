@@ -29,8 +29,8 @@ int main(int argc, char* argv[]) {
   if( argc != 5 ) {
     if( !commrank )
       fprintf(stderr, "Usage: %s <geombc posix file> <verbosity=0|1|2> <rankoffset> <outfile>\n",argv[0]);
-      fprintf(stderr, "verbosity=0 will only write to the specified \'outfile\'\n",argv[0]);
-      fprintf(stderr, "verbosity>0 will write to the specified \'outfile\' and to stdout\n",argv[0]);
+      fprintf(stderr, "verbosity=0 will only write to the specified \'outfile\'\n");
+      fprintf(stderr, "verbosity>0 will write to the specified \'outfile\' and to stdout\n");
     MPI_Finalize();
     return 1;
   }
@@ -69,8 +69,6 @@ int main(int argc, char* argv[]) {
 
   // Initialization
   int itkbeg = 0;
-  int m = 0;
-  int idl = 0;
   std::set<int> neighbors;
 
   // Compute summary info first such as number of communication tasks, neighboring parts, onwer parts, etc
@@ -115,7 +113,6 @@ int main(int argc, char* argv[]) {
       int iacc   = ilwork [itkbeg + 2];
       int iother = ilwork [itkbeg + 3];
       int numseg = ilwork [itkbeg + 4];
-      int isgbeg = ilwork [itkbeg + 5];
 
       // Toal number of nodes involved in this communication (lfront), including all segments
       int lfront = 0;
