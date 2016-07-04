@@ -25,16 +25,21 @@ namespace {
 
 void posix_openfile(const char filename[], phio_fp f) {
   std::string posixName = appendRank(filename);
-  posix_openfile_single(posixName.c_str(),f);
+  int err = posix_openfile_single(posixName.c_str(),f);
+  assert(!err);
 }
 
-void posix_openfile_single(const char filename[], phio_fp f) {
+int posix_openfile_single(const char filename[], phio_fp f) {
   assert(f->mode == 'r' || f->mode == 'w');
   std::string posixName(filename);
   if(f->mode == 'r')
     openfile(posixName.c_str(), "read", f->file);
   else if(f->mode == 'w')
     openfile(posixName.c_str(), "write", f->file);
+  if( ! *(f->file) )
+    return 1;
+  else
+    return 0;
 }
 
 void posix_closefile(phio_fp f) {

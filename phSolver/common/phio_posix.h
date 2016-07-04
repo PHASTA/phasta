@@ -4,7 +4,7 @@ typedef struct phio_file* phio_fp;
 void posix_openfile(
     const char filename[],
     phio_fp fileDescriptor);
-void posix_openfile_single(
+int posix_openfile_single(
     const char filename[],
     phio_fp fileDescriptor);
 void posix_closefile(
