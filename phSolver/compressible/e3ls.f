@@ -171,8 +171,10 @@ c
      &                       tmp(:)*divqi(:,1)*divqi(:,1)
              rerrl(:,ia,5) = rerrl(:,ia,5) +
      &                       tmp(:)*divqi(:,2)*divqi(:,2)
-! hacked for ShockError             rerrl(:,ia,6) = rerrl(:,ia,6) +
-! hacked for ShockError     &                       tmp(:)*divqi(:,3)*divqi(:,3)
+! SAM wants a threshold here so we are going to take over this little used 
+! error indictor for that purpose
+! commented for ShockError             rerrl(:,ia,6) = rerrl(:,ia,6) +
+! commented for ShockError     &                       tmp(:)*divqi(:,3)*divqi(:,3)
           enddo
        endif
 c      

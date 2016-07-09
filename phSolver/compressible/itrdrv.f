@@ -47,8 +47,6 @@ c
      &            x(numnp,nsd),            iBC(nshg),
      &            BC(nshg,ndofBC),         ilwork(nlwork),
      &            iper(nshg),              uold(nshg,nsd)
-
-
 c
         dimension res(nshg,nflow),         
      &            rest(nshg),              solinc(nshg,ndof)
@@ -58,8 +56,6 @@ c
      &            shpb(MAXTOP,maxsh,MAXQPT),
      &            shglb(MAXTOP,nsd,maxsh,MAXQPT) 
         real*8   almit, alfit, gamit
-      
-
 
         dimension ifath(numnp),    velbar(nfath,ndof),  nsons(nfath)
         real*8 rerr(nshg,10),ybar(nshg,ndof+8) ! 8 is for avg. of square as uu, vv, ww, pp, TT, uv, uw, and vw
@@ -732,7 +728,14 @@ c... compute err
 c hack ShockError
 c  
                errmax=maxval(rerr(:,6))
-               errswitch=0.1*errmax
+               errswitch=0.1*errmax  
+!
+! note this scalefactor will govern the thickness of the refinement band around the shock.  
+! Higher values make it thinner (less refinement), lower -> thicker
+! what is below is specific to SAM adapt's expectation to adapt when the 6th field is > 1.0e-6
+! note also that this field was altered in e3.f and e3ls.f to no longer be the traditional error 
+! indicator, rather it is based on element jump of Temperature to identify shocks
+!
                where(rerr(:,6).gt.errswitch)
                     rerr(:,6)=1.0
                elsewhere

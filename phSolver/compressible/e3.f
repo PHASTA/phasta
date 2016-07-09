@@ -220,12 +220,18 @@ c
      &                giju,          DC,            
      &                ri,            rmi,           stiff, A0DC)
         endif
+! SAM wants a threshold here so we are going to take over this little used 
+! error indictor for that purpose.  To revert note you will want to uncomment the original 
+! form of this error indicator in e3LS.f
         if((intp.eq.1).and.(ierrcalc.eq.1).and.(nitr.eq.iter))  then
           do i=1,npro
              Tmax=maxval(yl(i,:,5))
              Tmin=minval(yl(i,:,5))
              rerrl(i,:,6)=(Tmax-Tmin)/T(i)
           enddo
+! the below was somewhat suprisingly ineffective compared to above for identifying shocks.  
+! it  refined on each side of the shock but left the actual shock quite coarse whereas the above
+! centered well on the shock
 !          do j=1,nshl
 !            rerrl(:,j,6)=rerrl(:,j,6)+DC(:,intp)  !super hack to get error indicator for shock capturing
 !          enddo
