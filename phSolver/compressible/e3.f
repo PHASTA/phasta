@@ -219,7 +219,8 @@ c
      &                A0,            raLS,          rTLS,
      &                giju,          DC,            
      &                ri,            rmi,           stiff, A0DC)
-         if((intp.eq.1).and.(ierrcalc.eq.1).and.(nitr.eq.iter))  then
+        endif
+        if((intp.eq.1).and.(ierrcalc.eq.1).and.(nitr.eq.iter))  then
           do i=1,npro
              Tmax=maxval(yl(i,:,5))
              Tmin=minval(yl(i,:,5))
@@ -228,7 +229,6 @@ c
 !          do j=1,nshl
 !            rerrl(:,j,6)=rerrl(:,j,6)+DC(:,intp)  !super hack to get error indicator for shock capturing
 !          enddo
-         endif
         endif
 c
 c
