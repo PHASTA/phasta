@@ -64,7 +64,6 @@ c
             endif
           enddo
         endif
-        deallocate(iBCtmp)
 
 c
 c.... for deformable wall case update iBC from iBCB information
@@ -86,6 +85,8 @@ c
           iBC = iBC + iBCpart
           deallocate(iBCpart)
        endif
+
+        deallocate(iBCtmp)
 
        
           

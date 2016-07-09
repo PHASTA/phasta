@@ -209,7 +209,7 @@ c
          allocate(ltg(ncorpsize))
          ltg(:)=fncorp(:)
        endif
-      else
+      else  !serial
        if((usingPETSc.eq.1)) then
          fncorpsize = nshg
          allocate(fncorp(fncorpsize))
@@ -226,9 +226,9 @@ c
              ltg(i)=i
            enddo
        endif
-           nlwork=1
-           allocate( point2ilwork(1))
-           nshg0 = nshg
+       nlwork=1
+       allocate( point2ilwork(1))
+       nshg0 = nshg
       endif
 
 

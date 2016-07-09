@@ -54,8 +54,8 @@ c
          do i = 1, ndof+7
             where (nBC(:) .ne. 0) BCtmp(:,i) = BCinp(nBC(:),i)
          enddo
-         deallocate(BCinp)
       endif
+      deallocate(BCinp)
             
 c
       if(any(BCtmp(:,12).ne.0)) then
@@ -109,6 +109,12 @@ c... apply slip wall condition to wall nodes
      &               wlnorm(nn,:,:)                     )
          enddo
          icd=icdg
+         deallocate(idxslpw)
+         deallocate(BCg)
+         deallocate(iBCg)
+         deallocate(BCtmpg)
+         deallocate(mpslpw)
+         deallocate(wlnorm)
 !      else
 !         if(myrank.eq.0) write(*,*) 'Incompressible code not able to do inviscid at this time'
       endif
