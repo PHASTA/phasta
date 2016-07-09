@@ -47,6 +47,8 @@ c
      &            x(numnp,nsd),            iBC(nshg),
      &            BC(nshg,ndofBC),         ilwork(nlwork),
      &            iper(nshg),              uold(nshg,nsd)
+
+
 c
         dimension res(nshg,nflow),         
      &            rest(nshg),              solinc(nshg,ndof)
@@ -56,6 +58,9 @@ c
      &            shpb(MAXTOP,maxsh,MAXQPT),
      &            shglb(MAXTOP,nsd,maxsh,MAXQPT) 
         real*8   almit, alfit, gamit
+      
+
+
         dimension ifath(numnp),    velbar(nfath,ndof),  nsons(nfath)
         real*8 rerr(nshg,10),ybar(nshg,ndof+8) ! 8 is for avg. of square as uu, vv, ww, pp, TT, uv, uw, and vw
         real*8, allocatable, dimension(:,:) :: vortG
@@ -311,9 +316,10 @@ c============ Start the loop of time steps============================c
 !        edamp3=0.05
         deltaInlInv=one/(0.125*0.0254)
         do 2000 istp = 1, nstp
+           rerr=zero !extreme limit of 1 step window or error stats....later a variable
 
-           if (myrank.eq.master) write(*,*) 'Time step of current run', 
-     &                                    istp
+!           if (myrank.eq.master) write(*,*) 'Time step of current run', 
+!     &                                    istp
 
 c  Time Varying BCs------------------------------------(Kyle W 6-6-13)
            if(BCdtKW.gt.0) then
@@ -723,6 +729,15 @@ c...  ybar(:,ndof+1:ndof+8) is for avg. of square as uu, vv, ww, pp, TT, uv, uw,
                ybar(:,ndof+8) = tfact*yold(:,2)*yold(:,3) + !vw
      &                          (one-tfact)*ybar(:,ndof+8)
 c... compute err
+c hack ShockError
+c  
+               errmax=maxval(rerr(:,6))
+               errswitch=0.1*errmax
+               where(rerr(:,6).gt.errswitch)
+                    rerr(:,6)=1.0
+               elsewhere
+                    rerr(:,6)=1e-10
+               endwhere
                rerr(:, 7)=rerr(:, 7)+(yold(:,1)-ybar(:,1))**2
                rerr(:, 8)=rerr(:, 8)+(yold(:,2)-ybar(:,2))**2
                rerr(:, 9)=rerr(:, 9)+(yold(:,3)-ybar(:,3))**2
@@ -734,58 +749,24 @@ c.. writing ybar field if requested in each restart file
             !here is where we save our averaged field.  In some cases we want to
             !write it less frequently		
             if( (irs >= 1) .and. (
-     &          mod(lstep, ntout) == 0 .or. !Checkpoint
-     &          istep == nstp) )then        !End of simulation
-
-               if( (mod(lstep, ntoutv) .eq. 0) .and.
-     &              ((irscale.ge.0).or.(itwmod.gt.0) .or. 
-     &              ((nsonmax.eq.1).and.(iLES.gt.0))))
-     &              call rwvelb  ('out ',  velbar  ,ifail)
-
-               !BUG: need to update new_interface to work with SyncIO.
-               !Bflux is presently completely crippled. Note that restar
-               !has also been moved here for readability. 
-!              call Bflux  (yold,          acold,     x,  compute boundary fluxes and print out
-!    &              shp,           shgl,      shpb,
-!    &              shglb,         nodflx,    ilwork)
-                  
-               call timer ('Output  ')      !set up the timer
-
-               !write the solution and time derivative 
-               call restar ('out ',  yold, acold)  
-
-               !Write the distance to wall field in each restart
-               if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
-                 call write_field(myrank,'a'//char(0),'dwal'//char(0),4,
-     &                            d2wall,'d'//char(0), nshg, 1, lstep)
-               endif 
-           
-               !Write the time average in each restart. 
-               if(ioybar.eq.1)then
-                 call write_field(myrank,'a'//char(0),'ybar'//char(0),4,
-     &                              ybar,'d'//char(0),nshg,ndof+8,lstep)
-               endif
-                 
-               !Write the error feild at the end of each step sequence
-               if(ierrcalc.eq.1 .and. istep == nstp) then 
-                 !smooth the error indicators
-             
-                do i=1,ierrsmooth
-                  call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
-                enddo
-                   
-!                call write_error(myrank, lstep, nshg, 10, rerr )
-                 call write_field(
-     &                      myrank, 'a'//char(0), 'errors'//char(0), 6, 
-     &                        rerr, 'd'//char(0), nshg, 10, lstep)
-               endif
-
-c the following is a future way to have the number of steps in the header...done for posix but not yet for syncio
-c
-c              call write_field2(myrank,'a'//char(0),'ybar'//char(0),
-c     &                          4,ybar,'d'//char(0),nshg,ndof+8,
-c     &                         lstep,istep)
-            endif   
+     &        mod(lstep, ntout) == 0 .or. !Checkpoint
+     &        istep == nstp) )then        !End of simulation
+              if(output_mode .eq. -1 ) then ! this is an in-memory adapt case
+                if(istep == nstp) then ! go ahead and take care of it
+                  call checkpoint (nstp,yold, acold, ybar, rerr,  velbar, 
+     &                       x, iper, ilwork, shp, shgl, iBC )
+                endif
+                if(ntout.le.lstep) then ! user also wants file output
+                  output_mode=0
+                  call checkpoint (nstp,yold, acold, ybar, rerr,  velbar, 
+     &                       x, iper, ilwork, shp, shgl, iBC )
+                  output_mode=-1 ! reset to stream 
+                endif
+              else
+                call checkpoint (nstp,yold, acold, ybar, rerr,  velbar, 
+     &                       x, iper, ilwork, shp, shgl, iBC )
+              endif   
+             endif   
 
  2000    continue  !end of NSTEP loop
  2001    continue  
@@ -873,4 +854,69 @@ c
       return
       end
 
+      subroutine checkpoint (nstp,yold, acold, ybar, rerr,  velbar, 
+     &                       x, iper, ilwork, shp, shgl, iBC )
+c
+      use turbSA
+      include "common.h"
+      dimension shp(MAXTOP,maxsh,MAXQPT),  
+     &            shgl(MAXTOP,nsd,maxsh,MAXQPT), 
+     &            iper(nshg),              iBC(nshg),
+     &            x(nshg,nsd),         ilwork(nlwork)
+      real*8  velbar(nfath,ndof),
+     &        yold(nshg,ndof),      acold(nshg,ndof),           
+     &        rerr(nshg,10),        ybar(nshg,ndof+8) 
+! 8 is for avg. of square as uu, vv, ww, pp, TT, uv, uw, and vw
+
+      if( (mod(lstep, ntout) .eq. 0) .and.
+     &              ((irscale.ge.0).or.(itwmod.gt.0) .or. 
+     &              ((nsonmax.eq.1).and.(iLES.gt.0))))
+     &              call rwvelb  ('out ',  velbar  ,ifail)
+
+!BUG: need to update new_interface to work with SyncIO.
+      !Bflux is presently completely crippled. Note that restar
+      !has also been moved here for readability. 
+!              call Bflux  (yold,          acold,     x,  compute boundary fluxes and print out
+!    &              shp,           shgl,      shpb,
+!    &              shglb,         nodflx,    ilwork)
+                  
+      call timer ('Output  ')      !set up the timer
+
+      !write the solution and time derivative 
+      call restar ('out ',  yold, acold)  
+
+      !Write the distance to wall field in each restart
+      if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
+                 call write_field(myrank,'a'//char(0),'dwal'//char(0),4,
+     &                            d2wall,'d'//char(0), nshg, 1, lstep)
+      endif 
+           
+      !Write the time average in each restart. 
+      if(ioybar.eq.1)then
+                 call write_field(myrank,'a'//char(0),'ybar'//char(0),4,
+     &                              ybar,'d'//char(0),nshg,ndof+8,lstep)
+      endif
+                 
+      !Write the error feild at the end of each step sequence
+      if(ierrcalc.eq.1 .and. istep == nstp) then 
+        !smooth the error indicators
+      
+        do i=1,ierrsmooth
+         call errsmooth( rerr, x, iper, ilwork, shp, shgl, iBC )
+        enddo
+                   
+        call write_field( myrank, 'a'//char(0), 'errors'//char(0), 6, 
+     &                        rerr, 'd'//char(0), nshg, 10, lstep)
+      endif
+
+c the following is a future way to have the number of steps in the header...done for posix but not yet for syncio
+c
+c              call write_field2(myrank,'a'//char(0),'ybar'//char(0),
+c     &                          4,ybar,'d'//char(0),nshg,ndof+8,
+c     &                         lstep,istep)
+c
+c.... end
+c
+      return
+      end
 
