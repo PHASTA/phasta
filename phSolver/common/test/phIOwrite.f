@@ -29,8 +29,14 @@
       fname(2) = c_char_"fortranWater.dat."//c_null_char
       nfiles = 2
       ppf = peers/nfiles
+      ! handle(1) is the file for syncio writing
       call syncio_setup_write(nfiles, one, ppf, handle(1))
+      ! handle(2) is the file for posix writing
       call posixio_setup(handle(2), c_char_"w"//c_null_char)
+      ! if there were a handle(3) for streams we would do the following
+      ! call streamio_setup_write(handle(3), <stream obj>)
+      ! after the handles are setup the function calls are the same
+      ! write the same garbage to posix and syncio files
       do i=1,2
         call phio_openfile(fname(i), handle(i))
         call phio_writeheader(handle(i), phrase, c_loc(fish), one, one,
@@ -39,6 +45,7 @@
      &      one, dataDbl, iotype)
         call phio_closefile(handle(i))
       end do
+      ! this is the read side... less interesting for us
       call syncio_setup_read(nfiles, handle(1))
       call posixio_setup(handle(2), c_char_"r"//c_null_char)
       do i=1,2
