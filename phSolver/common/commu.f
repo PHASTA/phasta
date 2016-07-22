@@ -45,8 +45,14 @@ c
       if(impistat.gt.0) rDelISend = zero
       if(impistat.gt.0) rDelWaitAll = zero
 
-      if (code .ne. 'in ' .and. code .ne. 'out') 
-     &  call error ('commu   ','code    ',0)
+      if (code .ne. 'in ' .and. code .ne. 'out') then
+        if(myrank.eq.0) then
+           write(*,*) 'ERROR code != ''in '' || ''out'''
+           write(*,*) 'ERROR code =''', code,''''
+        endif
+        call error ('commu   ','code    ',0)
+      endif
+
 
       if     (n .eq. 1)      then        ! like a scalar
         kdof = 1
