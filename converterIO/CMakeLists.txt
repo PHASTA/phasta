@@ -1,7 +1,9 @@
 project(converterIO)
 cmake_minimum_required(VERSION 2.8.5)
 
+if(NOT PHASTA_SKIP_MPI_CHECK)
 find_package(MPI REQUIRED)
+endif()
 add_definitions(-DOMPI_SKIP_MPICXX=1)
 
 include_directories(${MPI_INCLUDE_PATH})

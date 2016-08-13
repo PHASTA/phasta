@@ -2,7 +2,9 @@ project(M2NFixBnd)
 cmake_minimum_required(VERSION 2.8)
 enable_language(Fortran)
 
+if(NOT PHASTA_SKIP_MPI_CHECK)
 find_package(MPI REQUIRED)
+endif()
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include(FortranCInterface)

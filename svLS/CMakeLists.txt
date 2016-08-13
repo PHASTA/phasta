@@ -1,6 +1,8 @@
 project(svLS Fortran)
 cmake_minimum_required(VERSION 2.8)
+if(NOT PHASTA_SKIP_MPI_CHECK)
 find_package(MPI REQUIRED)
+endif()
 include_directories(${MPI_Fortran_INCLUDE_PATH})
 
 SET(FSRCS ADDBCMUL.f

@@ -1,7 +1,9 @@
 project(phastaIO)
 enable_language(CXX)
 
+if(NOT PHASTA_SKIP_MPI_CHECK)
 find_package(MPI REQUIRED)
+endif()
 include_directories(${MPI_C_INCLUDE_PATH})
 # collect all the source files
 include(FortranCInterface)
