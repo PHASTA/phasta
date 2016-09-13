@@ -51,10 +51,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
 	#force preprocessing of solfar.f
 	set_source_files_properties(solfar.f PROPERTIES COMPILE_FLAGS "-Mpreprocess")
 endif(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
-#incompressible reuses a fortran module from common w/o telling cmake
-#this is why we specify a module directory in the next cmakelists up
-#and we need to serialize incompressible after common
-add_dependencies(incompressible common)
+target_link_libraries(incompressible PUBLIC common)
 if( PHASTA_USE_LESLIB AND PHASTA_USE_SVLS )
 message(STATUS "using SVLS and LESLIB")
 set(PHASTAIC_LIBS
