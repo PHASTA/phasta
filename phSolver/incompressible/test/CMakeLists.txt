@@ -1,12 +1,3 @@
-macro(ic_parallel_test name procs dir exe)
-  set(tname incompressible_${solver}_${name})
-  add_test(
-    NAME ${tname}
-    COMMAND ${MPIRUN} ${MPIRUN_PROCFLAG} ${procs} ${exe} ${ARGN}
-    WORKING_DIRECTORY ${dir} )
-  set_tests_properties(${tname} PROPERTIES LABELS "phsolver_incompressible")
-endmacro(ic_parallel_test)
-
 macro(ic_serial_test name exe)
   set(tname incompressible_${solver}_${name})
   add_test( NAME ${tname} COMMAND ${exe} ${ARGN} )
