@@ -19,12 +19,6 @@ if(HAS_VALGRIND)
     valgrind --leak-check=yes --log-file=icSyncValgrind.%p
     ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
 endif(HAS_VALGRIND)
-set(compareArgs
-  ${CDIR}/4-procs_case-SyncIO-2/
-  ${CDIR}/4-procs_case-SyncIO-2_ref/
-  2 1e-6)
-ic_parallel_test(compare-sync 4 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
 
 add_test(NAME ${testLabel}_restart-sync
   COMMAND ${CMAKE_COMMAND}
@@ -38,8 +32,6 @@ add_test(NAME ${testLabel}_restart-sync
   -DNUMPROCS=4
   -P ${CMAKE_CURRENT_SOURCE_DIR}/runphasta.cmake
   )
-ic_parallel_test(compareRestart-sync 4 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
 
 add_test(NAME ${testLabel}_posix
   COMMAND ${CMAKE_COMMAND}
@@ -63,13 +55,6 @@ if(HAS_VALGRIND)
     ${PHASTA_BINARY_DIR}/bin/phastaIC.exe)
 endif(HAS_VALGRIND)
 
-set(compareArgs
-  ${CDIR}/4-procs_case-Posix/
-  ${CDIR}/4-procs_case-Posix_ref/
-  0 1e-6)
-ic_parallel_test(compare-posix 4 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
-
 add_test(NAME ${testLabel}_restart-posix
   COMMAND ${CMAKE_COMMAND}
   -DNAME=${casename}
@@ -82,5 +67,3 @@ add_test(NAME ${testLabel}_restart-posix
   -DNUMPROCS=4
   -P ${CMAKE_CURRENT_SOURCE_DIR}/runphasta.cmake
   )
-ic_parallel_test(compareRestart-posix 4 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
