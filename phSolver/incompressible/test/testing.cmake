@@ -1,4 +1,4 @@
-set(testLabel "phsolver_incompressible")
+set(testLabel "phsolver_incompressible_${solver}")
 add_test(NAME ${testLabel}_sync
   COMMAND ${CMAKE_COMMAND}
   -DNAME=${casename}
