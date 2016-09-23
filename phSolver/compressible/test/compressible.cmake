@@ -1,12 +1,5 @@
 c_serial_test(linkProcsDir-sync
   ln -snf ${CDIR}/2-procs_case-SyncIO-1 ${CDIR}/2-procs_case)
-if(HAS_VALGRIND)
-  c_serial_test(resetNumStartValgrind-sync
-    cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
-  c_parallel_test(valgrind-sync 2 ${CDIR}
-    valgrind --leak-check=yes --log-file=cSyncValgrind.%p
-    ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
-endif(HAS_VALGRIND)
 c_serial_test(resetNumStart-sync
   cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
 c_parallel_test( sync 2 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
@@ -22,13 +15,6 @@ c_parallel_test(compareRestart-sync 2 ${CDIR}
 
 c_serial_test(linkProcsDir-posix
   ln -snf ${CDIR}/2-procs_case-Posix ${CDIR}/2-procs_case)
-if(HAS_VALGRIND)
-  c_serial_test(resetNumStartValgrind-posix
-    cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
-  c_parallel_test(compressibleValgrind-posix 2 ${CDIR}
-    valgrind --leak-check=yes --log-file=cPosixValgrind.%p
-    ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
-endif(HAS_VALGRIND)
 c_serial_test(resetNumStart-posix
   cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
 c_parallel_test(posix 2 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
