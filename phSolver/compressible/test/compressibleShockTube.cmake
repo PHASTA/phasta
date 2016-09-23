@@ -1,4 +1,4 @@
-set(testLabel "phsolver_compressible_shocktube")
+set(testLabel "phsolver_compressible_shocktube_${solver}")
 add_test(NAME ${testLabel}_posix
   COMMAND ${CMAKE_COMMAND}
   -DNAME=${casename}
