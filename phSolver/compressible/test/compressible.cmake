@@ -1,30 +1,60 @@
-c_serial_test(linkProcsDir-sync
-  ln -snf ${CDIR}/2-procs_case-SyncIO-1 ${CDIR}/2-procs_case)
-c_serial_test(resetNumStart-sync
-  cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
-c_parallel_test( sync 2 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
-set(compareArgs
-  ${CDIR}/2-procs_case-SyncIO-1/
-  ${CDIR}/2-procs_case-SyncIO-1_ref/
-  1 1e-6)
-c_parallel_test(compare-sync 2 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
-c_parallel_test(restart-sync 2 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
-c_parallel_test(compareRestart-sync 2 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
+set(testLabel "phsolver_compressible")
+add_test(NAME ${testLabel}_sync
+  COMMAND ${CMAKE_COMMAND}
+  -DNAME=${casename}
+  -DWORKDIR=${CDIR}
+  -DCASEDIR=${CDIR}/2-procs_case-SyncIO-1
+  -DTGTCASEDIR=${CDIR}/2-procs_case
+  -DNUMSTART=${CDIR}/numstart.dat
+  -DMPIRUN=${MPIRUN}
+  -DMPIRUN_PROCFLAG=${MPIRUN_PROCFLAG}
+  -DEXE=${PHASTA_BINARY_DIR}/bin/phastaC.exe
+  -DCOMPARE_EXE=${PHASTA_BINARY_DIR}/bin/checkphasta
+  -DIS_SYNCIO=1
+  -DNUMPROCS=2
+  -P ${CMAKE_CURRENT_SOURCE_DIR}/runphasta.cmake
+  )
+add_test(NAME ${testLabel}_restart-sync
+  COMMAND ${CMAKE_COMMAND}
+  -DNAME=${casename}
+  -DWORKDIR=${CDIR}
+  -DCASEDIR=${CDIR}/2-procs_case-SyncIO-1
+  -DTGTCASEDIR=${CDIR}/2-procs_case
+  -DMPIRUN=${MPIRUN}
+  -DMPIRUN_PROCFLAG=${MPIRUN_PROCFLAG}
+  -DEXE=${PHASTA_BINARY_DIR}/bin/phastaC.exe
+  -DCOMPARE_EXE=${PHASTA_BINARY_DIR}/bin/checkphasta
+  -DIS_SYNCIO=1
+  -DNUMPROCS=2
+  -P ${CMAKE_CURRENT_SOURCE_DIR}/runphasta.cmake
+  )
 
-c_serial_test(linkProcsDir-posix
-  ln -snf ${CDIR}/2-procs_case-Posix ${CDIR}/2-procs_case)
-c_serial_test(resetNumStart-posix
-  cp ${CDIR}/numstart.dat ${CDIR}/2-procs_case/numstart.dat)
-c_parallel_test(posix 2 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
-set(compareArgs
-  ${CDIR}/2-procs_case-Posix/
-  ${CDIR}/2-procs_case-Posix_ref/
-  0 1e-6)
-c_parallel_test(compare-posix 2 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
-c_parallel_test(restart-posix 2 ${CDIR} ${PHASTA_BINARY_DIR}/bin/phastaC.exe)
-c_parallel_test(compareRestart-posix 2 ${CDIR}
-  ${PHASTA_BINARY_DIR}/bin/checkphasta ${compareArgs})
-c_serial_test(unlinkProcsDir-compressible rm ${CDIR}/2-procs_case)
+add_test(NAME ${testLabel}_posix
+  COMMAND ${CMAKE_COMMAND}
+  -DNAME=${casename}
+  -DWORKDIR=${CDIR}
+  -DCASEDIR=${CDIR}/2-procs_case-Posix
+  -DTGTCASEDIR=${CDIR}/2-procs_case
+  -DNUMSTART=${CDIR}/numstart.dat
+  -DMPIRUN=${MPIRUN}
+  -DMPIRUN_PROCFLAG=${MPIRUN_PROCFLAG}
+  -DEXE=${PHASTA_BINARY_DIR}/bin/phastaC.exe
+  -DCOMPARE_EXE=${PHASTA_BINARY_DIR}/bin/checkphasta
+  -DIS_SYNCIO=0
+  -DNUMPROCS=2
+  -P ${CMAKE_CURRENT_SOURCE_DIR}/runphasta.cmake
+  )
+add_test(NAME ${testLabel}_restart-posix
+  COMMAND ${CMAKE_COMMAND}
+  -DNAME=${casename}
+  -DWORKDIR=${CDIR}
+  -DCASEDIR=${CDIR}/2-procs_case-Posix
+  -DTGTCASEDIR=${CDIR}/2-procs_case
+  -DMPIRUN=${MPIRUN}
+  -DMPIRUN_PROCFLAG=${MPIRUN_PROCFLAG}
+  -DEXE=${PHASTA_BINARY_DIR}/bin/phastaC.exe
+  -DCOMPARE_EXE=${PHASTA_BINARY_DIR}/bin/checkphasta
+  -DIS_SYNCIO=0
+  -DNUMPROCS=2
+  -P ${CMAKE_CURRENT_SOURCE_DIR}/runphasta.cmake
+  )
