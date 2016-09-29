@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
   const char* phrase = "co-ordinates";
   const char* type = "double";
   const char* iotype = "binary";
-  const char* dir[2] = {"4-procs_case-SyncIO-2", "4-procs_case-Posix"};
+  const char* dir[2] = {"4-procs_case-SyncIO-2_ref", "4-procs_case-Posix_ref"};
   const char* filename[2] = {"geombc-dat.", "geombc.dat."};
   double* coords[2] = {NULL, NULL};
   int len[2] = {0, 0};

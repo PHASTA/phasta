@@ -31,8 +31,8 @@
       two = 2 
       nfiles = 2
 
-      dir(1) = c_char_"4-procs_case-SyncIO-2"//c_null_char
-      dir(2) = c_char_"4-procs_case-Posix"//c_null_char
+      dir(1) = c_char_"4-procs_case-SyncIO-2_ref"//c_null_char
+      dir(2) = c_char_"4-procs_case-Posix_ref"//c_null_char
       fname(1) = c_char_"geombc-dat."//c_null_char
       fname(2) = c_char_"geombc.dat."//c_null_char
       call syncio_setup_read(nfiles, handle(1))
