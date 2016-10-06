@@ -16,8 +16,8 @@ extern "C" {
 
 double En(int ip, double r, double s) {
    double f = 0.0;
-   double t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16,t17,t18;
-   double t19,t20,t21,t22,t23,t24,t25,t26,t27,t28;
+   double t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t18;
+   double t21,t22,t23,t24,t25,t26;
 
    /* p=2 */
    if( ip==0 ) {
