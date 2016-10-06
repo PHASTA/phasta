@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
   const char* iotype = "binary";
   int numberOfNodes[2] = {0,0};
   int nfiles[2] = {atoi(argv[1]), 1};
-  const char* dir[2] = {"4-procs_case-SyncIO-2", "4-procs_case-Posix"};
+  const char* dir[2] = {"4-procs_case-SyncIO-2_ref", "4-procs_case-Posix_ref"};
   const char* filename[2] = {"geombc-dat.", "geombc.dat."};
   phio_fp file[2];
   syncio_setup_read(nfiles[0], &(file[0]));
