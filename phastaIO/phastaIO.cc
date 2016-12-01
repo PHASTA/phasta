@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <cstdarg>
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
@@ -62,7 +63,7 @@ void phprintf(const char* fmt, ...) {
   snprintf(format, sizeof(format), "phastaIO debug: %s", fmt);
   va_list ap;
   va_start(ap,fmt);
-  vprintf(format,ap)
+  vprintf(format,ap);
   va_end(ap);
 #endif
 }
@@ -76,7 +77,7 @@ void phprintf_0(const char* fmt, ...) {
     char format[1024];
     snprintf(format, sizeof(format), "phastaIO debug: irank=0 %s", fmt);
     va_list ap;
-    va_start(ap,s);
+    va_start(ap,fmt);
     vprintf(format, ap);
     va_end(ap);
   }
@@ -496,7 +497,7 @@ void queryphmpiio(const char filename[],int *nfields, int *nppf)
   MPI_Bcast( nfields, 1, MPI_INT, 0, MPI_COMM_WORLD );
   MPI_Bcast( nppf, 1, MPI_INT, 0, MPI_COMM_WORLD );
   MPI_Bcast( &MasterHeaderSize, 1, MPI_INT, 0, MPI_COMM_WORLD );
-  phprintf("Info queryphmpiio: myrank = %d, MasterHeaderSize = %d", irank, MasterHeaderSize);
+  phprintf("Info queryphmpiio: myrank = %d, MasterHeaderSize = %d\n", irank, MasterHeaderSize);
 }
 
 /**
@@ -562,7 +563,7 @@ int initphmpiio( int *nfields, int *nppf, int *nfiles, int *filehandle, const ch
   MPI_Comm_rank(MPI_COMM_WORLD, &irank);
   MPI_Comm_size(MPI_COMM_WORLD, &mysize);
 
-  phprintf("Info initphmpiio: entering function, myrank = %d, MasterHeaderSize = %d", irank, MasterHeaderSize);
+  phprintf("Info initphmpiio: entering function, myrank = %d, MasterHeaderSize = %d, nfields %d, nppf %d, nfiles %d\n", irank, MasterHeaderSize, *nfields, *nppf, *nfiles);
 
   double timer_start, timer_end;
   startTimer(&timer_start);
@@ -584,7 +585,7 @@ int initphmpiio( int *nfields, int *nppf, int *nfiles, int *filehandle, const ch
   }
   free ( imode );
 
-  phprintf("Info initphmpiio: myrank = %d, MasterHeaderSize = %d", irank, MasterHeaderSize);
+  phprintf("Info initphmpiio: myrank = %d, MasterHeaderSize = %d\n", irank, MasterHeaderSize);
 
   int i, j;
 
@@ -753,7 +754,7 @@ int initphmpiiosub( int *nfields, int *nppf, int *nfiles, int *filehandle, const
   MPI_Comm_rank(my_local_comm, &irank);
   MPI_Comm_size(my_local_comm, &mysize);
 
-  phprintf("Info initphmpiio: entering function, myrank = %d, MasterHeaderSize = %d", irank, MasterHeaderSize);
+  phprintf("Info initphmpiio: entering function, myrank = %d, MasterHeaderSize = %d\n", irank, MasterHeaderSize);
 
   double timer_start, timer_end;
   startTimer(&timer_start);
@@ -775,7 +776,7 @@ int initphmpiiosub( int *nfields, int *nppf, int *nfiles, int *filehandle, const
   }
   free ( imode );
 
-  phprintf("Info initphmpiio: myrank = %d, MasterHeaderSize = %d", irank, MasterHeaderSize);
+  phprintf("Info initphmpiio: myrank = %d, MasterHeaderSize = %d\n", irank, MasterHeaderSize);
 
   int i, j;
 
