@@ -41,14 +41,10 @@ configure_file(
   "${CMAKE_BINARY_DIR}/phastaCommonConfig.cmake"
 )
 
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+set(git_hash_string "# git hash ${GIT_SHA1}")
 execute_process(
-  COMMAND git rev-parse HEAD
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  OUTPUT_VARIABLE git_hash
-)
-set(git_hash_string "# git hash ${git_hash}")
-execute_process(
-  COMMAND echo -n ${git_hash_string}
+  COMMAND echo ${git_hash_string}
   COMMAND cat - input.config
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   OUTPUT_FILE ${CMAKE_BINARY_DIR}/input.config
