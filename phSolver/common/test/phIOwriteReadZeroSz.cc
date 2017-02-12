@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
   syncio_setup_write(nfiles, one, ppf, &(file[0]));
   posixio_setup(&(file[1]), 'w');
   streamio_setup_write(&(file[2]), rs);
-  for(int i=0; i<2; i++) {
+  for(int i=0; i<3; i++) {
     phio_openfile(filename[i], file[i]);
     phio_writeheader(file[i], phrase, &zero, &one, &zero, type, iotype);
     phio_writedatablock(file[i], phrase, &fishWeight, &zero, type, iotype);
@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
   syncio_setup_read(nfiles, &(file[0]));
   posixio_setup(&(file[1]), 'r');
   streamio_read_r(&(file[2]), rs);
-  for(int i=0; i<2; i++) {
+  for(int i=0; i<3; i++) {
     phio_openfile(filename[i], file[i]);
     phio_readheader(file[i], phrase, &numFish, &one, type, iotype);
     assert(!numFish);
