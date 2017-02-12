@@ -28,6 +28,8 @@ void stream_openfile(
   stream_fp sf = (stream_fp) f;
   if(sf->mode == 'w' && sf->rs != NULL)
     sf->file = (int*) openRStreamWrite(sf->rs);
+  else if(sf->mode == 'r' && sf->rs != NULL)
+    sf->file = (int*) openRStreamRead(sf->rs);
   else if(sf->mode == 'r' && sf->grs != NULL)
     sf->file = (int*) openGRStreamRead(sf->grs, filename);
   else
