@@ -7,6 +7,7 @@ include_directories("${PHASTA_BINARY_DIR}")
 include_directories(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 setup_exe(phIOreadheader phIOreadheader.cc)
+setup_exe(phIOwriteReadZeroSz phIOwriteReadZeroSz.cc)
 setup_exe(phIOreaddatablock phIOreaddatablock.cc)
 setup_exe(phIOreadIlwork phIOreadIlwork.cc)
 setup_exe(phIOposixMultiTopo phIOposixMultiTopo.cc)

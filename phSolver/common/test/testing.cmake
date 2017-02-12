@@ -9,6 +9,10 @@ endmacro(common_parallel_test)
 
 common_parallel_test(readHeader 4 ${CASES}/incompressible
   ${PHASTA_BINARY_DIR}/bin/phIOreadheader 2)
+if(PHASTA_CHEF_ENABLED)
+  common_parallel_test(writeReadZeroSz 2 ${CASES}/incompressible
+    ${PHASTA_BINARY_DIR}/bin/phIOwriteReadZeroSz  1)
+endif()
 common_parallel_test(readIlwork 4
   ${CASES}/crossflow/4-1chef/4-procs_case
   ${PHASTA_BINARY_DIR}/bin/phIOreadIlwork

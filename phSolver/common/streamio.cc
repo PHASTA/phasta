@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <cassert>
 #include "streamio.h"
 #include "phio_stream.h"
 #include "phio_posix.h"
@@ -17,6 +18,13 @@ static struct phio_ops stream_ops = {
   stream_writedatablock,
   stream_constructname
 };
+
+void streamio_read_r(phio_fp* f, RStream* rs) {
+  assert(f);
+  assert(rs);
+  stream_fp sf = (stream_fp) *f;
+  sf->mode = 'r';
+}
 
 void streamio_setup_read(phio_fp* f, GRStream* grs) {
   *f = (phio_fp) malloc(sizeof(struct streamio_file));
