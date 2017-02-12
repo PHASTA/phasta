@@ -19,11 +19,14 @@ static struct phio_ops stream_ops = {
   stream_constructname
 };
 
-void streamio_read_r(phio_fp* f, RStream* rs) {
-  assert(f);
+void streamio_setup_r(phio_fp* f, RStream* rs, char mode) {
   assert(rs);
+  *f = (phio_fp) malloc(sizeof(struct streamio_file));
   stream_fp sf = (stream_fp) *f;
-  sf->mode = 'r';
+  sf->ops = &stream_ops;
+  sf->mode = mode;
+  sf->grs = NULL;
+  sf->rs = rs;
 }
 
 void streamio_setup_read(phio_fp* f, GRStream* grs) {
