@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
   phio_fp file[3];
   syncio_setup_write(nfiles, one, ppf, &(file[0]));
   posixio_setup(&(file[1]), 'w');
-  streamio_setup_write(&(file[2]), rs);
+  streamio_setup_r(&(file[2]), rs, 'w');
   for(int i=0; i<3; i++) {
     phio_openfile(filename[i], file[i]);
     phio_writeheader(file[i], phrase, &zero, &one, &zero, type, iotype);
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
   }
   syncio_setup_read(nfiles, &(file[0]));
   posixio_setup(&(file[1]), 'r');
-  streamio_read_r(&(file[2]), rs);
+  streamio_setup_r(&(file[2]), rs, 'r');
   for(int i=0; i<3; i++) {
     phio_openfile(filename[i], file[i]);
     phio_readheader(file[i], phrase, &numFish, &one, type, iotype);
