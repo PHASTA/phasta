@@ -130,7 +130,7 @@ void phio_readheader(
   const double t0 = getTime();
   f->ops->readheader(f->file, keyphrase, valueArray,
       nItems, datatype, iotype);
-  phio_global_stats.readBytes += (*nItems)*getSize(datatype);
+  phio_global_stats.readBytes += (*nItems)*getSize("integer");
   phio_global_stats.readTime += getTime()-t0;
 }
 void phio_writeheader(
@@ -144,7 +144,7 @@ void phio_writeheader(
   const double t0 = getTime();
   f->ops->writeheader(f->file, keyphrase, valueArray,
       nItems, ndataItems, datatype, iotype);
-  phio_global_stats.writeBytes += (*nItems)*getSize(datatype);
+  phio_global_stats.writeBytes += (*nItems)*getSize("integer");
   phio_global_stats.writeTime += getTime()-t0;
 }
 void phio_readdatablock(
