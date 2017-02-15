@@ -1,31 +1,42 @@
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cassert>
 #include <cstring>
 #include <string>
 #include <sstream>
 #include "phIO.h"
 #include "phComm.h"
 #include "phio_base.h"
-#include <mpi.h>
+#include "ph_mpi_help.h"
 
 #ifndef PHASTAIO_TIMERS_ON
 #define PHASTAIO_TIMERS_ON 0
 #endif
+struct phastaio_stats {
+  double readTime;
+  double writeTime;
+  double openTime;
+  double closeTime;
+  size_t readBytes;
+  size_t writeBytes;
+};
+phastaio_stats phio_global_stats;
 
 namespace {
   inline double getTime() {
     return MPI_Wtime();
   }
-  inline bool isRankZero() {
-    int rank = 0;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    return !rank;
-  }
-  inline void printTime(const char* key, double t) {
-#if PHASTAIO_TIMERS_ON==1
-    if( isRankZero() )
-      fprintf(stderr, "%s %f\n", key, t);
-#endif
+  inline size_t getSize(const char* t) {
+    std::string type(t);
+    if(type == "integer")
+      return sizeof(int);
+    else if(type == "double")
+      return sizeof(double);
+    else {
+      assert(0);
+      exit(EXIT_FAILURE);
+    }
   }
 }
 
@@ -35,11 +46,73 @@ namespace {
     if(PHIO_TRACING)
       fprintf(stderr, "PHIO_TRACE entering %s %s %p\n", key, aux, obj);
   }
+  void printMinMaxAvg(const char* key, size_t v) {
+    int val = static_cast<int>(v);
+    int min = ph_min_int(val);
+    int max = ph_max_int(val);
+    long tot = ph_add_long(static_cast<long>(val));
+    double avg = tot/static_cast<double>(ph_peers());
+    if(!ph_self())
+      fprintf(stderr, "phio_%s min max avg %d %d %f\n",
+          key, min, max, avg);
+  }
+
+  void printMinMaxAvg(const char* key, double v) {
+    double min = ph_min_double(v);
+    double max = ph_max_double(v);
+    double tot = ph_add_double(v);
+    double avg = tot/ph_peers();
+    if(!ph_self())
+      fprintf(stderr, "phio_%s min max avg %f %f %f\n",
+          key, min, max, avg);
+  }
 }
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void phio_printStats() {
+  printMinMaxAvg("readTime",phio_getReadTime());
+  printMinMaxAvg("writeTime", phio_getWriteTime());
+  printMinMaxAvg("openTime", phio_getOpenTime());
+  printMinMaxAvg("closeTime", phio_getCloseTime());
+  printMinMaxAvg("readBytes", phio_getReadBytes());
+  printMinMaxAvg("writeBytes", phio_getWriteBytes());
+}
+
+void phio_initStats() {
+  phio_global_stats.readTime = 0;
+  phio_global_stats.writeTime = 0;
+  phio_global_stats.openTime = 0;
+  phio_global_stats.closeTime = 0;
+  phio_global_stats.readBytes = 0;
+  phio_global_stats.writeBytes = 0;
+}
+
+double phio_getReadTime() {
+  return phio_global_stats.readTime;
+}
+
+double phio_getWriteTime() {
+  return phio_global_stats.writeTime;
+}
+
+double phio_getOpenTime() {
+  return phio_global_stats.openTime;
+}
+
+double phio_getCloseTime() {
+  return phio_global_stats.closeTime;
+}
+
+size_t phio_getReadBytes() {
+  return phio_global_stats.readBytes;
+}
+
+size_t phio_getWriteBytes() {
+  return phio_global_stats.writeBytes;
+}
 
 void phio_readheader(
     phio_fp f,
@@ -51,7 +124,8 @@ void phio_readheader(
   const double t0 = getTime();
   f->ops->readheader(f->file, keyphrase, valueArray,
       nItems, datatype, iotype);
-  printTime(__func__, getTime()-t0);
+  phio_global_stats.readBytes += (*nItems)*getSize(datatype);
+  phio_global_stats.readTime += getTime()-t0;
 }
 void phio_writeheader(
     phio_fp f,
@@ -64,7 +138,8 @@ void phio_writeheader(
   const double t0 = getTime();
   f->ops->writeheader(f->file, keyphrase, valueArray,
       nItems, ndataItems, datatype, iotype);
-  printTime(__func__, getTime()-t0);
+  phio_global_stats.writeBytes += (*nItems)*getSize(datatype);
+  phio_global_stats.writeTime += getTime()-t0;
 }
 void phio_readdatablock(
     phio_fp f,
@@ -76,7 +151,8 @@ void phio_readdatablock(
   const double t0 = getTime();
   f->ops->readdatablock(f->file, keyphrase, valueArray,
       nItems, datatype, iotype);
-  printTime(__func__, getTime()-t0);
+  phio_global_stats.readBytes += (*nItems)*getSize(datatype);
+  phio_global_stats.readTime += getTime()-t0;
 }
 void phio_writedatablock(
     phio_fp f,
@@ -88,16 +164,15 @@ void phio_writedatablock(
   const double t0 = getTime();
   f->ops->writedatablock(f->file, keyphrase, valueArray,
       nItems, datatype, iotype);
-  printTime(__func__, getTime()-t0);
+  phio_global_stats.writeBytes += (*nItems)*getSize(datatype);
+  phio_global_stats.writeTime += getTime()-t0;
 }
 
 void phio_constructName(
     phio_fp f,
     const char inName[],
     char* outName) {
-  const double t0 = getTime();
   f->ops->constructname(inName, outName);
-  printTime(__func__, getTime()-t0);
 }
 
 void phio_openfile(
@@ -106,14 +181,14 @@ void phio_openfile(
   const double t0 = getTime();
   trace("openfile",filename,f);
   f->ops->openfile(filename, f);
-  printTime(__func__, getTime()-t0);
+  phio_global_stats.openTime += getTime()-t0;
 }
 
 void phio_closefile(phio_fp f) {
   const double t0 = getTime();
   trace("closefile","unknown",f);
   f->ops->closefile(f);
-  printTime(__func__, getTime()-t0);
+  phio_global_stats.closeTime += getTime()-t0;
 }
 
 void phio_appendInt(char* dest, int v) {

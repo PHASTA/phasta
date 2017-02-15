@@ -1,9 +1,18 @@
 #ifndef PHSOLVER_PHIO_H
 #define PHSOLVER_PHIO_H
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+  void phio_initStats();
+  void phio_printStats();
+  double phio_getReadTime();
+  double phio_getWriteTime();
+  double phio_getOpenTime();
+  double phio_getCloseTime();
+  size_t phio_getReadBytes();
+  size_t phio_getWriteBytes();
   typedef struct phio_file* phio_fp;
   void phio_openfile(
       const char filename[],
