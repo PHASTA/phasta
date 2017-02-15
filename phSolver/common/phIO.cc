@@ -10,6 +10,7 @@
 #include "phio_base.h"
 #include "ph_mpi_help.h"
 
+
 #ifndef PHASTAIO_TIMERS_ON
 #define PHASTAIO_TIMERS_ON 0
 #endif
@@ -73,12 +74,17 @@ extern "C" {
 #endif
 
 void phio_printStats() {
-  printMinMaxAvg("readTime",phio_getReadTime());
-  printMinMaxAvg("writeTime", phio_getWriteTime());
-  printMinMaxAvg("openTime", phio_getOpenTime());
-  printMinMaxAvg("closeTime", phio_getCloseTime());
-  printMinMaxAvg("readBytes", phio_getReadBytes());
-  printMinMaxAvg("writeBytes", phio_getWriteBytes());
+  const int mebi=1024*1024;
+  printMinMaxAvg("readTime (s)",phio_getReadTime());
+  printMinMaxAvg("writeTime (s)", phio_getWriteTime());
+  printMinMaxAvg("openTime (s)", phio_getOpenTime());
+  printMinMaxAvg("closeTime (s)", phio_getCloseTime());
+  printMinMaxAvg("readBytes (B)", phio_getReadBytes());
+  printMinMaxAvg("writeBytes (B)", phio_getWriteBytes());
+  printMinMaxAvg("readBandwidth (MiB/s)",
+      (phio_getReadBytes()/phio_getReadTime())/mebi);
+  printMinMaxAvg("writeBandwidth (MiB/s)",
+      (phio_getWriteBytes()/phio_getWriteTime())/mebi);
 }
 
 void phio_initStats() {
