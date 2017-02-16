@@ -21,8 +21,6 @@ struct phastaio_stats {
   double closeTime;
   size_t readBytes;
   size_t writeBytes;
-  size_t reads;
-  size_t writes;
 };
 phastaio_stats phio_global_stats;
 
@@ -77,8 +75,6 @@ extern "C" {
 
 void phio_printStats() {
   const int mebi=1024*1024;
-  printMinMaxAvg("reads",phio_getReads());
-  printMinMaxAvg("writes",phio_getWrites());
   printMinMaxAvg("readTime (s)",phio_getReadTime());
   printMinMaxAvg("writeTime (s)", phio_getWriteTime());
   printMinMaxAvg("openTime (s)", phio_getOpenTime());
@@ -98,16 +94,6 @@ void phio_initStats() {
   phio_global_stats.closeTime = 0;
   phio_global_stats.readBytes = 0;
   phio_global_stats.writeBytes = 0;
-  phio_global_stats.reads = 0;
-  phio_global_stats.writes = 0;
-}
-
-size_t phio_getReads() {
-  return phio_global_stats.reads;
-}
-
-size_t phio_getWrites() {
-  return phio_global_stats.writes;
 }
 
 double phio_getReadTime() {
@@ -141,8 +127,11 @@ void phio_readheader(
     int*  nItems,
     const char  datatype[],
     const char  iotype[] ) {
+  const double t0 = getTime();
   f->ops->readheader(f->file, keyphrase, valueArray,
       nItems, datatype, iotype);
+  phio_global_stats.readBytes += (*nItems)*getSize("integer");
+  phio_global_stats.readTime += getTime()-t0;
 }
 void phio_writeheader(
     phio_fp f,
@@ -152,8 +141,11 @@ void phio_writeheader(
     const int* ndataItems,
     const char datatype[],
     const char iotype[] ) {
+  const double t0 = getTime();
   f->ops->writeheader(f->file, keyphrase, valueArray,
       nItems, ndataItems, datatype, iotype);
+  phio_global_stats.writeBytes += (*nItems)*getSize("integer");
+  phio_global_stats.writeTime += getTime()-t0;
 }
 void phio_readdatablock(
     phio_fp f,
@@ -167,7 +159,6 @@ void phio_readdatablock(
       nItems, datatype, iotype);
   phio_global_stats.readBytes += (*nItems)*getSize(datatype);
   phio_global_stats.readTime += getTime()-t0;
-  phio_global_stats.reads++;
 }
 void phio_writedatablock(
     phio_fp f,
@@ -181,7 +172,6 @@ void phio_writedatablock(
       nItems, datatype, iotype);
   phio_global_stats.writeBytes += (*nItems)*getSize(datatype);
   phio_global_stats.writeTime += getTime()-t0;
-  phio_global_stats.writes++;
 }
 
 void phio_constructName(
