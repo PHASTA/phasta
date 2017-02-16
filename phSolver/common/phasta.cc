@@ -29,6 +29,7 @@ using namespace std;
 
 #include "common_c.h"
 #include "Input.h"
+#include "phiostats.h"
 #include "phstream.h"
 #include "streamio.h"
 
@@ -106,9 +107,11 @@ namespace {
         return -1;
       }
       MPI_Barrier(MPI_COMM_WORLD);
+      phastaio_initStats();
       input();
       /* now we can start the solver */
       proces();
+      phastaio_printStats();
     }
     else{
       printf("error during reading ascii input \n");
@@ -259,9 +262,11 @@ int phasta( int argc, char *argv[] ) {
       setIOparam();
       outpar.input_mode = outpar.nsynciofiles; //FIXME this is awful
       outpar.output_mode = outpar.nsynciofiles; //FIXME this is awful
+      phastaio_initStats();
       input();
       /* now we can start the solver */
       proces();
+      phastaio_printStats();
     }
     else{
         printf("error during reading ascii input \n");
