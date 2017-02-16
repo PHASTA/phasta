@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <cassert>
+#include "phiostats.h"
 #include "phIO.h"
 #include "phstream.h" //for makeRStream and makeGRStream
 #include "syncio.h"
@@ -38,26 +39,26 @@ int main(int argc, char* argv[]) {
   streamio_setup_r(&(file[2]), rs, 'w');
   for(int i=0; i<3; i++) {
     if(!rank) fprintf(stderr, "%s\n", modes[i]);
-    phio_initStats();
+    phastaio_initStats();
     phio_openfile(filename[i], file[i]);
     phio_writeheader(file[i], phrase, &zero, &one, &zero, type, iotype);
     phio_writedatablock(file[i], phrase, &fishWeight, &zero, type, iotype);
     phio_closefile(file[i]);
-    phio_printStats();
+    phastaio_printStats();
   }
   syncio_setup_read(nfiles, &(file[0]));
   posixio_setup(&(file[1]), 'r');
   streamio_setup_r(&(file[2]), rs, 'r');
   for(int i=0; i<3; i++) {
     if(!rank) fprintf(stderr, "%s\n", modes[i]);
-    phio_initStats();
+    phastaio_initStats();
     phio_openfile(filename[i], file[i]);
     phio_readheader(file[i], phrase, &numFish, &one, type, iotype);
     assert(!numFish);
     phio_readdatablock(file[i], phrase, &fishWeight, &numFish, type, iotype);
     assert(fishWeight == 1.23);
     phio_closefile(file[i]);
-    phio_printStats();
+    phastaio_printStats();
   }
   MPI_Finalize();
   return 0;
