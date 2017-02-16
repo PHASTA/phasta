@@ -13,6 +13,8 @@ extern "C" {
   double phio_getCloseTime();
   size_t phio_getReadBytes();
   size_t phio_getWriteBytes();
+  size_t phio_getReads();
+  size_t phio_getWrites();
   typedef struct phio_file* phio_fp;
   void phio_openfile(
       const char filename[],
