@@ -1,9 +1,9 @@
 #include<mpi.h>
 #include<assert.h>
 #include"phiompi.h"
-int phio_ar_int(int val, int op) {
-  int res = 0;
-  int err = MPI_Allreduce(&val,&res,1,MPI_INT,op,MPI_COMM_WORLD);
+size_t phio_ar_sizet(size_t val, int op) {
+  size_t res = 0;
+  int err = MPI_Allreduce(&val,&res,1,MPI_UNSIGNED_LONG,op,MPI_COMM_WORLD);
   assert(err == MPI_SUCCESS);
   return res;
 }
@@ -13,20 +13,14 @@ double phio_ar_dbl(double val, int op) {
   assert(err == MPI_SUCCESS);
   return res;
 }
-long phio_ar_long(long val, int op) {
-  long res = 0;
-  int err = MPI_Allreduce(&val,&res,1,MPI_LONG,op,MPI_COMM_WORLD);
-  assert(err == MPI_SUCCESS);
-  return res;
+size_t phio_min_sizet(size_t val) {
+  return phio_ar_sizet(val,MPI_MIN);
 }
-int phio_min_int(int val) {
-  return phio_ar_int(val,MPI_MIN);
+size_t phio_max_sizet(size_t val) {
+  return phio_ar_sizet(val,MPI_MAX);
 }
-int phio_max_int(int val) {
-  return phio_ar_int(val,MPI_MAX);
-}
-long phio_add_long(long val) {
-  return phio_ar_long(val,MPI_SUM);
+size_t phio_add_sizet(size_t val) {
+  return phio_ar_sizet(val,MPI_SUM);
 }
 double phio_min_double(double val) {
   return phio_ar_dbl(val,MPI_MIN);
