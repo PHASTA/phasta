@@ -58,6 +58,7 @@ c
       integer :: ierr_io, numprocs, itmp, itmp2
       integer :: ignored
       integer :: fileFmt
+      integer :: readstep
       character*255 fname2, temp2
       character*64 temp1
       type(c_ptr) :: handle
@@ -67,9 +68,14 @@ c
 c
 c.... determine the step number to start with
 c
-      open(unit=72,file='numstart.dat',status='old')
-      read(72,*) irstart
-      close(72)
+      irstart=0
+      if (myrank.eq.master) then
+        open(unit=72,file='numstart.dat',status='old')
+        read(72,*) irstart
+        close(72)
+      endif
+      call drvAllreducesclr(irstart,readstep)
+      irstart=readstep
       lstep=irstart ! in case restart files have no fields
 
       fname1='geombc.dat'
