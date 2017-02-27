@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
   int one = 1;
   int numFish = 0;
   double fishWeight = 1.23;
-  int nfiles = atoi(argv[1]);
+  int nfiles = 1;
   int ppf = size/nfiles;
   const char* filename[2] = {"water-dat.", "water.dat."};
   rstream rs = makeRStream();
@@ -41,8 +41,10 @@ int main(int argc, char* argv[]) {
     if(!rank) fprintf(stderr, "%s\n", modes[i]);
     phastaio_initStats();
     phio_openfile(filename[i], file[i]);
-    phio_writeheader(file[i], phrase, &zero, &one, &zero, type, iotype);
-    phio_writedatablock(file[i], phrase, &fishWeight, &zero, type, iotype);
+    for (int j = 0; j < atoi(argv[1]) ; j++) {
+      phio_writeheader(file[i], phrase, &zero, &one, &zero, type, iotype);
+      phio_writedatablock(file[i], phrase, &fishWeight, &zero, type, iotype);
+    }
     phio_closefile(file[i]);
     phastaio_printStats();
   }
