@@ -74,7 +74,7 @@ c
         read(72,*) irstart
         close(72)
       endif
-      call drvAllreducesclr(irstart,readstep)
+      call drvAllreduceMaxInt(irstart,readstep)
       irstart=readstep
       lstep=irstart ! in case restart files have no fields
 
