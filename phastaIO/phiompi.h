@@ -8,6 +8,7 @@ extern "C" {
 #endif
 int phio_self();
 int phio_peers();
+void phio_barrier();
 size_t phio_min_sizet(size_t val);
 size_t phio_max_sizet(size_t val);
 size_t phio_add_sizet(size_t val);

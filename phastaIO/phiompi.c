@@ -41,3 +41,6 @@ int phio_peers() {
   MPI_Comm_size(MPI_COMM_WORLD, &peers);
   return peers;
 }
+void phio_barrier() {
+  MPI_Barrier(MPI_COMM_WORLD);
+}
