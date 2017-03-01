@@ -22,10 +22,17 @@
 #include <math.h>
 #include <sstream>
 #include "phastaIO.h"
+#include "phiompi.h"
 #include "mpi.h"
 #include "phiotmrc.h"
 #include "phiostats.h"
 #include <assert.h>
+
+/* OS-specific things try to stay here */
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+
 
 #define VERSION_INFO_HEADER_SIZE 8192
 #define DB_HEADER_SIZE 1024
@@ -870,7 +877,39 @@ int initphmpiiosub( int *nfields, int *nppf, int *nfiles, int *filehandle, const
   return i;
 }
 
+namespace {
 
+  enum {
+    DIR_MODE = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH
+  };
+
+  bool my_mkdir(const char* name) {
+    errno = 0;
+    int err = mkdir(name, DIR_MODE);
+    if ((err == -1) && (errno == EEXIST)) {
+      errno = 0;
+      err = 0;
+      return false;
+    }
+    assert(!err);
+    return true;
+  }
+
+  enum {
+    DIR_FANOUT = 2048
+  };
+
+  std::string getSubDirPrefix() {
+    if (phio_peers() <= DIR_FANOUT)
+      return string("");
+    int self = phio_self();
+    int subSelf = self % DIR_FANOUT;
+    int subGroup = self / DIR_FANOUT;
+    std::stringstream ss;
+    ss << subGroup << '/';
+    return ss.str();
+  }
+}
 
 /** open file for both POSIX and MPI-IO syncIO format.
  *
@@ -895,11 +934,19 @@ void openfile(const char filename[], const char mode[], int*  fileDescriptor )
     char* fname = StringStripper( filename );
     char* imode = StringStripper( mode );
 
+    std::string posixname = getSubDirPrefix();
+    if (!phio_self())
+      my_mkdir(posixname.c_str());
+    phio_barrier();
+    posixname += string(fname);
     phioTime t0,t1;
     phastaio_time(&t0);
-    if ( cscompare( "read", imode ) ) file = fopen(fname, "rb" );
-    else if( cscompare( "write", imode ) ) file = fopen(fname, "wb" );
-    else if( cscompare( "append", imode ) ) file = fopen(fname, "ab" );
+    if ( cscompare( "read", imode ) )
+      file = fopen(posixname.c_str(), "rb" );
+    else if( cscompare( "write", imode ) )
+      file = fopen(posixname.c_str(), "wb" );
+    else if( cscompare( "append", imode ) )
+      file = fopen(posixname.c_str(), "ab" );
     phastaio_time(&t1);
     const size_t elapsed = phastaio_time_diff(&t0,&t1);
     phastaio_addOpenTime(elapsed);
