@@ -2,6 +2,8 @@
 #include <string>
 #include <sstream>
 #include <phastaIO.h>
+#include <phiotmrc.h> //phioTime
+#include <phiostats.h>  //phastaio_add[Open|Close]Time
 #include "phio_stream.h"
 
 #define PHIO_STREAM_TRACING 0
@@ -26,6 +28,8 @@ void stream_openfile(
     phio_fp f) {
   traceEnter(__func__, filename);
   stream_fp sf = (stream_fp) f;
+  phioTime t0,t1;
+  phastaio_time(&t0);
   if(sf->mode == 'w' && sf->rs != NULL)
     sf->file = (int*) openRStreamWrite(sf->rs);
   else if(sf->mode == 'r' && sf->rs != NULL)
@@ -36,6 +40,9 @@ void stream_openfile(
     fprintf(stderr,
         "ERROR %s type of stream %s is unknown... exiting\n",
         __func__, filename);
+  phastaio_time(&t1);
+  const size_t elapsed = phastaio_time_diff(&t0,&t1);
+  phastaio_addOpenTime(elapsed);
   traceExit(__func__);
 }
 
@@ -95,7 +102,12 @@ void stream_writedatablock(
 void stream_closefile(phio_fp f) {
   traceEnter(__func__);
   stream_fp sf = (stream_fp) f;
+  phioTime t0,t1;
+  phastaio_time(&t0);
   fclose((FILE*)sf->file);
+  phastaio_time(&t1);
+  const size_t elapsed = phastaio_time_diff(&t0,&t1);
+  phastaio_addCloseTime(elapsed);
   free(f);
   traceExit(__func__);
 }
