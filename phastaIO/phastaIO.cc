@@ -883,9 +883,11 @@ namespace {
     DIR_MODE = S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH
   };
 
-  bool my_mkdir(const char* name) {
+  bool my_mkdir(std::string name) {
+    if(name.empty())
+      return true;
     errno = 0;
-    int err = mkdir(name, DIR_MODE);
+    int err = mkdir(name.c_str(), DIR_MODE);
     if ((err == -1) && (errno == EEXIST)) {
       errno = 0;
       err = 0;
@@ -936,7 +938,7 @@ void openfile(const char filename[], const char mode[], int*  fileDescriptor )
 
     std::string posixname = getSubDirPrefix();
     if (!phio_self())
-      my_mkdir(posixname.c_str());
+      my_mkdir(posixname);
     phio_barrier();
     posixname += string(fname);
     phioTime t0,t1;
