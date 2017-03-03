@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <time.h>
+#include <cassert>
 
 #include <sys/time.h>
 #include <sys/resource.h>
