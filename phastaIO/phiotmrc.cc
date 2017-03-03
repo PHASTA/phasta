@@ -19,7 +19,6 @@
 #define MILLION 1000L*1000L
 
 #ifdef __INTEL_COMPILER
-typedef size_t phioTime;
 size_t phastaio_global_cpus;
 size_t phastaio_time_diff(phioTime* start, phioTime* end);
 /* return the cycle count */
@@ -50,7 +49,6 @@ size_t phastaio_time_diff(phioTime* start, phioTime* end) {
   return us;
 }
 #else
-typedef struct timespec phioTime;
 void phastaio_time(phioTime* t) {
   int err;
   err = clock_gettime(CLOCK_MONOTONIC,t);
