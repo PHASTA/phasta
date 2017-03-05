@@ -1,0 +1,6 @@
+#ifndef PHASTA_VERSION_H
+#define PHASTA_VERSION_H
+const char* phasta_version() {
+  return "${PHASTA_GIT_SHA1}";
+}
+#endif

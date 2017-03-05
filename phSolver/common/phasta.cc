@@ -27,6 +27,7 @@ using namespace std;
 #include <unistd.h>
 #endif
 
+#include "phasta_version.h"
 #include "common_c.h"
 #include "Input.h"
 #include "phiostats.h"
@@ -92,6 +93,9 @@ namespace {
     char inpfilename[100];
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+
+    if(!myrank)
+      printf("PHASTA Git hash %s\n", phasta_version());
 
     workfc.numpe = size;
     workfc.myrank = myrank;
@@ -163,6 +167,8 @@ int phasta( int argc, char *argv[] ) {
     char* pauseDebugger = getenv("catchDebugger");
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
+    if(!myrank)
+      printf("PHASTA Git hash %s\n", phasta_version());
 
 #ifdef HAVE_PETSC
     PETSC_COMM_WORLD=MPI_COMM_WORLD;
