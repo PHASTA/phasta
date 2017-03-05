@@ -12,6 +12,8 @@ common_parallel_test(readHeader 4 ${CASES}/incompressible
 if(PHASTA_CHEF_ENABLED)
   common_parallel_test(writeReadZeroSz 2 ${CASES}/incompressible
     ${PHASTA_BINARY_DIR}/bin/phIOwriteReadZeroSz  1)
+  common_parallel_test(writeFields 1 ${CASES}/incompressible
+    ${PHASTA_BINARY_DIR}/bin/phIOwriteFields  1)
 endif()
 common_parallel_test(readIlwork 4
   ${CASES}/crossflow/4-1chef/4-procs_case
