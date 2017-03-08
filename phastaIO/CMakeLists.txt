@@ -19,4 +19,7 @@ if(NOT PHASTA_CHEF_ENABLED)
 endif()
 
 ADD_LIBRARY(phastaIO ${SRC_FILES})
-target_link_libraries(phastaIO ${MPI_C_LIBRARIES})
+target_link_libraries(phastaIO PRIVATE ${MPI_C_LIBRARIES})
+if(PHASTA_CHEF_ENABLED)
+  TARGET_LINK_LIBRARIES(phastaIO PUBLIC SCOREC::ph)
+endif()
