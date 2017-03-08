@@ -92,6 +92,10 @@ OPTION(PHASTA_BUILD_PHASTAIO "Build PhastaIO" ON)
 if(PHASTA_BUILD_PHASTAIO)
 	add_subdirectory(phastaIO)
 	list(APPEND PHASTA_INCLUDES "${PHASTA_SOURCE_DIR}/phastaIO")
+        if(NOT PHASTA_CHEF_ENABLED)
+	  list(APPEND PHASTA_INCLUDES
+            "${PHASTA_SOURCE_DIR}/phastaIO/phiotimer_empty")
+        endif(NOT PHASTA_CHEF_ENABLED)
 endif(PHASTA_BUILD_PHASTAIO)
 
 OPTION(PHASTA_BUILD_SHAPEFUNCTION "Build shapeFunction" ON)

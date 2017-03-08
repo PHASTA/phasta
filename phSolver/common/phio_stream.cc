@@ -2,8 +2,7 @@
 #include <string>
 #include <sstream>
 #include <phastaIO.h>
-#include <phiotmrc.h> //phioTime
-#include <phiostats.h>  //phastaio_add[Open|Close]Time
+#include "phiotimer.h"  //phastaio_add[Open|Close]Time
 #include "phio_stream.h"
 
 #define PHIO_STREAM_TRACING 0
@@ -28,7 +27,7 @@ void stream_openfile(
     phio_fp f) {
   traceEnter(__func__, filename);
   stream_fp sf = (stream_fp) f;
-  phioTime t0,t1;
+  phastaioTime t0,t1;
   phastaio_time(&t0);
   if(sf->mode == 'w' && sf->rs != NULL)
     sf->file = (int*) openRStreamWrite(sf->rs);
@@ -102,7 +101,7 @@ void stream_writedatablock(
 void stream_closefile(phio_fp f) {
   traceEnter(__func__);
   stream_fp sf = (stream_fp) f;
-  phioTime t0,t1;
+  phastaioTime t0,t1;
   phastaio_time(&t0);
   fclose((FILE*)sf->file);
   phastaio_time(&t1);
