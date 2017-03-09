@@ -32,6 +32,7 @@ c
       use readarrays
       use fncorpmod
       use phio
+      use phiotimer
       use phstr
       use syncio
       use posixio
@@ -107,6 +108,7 @@ c
       end if
       call phio_constructName(fhandle, 
      &        c_char_'geombc' // char(0), fname1)
+      call phastaio_setfile(GEOMBC_READ)
       call phio_openfile(fname1, fhandle);
 
       call phio_readheader(fhandle,c_char_'number of nodes' // char(0),
@@ -480,6 +482,7 @@ c.... Read restart files
      &        c_char_'restart' // char(0), fnamer)
       call phstr_appendInt(fnamer, irstart)
       call phstr_appendStr(fnamer, c_char_'.'//c_null_char)
+      call phastaio_setfile(RESTART_READ)
       call phio_openfile(fnamer, fhandle);
 
       ithree=3
