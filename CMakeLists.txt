@@ -5,6 +5,15 @@ enable_language(Fortran)
 enable_language(C)
 enable_language(CXX)
 
+#The following commit fixes an issue with imported targets and gfortran
+#https://gitlab.kitware.com/cmake/cmake/commit/a8e7a1047ad3b61238f073ea3d2cd138f207c1ed
+if(${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} VERSION_LESS 3.3.0)
+  #if the cmake version is too old then set the magic flag to use -I instead of
+  # -isystem for imported targets - we are importing a fortran module from
+  # SCOREC/core for phasta io timers
+  unset(CMAKE_INCLUDE_SYSTEM_FLAG_Fortran)
+endif()
+
 enable_testing()
 include(CTest)
 set(MPIRUN "mpirun"
