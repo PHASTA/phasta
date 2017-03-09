@@ -12,6 +12,8 @@ extern "C" {
 #define PHASTAIO_READTIME(cmd,ignored) cmd
 #define PHASTAIO_WRITETIME(cmd,ignored) cmd
 
+enum phastaio_file { GEOMBC_READ, RESTART_READ, RESTART_WRITE };
+
 typedef int phastaioTime;
 struct phastaio_stats;
 void phastaio_time(phastaioTime*);

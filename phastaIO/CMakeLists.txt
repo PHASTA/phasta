@@ -1,6 +1,7 @@
 project(phastaIO)
 enable_language(CXX)
 
+
 if(NOT PHASTA_SKIP_MPI_CHECK)
 find_package(MPI REQUIRED)
 endif()
@@ -14,7 +15,10 @@ add_definitions(-DMPICH_SKIP_MPICXX)
 add_definitions(-DOMPI_SKIP_MPICXX=1)
 set(SRC_FILES phiotmrc.cc phastaIO.cc phiompi.c)
 if(NOT PHASTA_CHEF_ENABLED)
-  set(SRC_FILES ${SRC_FILES} phiotimer_empty/phiotimer_empty.cc)
+  set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/phSolver/modules)
+  set(SRC_FILES ${SRC_FILES}
+    phiotimer_empty/phiotimer_empty.cc
+    phiotimer_empty/phiotimer_empty.f)
   include_directories(phiotimer_empty)
 endif()
 
