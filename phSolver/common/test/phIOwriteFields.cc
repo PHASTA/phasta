@@ -24,7 +24,8 @@ int main(int argc, char* argv[]) {
   const char* phrase = "number of fishes";
   const char* type = "double";
   const char* iotype = "binary";
-  int zero = 0;
+  double blockArray[4] = {2.0,4.0,8.0,16.0};
+  int blockEntries = 4;
   int one = 1;
   int numFish = 0;
   double fishWeight = 1.23;
@@ -64,14 +65,14 @@ int main(int argc, char* argv[]) {
       fprintf(stderr,"%s\n","Printing the const char iotype, this is set to binary");
       fprintf(stderr,"%s\n",iotype);
       fprintf(stderr,"%s\n","Opening the file" );
-      phio_writeheader(file[i], str, &zero, &one, &zero, type, iotype);
+      phio_writeheader(file[i], str, &blockEntries, &one, &blockEntries, "integer", iotype);
       fprintf(stderr,"%s\n","Printing the created string after writing the header ");
       fprintf(stderr,"%s\n",str );
       fprintf(stderr,"%s\n","Printing the loop number" );
       fprintf(stderr,"%d\n",j );
       fprintf(stderr,"%s\n", "Writing the data block time - ");
      // fprintf(stderr,"%d\n",j );
-      phio_writedatablock(file[i], str, &fishWeight, &zero, type, iotype);
+      phio_writedatablock(file[i], str, blockArray, &blockEntries, type, iotype);
       fprintf(stderr,"%s\n","Printing the file[i] after writing the data block" );
       fprintf(stderr,"%s\n",file[i] );
       fprintf(stderr,"%s\n","Printing the string that has been created " );
