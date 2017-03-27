@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
     for (int j = 0; j < 2 ; j++) {
       fprintf(stderr,"%s\n", "Inside loop");
      //fprintf(stderr,"%d\n",atoi(argv[1]));
-      const char* str = "Number of times " +j;
+      const char* str = "Number of times " + 10;
       fprintf(stderr,"%s\n", "Writing the header time - " );
       fprintf(stderr,"%s\n","Printing the int zero");
       fprintf(stderr,"%d\n",zero);
