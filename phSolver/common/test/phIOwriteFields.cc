@@ -32,18 +32,39 @@ int main(int argc, char* argv[]) {
   int ppf = size/nfiles;
   const char* filename[2] = {"water-dat.", "water.dat."};
   rstream rs = makeRStream();
-  phio_fp file[3];
+     phio_fp file[3];
   const char* modes[3]={"syncio", "posixio", "streamio"};
   syncio_setup_write(nfiles, one, ppf, &(file[0]));
   posixio_setup(&(file[1]), 'w');
   streamio_setup_r(&(file[2]), rs, 'w');
+  fprintf(stderr, "%s\n" ,"Outside loop 1.0"); 
   for(int i=0; i<3; i++) {
+    fprintf(stderr, "%s\n" ,"Within the i loop");
     if(!rank) fprintf(stderr, "%s\n", modes[i]);
+    fprintf(stderr, "%s\n" ,"Before phastaio");
     phastaio_initStats();
+    fprintf(stderr, "%s\n" ,"Opening files with ", filename[i], file[i] );
     phio_openfile(filename[i], file[i]);
-    for (int j = 0; j < atoi(argv[1]) ; j++) {
-      phio_writeheader(file[i], phrase, &zero, &one, &zero, type, iotype);
-      phio_writedatablock(file[i], phrase, &fishWeight, &zero, type, iotype);
+    fprintf(stderr, "%s\n" ,"Entering for loop for ", atoi(argv[1]) );
+   // const char* str = "Number of times "+ nfiles ;
+    for (int j = 0; j < nfiles ; j++) {
+      fprintf(stderr,"%s\n", "Inside loop");
+      fprintf(stderr,"%d\n",atoi(argv[1]));
+      const char* str = "Number of times " +j;
+      fprintf(stderr,"%s\n", "Writing the header time - " );
+      fprintf(stderr,"%d\n",zero);
+      fprintf(stderr,"%d\n",one);
+      fprintf(stderr,"%s\n",file[i] );
+      fprintf(stderr,"%s\n","Should have printed the file" );
+      fprintf(stderr,"%s\n",type);
+      fprintf(stderr,"%s\n",iotype);
+      fprintf(stderr,"%s\n","Opening the file" );
+      phio_writeheader(file[i], str, &zero, &one, &zero, type, iotype);
+      fprintf(stderr,"%s\n",str );
+      fprintf(stderr,"%d\n",j );
+      fprintf(stderr,"%s\n", "Writing the data block time - ");
+      fprintf(stderr,"%d\n",j );
+      phio_writedatablock(file[i], str, &fishWeight, &zero, type, iotype);
     }
     phio_closefile(file[i]);
     phastaio_printStats();
@@ -55,9 +76,15 @@ int main(int argc, char* argv[]) {
     if(!rank) fprintf(stderr, "%s\n", modes[i]);
     phastaio_initStats();
     phio_openfile(filename[i], file[i]);
+    //Str was added
+   // const char* str = "Number of times "+ nfiles ;
+   // for (int j = 0; j < nfiles ; j++) {
     phio_readheader(file[i], phrase, &numFish, &one, type, iotype);
+    //  phio_readheader(file[i], str, &numFish, &one, type, iotype);
+     //Changing argument from file[i] to file[j]
     assert(!numFish);
     phio_readdatablock(file[i], phrase, &fishWeight, &numFish, type, iotype);
+    //  phio_readdatablock(file[i], str, &fishWeight, &numFish, type, iotype);
     assert(fishWeight == 1.23);
     phio_closefile(file[i]);
     phastaio_printStats();
