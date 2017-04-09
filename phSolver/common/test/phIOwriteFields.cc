@@ -21,62 +21,53 @@ int main(int argc, char* argv[]) {
     MPI_Finalize();
     return 1;
   }
+ 
   const char* phrase = "number of fishes";
   const char* type = "double";
   const char* iotype = "binary";
   double blockArray[4] = {2.0,4.0,8.0,16.0};
   int blockEntries = 4;
   int one = 1;
+  int zero = 0;
   int numFish = 0;
   double fishWeight = 1.23;
   int nfiles = 1;
   int ppf = size/nfiles;
-  const char* filename[2] = {"water-dat.", "water.dat."};
+  const char* filename[3] = {"water-dat.", "water.dat.", "water."};
   rstream rs = makeRStream();
      phio_fp file[3];
   const char* modes[3]={"syncio", "posixio", "streamio"};
+  fprintf(stderr,"nfiles %d\n", nfiles);
+  fprintf(stderr,"ppf %d\n", ppf);
   syncio_setup_write(nfiles, one, ppf, &(file[0]));
   posixio_setup(&(file[1]), 'w');
-  streamio_setup_r(&(file[2]), rs, 'w');
+  streamio_setup_r(&(file[2]), rs, 'w');//Check this _r? work
   fprintf(stderr, "%s\n" ,"Outside loop 1.0"); 
   for(int i=0; i<3; i++) {
     fprintf(stderr, "%s\n" ,"Within the i loop");
     if(!rank) fprintf(stderr, "%s\n", modes[i]);
     fprintf(stderr, "%s\n" ,"Before phastaio");
     phastaio_initStats();
-    fprintf(stderr, "%s\n" ,"Opening files with ", filename[i], file[i] );
+    fprintf(stderr, "Opening files with %s\n", filename[i]);
     phio_openfile(filename[i], file[i]);
-    fprintf(stderr, "%s\n" ,"Entering for loop for ", atoi(argv[1]) );
-   // const char* str = "Number of times "+ nfiles ;
-    for (int j = 0; j < 2 ; j++) {
+    char str [50];
+    int n;    
+   for (int j = 0; j < 2 ; j++) {
       fprintf(stderr,"%s\n", "Inside loop");
-     //fprintf(stderr,"%d\n",atoi(argv[1]));
-      const char* str = "Number of times " + 10;
-      fprintf(stderr,"%s\n", "Writing the header time - " );
-      fprintf(stderr,"%s\n","Printing the int zero");
-      fprintf(stderr,"%d\n",zero);
-      fprintf(stderr,"%s\n","Printing the int one");
-      fprintf(stderr,"%d\n",one);
-      fprintf(stderr,"%s\n","Printing the file[i]");
-      fprintf(stderr,"%s\n",file[i] );
-      fprintf(stderr,"%s\n","Should have printed the file" );
-      fprintf(stderr,"%s\n","Printing the const char type, this is set to double");
-      fprintf(stderr,"%s\n",type);
-      fprintf(stderr,"%s\n","Printing the const char iotype, this is set to binary");
-      fprintf(stderr,"%s\n",iotype);
-      fprintf(stderr,"%s\n","Opening the file" );
+      n = sprintf(str, " Number of times %d ", j);
+      assert(n);
+      fprintf(stderr,"str \'%s\'\n", str);
+      fprintf(stderr,"Printing the int zero %d\n", zero);
+      fprintf(stderr,"Printing the int one %d\n", one);
+      fprintf(stderr,"blockentries %d\n",blockEntries);
+      fprintf(stderr,"Printing the const char type %s\n", type);
+      fprintf(stderr,"Printing the const char iotype %s\n", iotype);
+      fprintf(stderr,"Calling writeheader\n");
       phio_writeheader(file[i], str, &blockEntries, &one, &blockEntries, "integer", iotype);
-      fprintf(stderr,"%s\n","Printing the created string after writing the header ");
-      fprintf(stderr,"%s\n",str );
-      fprintf(stderr,"%s\n","Printing the loop number" );
-      fprintf(stderr,"%d\n",j );
-      fprintf(stderr,"%s\n", "Writing the data block time - ");
-     // fprintf(stderr,"%d\n",j );
+      fprintf(stderr,"Done calling writeheader\n");
+      fprintf(stderr,"Calling writedatablock\n");
       phio_writedatablock(file[i], str, blockArray, &blockEntries, type, iotype);
-      fprintf(stderr,"%s\n","Printing the file[i] after writing the data block" );
-      fprintf(stderr,"%s\n",file[i] );
-      fprintf(stderr,"%s\n","Printing the string that has been created " );
-      fprintf(stderr,"%s\n",str );
+      fprintf(stderr,"Done Calling writedatablock\n");
     }
     phio_closefile(file[i]);
     phastaio_printStats();
