@@ -33,10 +33,10 @@ int main(int argc, char* argv[]) {
   double fishWeight = 1.23;
   int nfiles = 1;
   int ppf = size/nfiles;
-  const char* filename[3] = {"water-dat.", "water.dat.", "water."};
+  const char* filename[3] = {"water.dat.", "water.","water-dat."};
   rstream rs = makeRStream();
      phio_fp file[3];
-  const char* modes[3]={"syncio", "posixio", "streamio"};
+  const char* modes[3]={"streamio", "posixio", "syncio"};
   fprintf(stderr,"nfiles %d\n", nfiles);
   fprintf(stderr,"ppf %d\n", ppf);
   syncio_setup_write(nfiles, one, ppf, &(file[0]));
