@@ -36,12 +36,12 @@ int main(int argc, char* argv[]) {
   const char* filename[3] = {"water.dat.", "water.","water-dat."};
   rstream rs = makeRStream();
      phio_fp file[3];
-  const char* modes[3]={"streamio", "posixio", "syncio"};
+  const char* modes[3]={"posixio", "streamio", "syncio"};
   fprintf(stderr,"nfiles %d\n", nfiles);
   fprintf(stderr,"ppf %d\n", ppf);
-  syncio_setup_write(nfiles, one, ppf, &(file[0]));
-  posixio_setup(&(file[1]), 'w');
-  streamio_setup_r(&(file[2]), rs, 'w');//Check this _r? work
+  posixio_setup(&(file[0]), 'w');
+  streamio_setup_r(&(file[1]), rs, 'w');
+  syncio_setup_write(nfiles, one, ppf, &(file[2]));
   fprintf(stderr, "%s\n" ,"Outside loop 1.0"); 
   for(int i=0; i<3; i++) {
     fprintf(stderr, "%s\n" ,"Within the i loop");
@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
     }
     phio_closefile(file[i]);
     phastaio_printStats();
+    fprintf(stderr,"Done %s\n", modes[i]);
   }
   syncio_setup_read(nfiles, &(file[0]));
   posixio_setup(&(file[1]), 'r');
