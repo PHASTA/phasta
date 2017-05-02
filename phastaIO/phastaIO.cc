@@ -1698,7 +1698,12 @@ void writeheader(
 
     if ( char* p = strpbrk(buffer, "@") )
       *p = '\0';
-
+    printf("Printing field count %d\n", PhastaIOActiveFiles[i]->field_count);
+    printf("Printing max field %d\n", MAX_FIELDS_NUMBER );
+    printf("Printing part  count %d\n", PhastaIOActiveFiles[i]->part_count);
+    printf("Printing nppp %d\n", PhastaIOActiveFiles[i]->nppp);
+    assert(PhastaIOActiveFiles[i]->field_count < MAX_FIELDS_NUMBER);
+    assert(PhastaIOActiveFiles[i]->part_count < PhastaIOActiveFiles[i]->nppp);
     bzero((void*)mpi_tag,MAX_FIELDS_NAME_LENGTH);
     sprintf(mpi_tag, "\n%s : %d\n", buffer, PhastaIOActiveFiles[i]->field_count);
     unsigned long offset_value;
@@ -1723,8 +1728,7 @@ void writeheader(
     PhastaIOActiveFiles[i]->my_offset = offset_value;
 
     // Write in my offset table ...
-    PhastaIOActiveFiles[i]->my_offset_table[PhastaIOActiveFiles[i]->field_count][PhastaIOActiveFiles[i]->part_count] =
-      PhastaIOActiveFiles[i]->my_offset;
+    PhastaIOActiveFiles[i]->my_offset_table[PhastaIOActiveFiles[i]->field_count][PhastaIOActiveFiles[i]->part_count] = PhastaIOActiveFiles[i]->my_offset;
 
     // Update the next-start-address ...
     PhastaIOActiveFiles[i]->next_start_address = offset_value +
