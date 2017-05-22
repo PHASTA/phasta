@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
   double blockArray[4] = {2.0,4.0,8.0,16.0};
   int blockEntries = 4;
   int one = 1;
+  int nfields = 2;
   int zero = 0;
   int numFish = 0;
   double fishWeight = 1.23;
@@ -39,7 +40,7 @@ int main(int argc, char* argv[]) {
   const char* modes[3]={"syncio","posixio","streamio"};
   fprintf(stderr,"nfiles %d\n", nfiles);
   fprintf(stderr,"ppf %d\n", ppf);
-  syncio_setup_write(nfiles, one, ppf, &(file[0]));
+  syncio_setup_write(nfiles, nfields, ppf, &(file[0]));
   posixio_setup(&(file[1]), 'w');
   streamio_setup_r(&(file[2]), rs, 'w');
   fprintf(stderr, "%s\n" ,"Outside loop 1.0"); 
