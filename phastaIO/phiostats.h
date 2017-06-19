@@ -9,10 +9,10 @@ extern "C" {
 void phastaio_initStats();
 void phastaio_addReadBytes(size_t bytes);
 void phastaio_addWriteBytes(size_t bytes);
-void phastaio_addWriteTime(double time);
-void phastaio_addReadTime(double time);
-void phastaio_addOpenTime(double time);
-void phastaio_addCloseTime(double time);
+void phastaio_addWriteTime(size_t time);
+void phastaio_addReadTime(size_t time);
+void phastaio_addOpenTime(size_t time);
+void phastaio_addCloseTime(size_t time);
 void phastaio_printStats();
 #ifdef __cplusplus
 }

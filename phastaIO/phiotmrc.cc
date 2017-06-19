@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/time.h> /* gettimeofday */
 #include <time.h>
-
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <unistd.h>
+#include <cassert>
 
 #ifdef __bgq__
 #include "hwi/include/bqc/A2_inlines.h"

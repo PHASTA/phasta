@@ -17,6 +17,7 @@
 #include <FCMangle.h>
 #include "new_interface.h"
 #include "phIO.h"
+#include "phiotimer.h"
 #include "syncio.h"
 #include "posixio.h"
 #include "streamio.h"
@@ -279,6 +280,7 @@ Write_Restart(  int* pid,
     phio_constructName(f_descriptor,"restart",filename);
     phstr_appendInt(filename, *stepno);
     phstr_appendStr(filename, ".");
+    phastaio_setfile(RESTART_WRITE);
     phio_openfile(filename, f_descriptor);
 
     field_flag=0;

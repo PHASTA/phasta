@@ -32,6 +32,7 @@ c
       use readarrays
       use fncorpmod
       use phio
+      use phiotimer
       use phstr
       use syncio
       use posixio
@@ -58,6 +59,7 @@ c
       integer :: ierr_io, numprocs, itmp, itmp2
       integer :: ignored
       integer :: fileFmt
+      integer :: readstep
       character*255 fname2, temp2
       character*64 temp1
       type(c_ptr) :: handle
@@ -67,9 +69,14 @@ c
 c
 c.... determine the step number to start with
 c
-      open(unit=72,file='numstart.dat',status='old')
-      read(72,*) irstart
-      close(72)
+      irstart=0
+      if (myrank.eq.master) then
+        open(unit=72,file='numstart.dat',status='old')
+        read(72,*) irstart
+        close(72)
+      endif
+      call drvAllreduceMaxInt(irstart,readstep)
+      irstart=readstep
       lstep=irstart ! in case restart files have no fields
 
       fname1='geombc.dat'
@@ -101,6 +108,7 @@ c
       end if
       call phio_constructName(fhandle, 
      &        c_char_'geombc' // char(0), fname1)
+      call phastaio_setfile(GEOMBC_READ)
       call phio_openfile(fname1, fhandle);
 
       call phio_readheader(fhandle,c_char_'number of nodes' // char(0),
@@ -474,6 +482,7 @@ c.... Read restart files
      &        c_char_'restart' // char(0), fnamer)
       call phstr_appendInt(fnamer, irstart)
       call phstr_appendStr(fnamer, c_char_'.'//c_null_char)
+      call phastaio_setfile(RESTART_READ)
       call phio_openfile(fnamer, fhandle);
 
       ithree=3
