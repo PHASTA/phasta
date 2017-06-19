@@ -29,14 +29,13 @@ int main(int argc, char* argv[]) {
   int blockEntries = 4;
   int one = 1;
   int nfields = 2;
-  int zero = 0;
   int numFish = 0;
   double fishWeight = 1.23;
   int nfiles = 1;
   int ppf = size/nfiles;
   const char* filename[3] = {"water.dat.", "water.","water-dat."};
   rstream rs = makeRStream();
-     phio_fp file[3];
+  phio_fp file[3];
   const char* modes[3]={"syncio","posixio","streamio"};
   syncio_setup_write(nfiles, nfields, ppf, &(file[0]));
   posixio_setup(&(file[1]), 'w');
@@ -46,7 +45,7 @@ int main(int argc, char* argv[]) {
     phastaio_initStats();
     phio_openfile(filename[i], file[i]);
     char str [50];
-    int n;    
+    int n;
     for (int j = 0; j < 2 ; j++) {
       n = sprintf(str, " Number of times %d ", j);
       assert(n);
