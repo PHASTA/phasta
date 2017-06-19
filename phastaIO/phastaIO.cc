@@ -1698,10 +1698,6 @@ void writeheader(
 
     if ( char* p = strpbrk(buffer, "@") )
       *p = '\0';
-    printf("Printing field count %d\n", PhastaIOActiveFiles[i]->field_count);
-    printf("Printing max field %d\n", MAX_FIELDS_NUMBER );
-    printf("Printing part  count %d\n", PhastaIOActiveFiles[i]->part_count);
-    printf("Printing nppp %d\n", PhastaIOActiveFiles[i]->nppp);
     assert(PhastaIOActiveFiles[i]->field_count < MAX_FIELDS_NUMBER);
     assert(PhastaIOActiveFiles[i]->part_count < PhastaIOActiveFiles[i]->nppp);
     bzero((void*)mpi_tag,MAX_FIELDS_NAME_LENGTH);
