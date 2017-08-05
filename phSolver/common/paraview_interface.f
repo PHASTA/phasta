@@ -30,7 +30,7 @@ c...==============================================================
       if(docoprocessing .ne. 1) then
         return
       endif
-      
+
       if(nshg .ne. numnp) then
          print *, 'CoProcessing only setup for when nshg equals numnp'
          return
@@ -95,6 +95,9 @@ c  Inside addfields we check to see if we really need the field or not
         character*200 pyfilename
         integer stringlength
 
+        if(docoprocessing .ne. 1) then
+          return
+        endif
         pyfilename = "../cpscript.py"
         stringlength = 14
         docoprocessing = 1
