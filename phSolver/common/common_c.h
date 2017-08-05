@@ -20,6 +20,7 @@
 #define spebcvr FortranCInterface_GLOBAL_(spebcvr,SPEBCVR)
 #define aerfrc FortranCInterface_GLOBAL_(aerfrc,AERFRC)
 #define conpar FortranCInterface_GLOBAL_(conpar,CONPAR)
+#define coviz FortranCInterface_GLOBAL_(coviz,COVIZ)
 #define ctrlvari FortranCInterface_GLOBAL_(ctrlvari,CTRLVARI)
 #define ductvari FortranCInterface_GLOBAL_(ductvari,DUCTVARI)
 #define ctrlvar FortranCInterface_GLOBAL_(ctrlvar,CTRLVAR)
@@ -253,6 +254,10 @@ extern "C" {
     int iownnodes;
     int usingpetsc;
   } conpar ;
+
+  extern struct {
+    int docoprocessing;
+  } coviz;
 
 /*Woolwine June 4 2014 NASA Inlet*/
   extern struct{

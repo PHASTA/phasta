@@ -103,6 +103,17 @@ if(PHASTA_CHEF_ENABLED)
     PATHS ${SCOREC_PREFIX} NO_DEFAULT_PATH)
 endif(PHASTA_CHEF_ENABLED)
 
+option(PHASTA_USE_CATALYST "Build with ParaView in-situ viz" OFF)
+if(PHASTA_USE_CATALYST)
+	find_package(ParaView REQUIRED COMPONENTS vtkPVPythonCatalyst)
+	add_definitions("-DUSE_CATALYST")
+	include(${PARAVIEW_USE_FILE})
+	if(NOT PHASTA_ADAPTOR_LIB) #newish versions of ParaView
+		find_library(PHASTA_ADAPTOR_LIB NAMES PhastaAdaptor libPhastaAdaptor.a HINTS 
+			${PARAVIEW_DIR}/CoProcessing/Adaptors/PhastaAdaptor)
+	endif()
+endif(PHASTA_USE_CATALYST)
+
 OPTION(PHASTA_BUILD_PHASTAIO "Build PhastaIO" ON)
 if(PHASTA_BUILD_PHASTAIO)
 	add_subdirectory(phastaIO)

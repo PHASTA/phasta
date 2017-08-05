@@ -123,6 +123,11 @@ c
      &                  irs,    iexec,  necho,  ichem,  iRK,    nedof,
      &                  nshg,   nnz,    istop,  nflow,  nnz_tot, idtn,
      &                  ncorpsize, iownnodes, usingpetsc, numerr
+
+        integer docoprocessing
+
+        common /coviz/ docoprocessing
+
 c......................NASA Inlet Woolwine.................................
         common /nasavari/ BCdtKW, tsBase
         common /nasavar/  PresFreq, PresAmp, AlphaFreq, AlphaAmp
