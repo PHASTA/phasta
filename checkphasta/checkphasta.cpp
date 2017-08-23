@@ -1,4 +1,6 @@
+#ifndef __xlC__
 #define _GNU_SOURCE
+#endif
 #define _WITH_DPRINTF
 #include <cstdio>
 #include <cstdlib>
