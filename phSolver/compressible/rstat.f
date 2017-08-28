@@ -24,7 +24,7 @@ c
         dimension rtmp(nshg,2), nrsmax(1), ilwork(nlwork)
         real*8 resnrm(2), totres(2), eachproc(2)
         integer jtotrs(2)
-        dimension Forin(4), Forout(4)
+        dimension Forin(7), Forout(7)
 !SCATTER        dimension irecvcount(numpe), resvec(numpe)
 c        integer TMRC
 
@@ -72,16 +72,16 @@ c
 c.... output the forces and the heat flux
 c
         if (iter .eq. nitr) then
-          Forin = (/ Force(1), Force(2), Force(3), HFlux /)
+          Forin = (/ Force(1),Force(2),Force(3),Force(4),Force(5),Force(6),HFlux /)
           if (numpe > 1) then
-          call MPI_REDUCE (Forin(1), Forout(1), 4, MPI_DOUBLE_PRECISION,
+          call MPI_REDUCE (Forin(1), Forout(1), 7, MPI_DOUBLE_PRECISION,
      &                                   MPI_SUM, master, 
      &                                   MPI_COMM_WORLD,ierr)
           endif
-          Force = Forout(1:3)
-          HFlux = Forout(4)
+          Force = Forout(1:6)
+          HFlux = Forout(7)
           if (myrank .eq. master) then
-             write (iforce,1000) lstep+1, (Force(i), i=1,nsd), HFlux, 
+             write (iforce,1000) lstep+1, (Force(i), i=1,6), HFlux, 
      &                           spmasss
              call flush(iforce)
           endif
@@ -143,7 +143,7 @@ c.... return
 c
         return
 c
-1000    format(1p,i6,5e13.5)
+1000    format(1p,i6,8e13.5)
 2000    format(1p,i6,e10.3,e10.3,1x,'(',i4,')',
      &                  1x,e10.3,1x,'(',i4,')',
      &         ' [',i3,'-',i3,']',i10)
@@ -323,7 +323,7 @@ c
      &                                   MPI_SUM, master, 
      &                                   MPI_COMM_WORLD,ierr)
           endif
-          Force = Forout(1:3)
+          Force(1:3) = Forout(1:3)
           HFlux = Forout(4)
           if (myrank .eq. master) then
              write (iforce,1000) lstep+1, (Force(i), i=1,nsd), HFlux, 

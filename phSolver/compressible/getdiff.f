@@ -242,12 +242,12 @@ c   using no model; walls are resolved
 c in all of these cases, eddy viscosity is calculated normally
                savar = zero
                do n = 1, nshl
-                  savar = savar + shp(e,n) * ycl(e,n,6)
+                  savar = savar + shp(e,n) * ycl(e,n,6) ! nu tilde
                enddo
-               xki    = abs(savar)/rmu(e)
+               xki    = rho(e)*abs(savar)/rmu(e)
                xki3   = xki * xki * xki
                fv1    = xki3 / (xki3 + saCv1P3)
-               xmut(e) = fv1*abs(savar)
+               xmut(e) = rho(e)*fv1*abs(savar)
             endif
          enddo                  ! end loop over elts
 

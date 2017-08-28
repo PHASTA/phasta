@@ -645,7 +645,7 @@ c
      &               cp,              tmp,             tmp,
      &               tmp,             tmp)
 c
-        if (iconvsclr.eq.2) rho=one
+      ! WRONG         if (iconvsclr.eq.2) rho=one
 c
         call getDiffSclr(T,            cp,          rmu,
      &                   tmp,          tmp,         con, rho, Sclr)

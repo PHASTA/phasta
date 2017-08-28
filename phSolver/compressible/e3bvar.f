@@ -477,7 +477,7 @@ c
      &               cp,              alfap,              betaT,
      &               gamb,            c)
 c
-       if (iconvsclr.eq.2) rho=one
+       !WRONG      if (iconvsclr.eq.2) rho=one
 c
 c.... ---------------------->  Element Metrics  <-----------------------
 c

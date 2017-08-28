@@ -85,7 +85,8 @@ c
      &            rlm2mu(npro),                con(npro),
      &            tau1n(npro),
      &            tau2n(npro),                 tau3n(npro),
-     &            heat(npro)
+     &            heat(npro), fric1(npro), fric2(npro),
+     &            fric3(npro)
 c
         dimension lnode(27),               sgn(npro,nshl),
      &            shape(npro,nshl),        shdrv(npro,nsd,nshl)
@@ -145,6 +146,9 @@ c
           tau2n = zero
           tau3n = zero
           heat  = zero
+          fric1 = zero
+          fric2 = zero
+          fric3 = zero
 c
 c.... ------------------------->  convective  <------------------------
 c
@@ -341,8 +345,8 @@ c              flxID(2,iface) =  flxID(2,iface) - WdetJb(iel) * un(iel)
      &                   * WdetJb(iel) 
               flxID(5,iface) = flxID(5,iface)
      &                   - ( tau3n(iel) - bnorm(iel,3)*pres(iel))
-     &                   * WdetJb(iel) 
-
+     &                   * WdetJb(iel)
+     
            endif
         enddo
 
@@ -353,7 +357,11 @@ c
 c
 c.... compute the forces on the body
 c
-          where (.not.btest(iBCB(:,1),0) )
+c          where (.not.btest(iBCB(:,1),0) )
+          where ((nsrflist(iBCB(:,2)).eq.1) )
+            fric1 = - tau1n * WdetJb
+            fric2 = - tau2n * WdetJb
+            fric3 = - tau3n * WdetJb
             tau1n = ( pres * bnorm(:,1) - tau1n ) * WdetJb
             tau2n = ( pres * bnorm(:,2) - tau2n ) * WdetJb
             tau3n = ( pres * bnorm(:,3) - tau3n ) * WdetJb
@@ -368,6 +376,9 @@ c
           Force(1) = Force(1) + sum(tau1n)
           Force(2) = Force(2) + sum(tau2n)
           Force(3) = Force(3) + sum(tau3n)
+          Force(4) = Force(4) + sum(fric1)
+          Force(5) = Force(5) + sum(fric2)
+          Force(6) = Force(6) + sum(fric3)
           HFlux    = HFlux    + sum(heat)
 c
         endif
@@ -586,7 +597,8 @@ C
            
 c             F = F + rmu*Sclrn  !!!! CHECK THIS 
 
-          F = F + saSigmaInv*rho*((rmu/rho)+Sclr)*Sclrn!confirm the modificationc                                                      in getdiffsclr
+          F = F + saSigmaInv*((rmu/rho)+Sclr)*Sclrn!confirm the modificationc                                                      in getdiffsclr
+          if(iconvsclr.eq.1) F=rho*F
 
 c.....this modification of viscosity goes in getdiffsclr
 

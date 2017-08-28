@@ -432,6 +432,9 @@ c
                      Force(1) = zero
                      Force(2) = zero
                      Force(3) = zero
+                     Force(4) = zero
+                     Force(5) = zero
+                     Force(6) = zero
                      HFlux    = zero
 c     
 c.... form the element data and solve the matrix problem
@@ -889,7 +892,7 @@ c
       call restar ('out ',  yold, acold)  
 
       !Write the distance to wall field in each restart
-      if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
+      if((istep==nstp) .and. (irans .ne. 0 )) then !d2wall is allocated
                  call write_field(myrank,'a'//char(0),'dwal'//char(0),4,
      &                            d2wall,'d'//char(0), nshg, 1, lstep)
       endif 
