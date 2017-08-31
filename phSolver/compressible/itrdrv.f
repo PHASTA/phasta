@@ -91,6 +91,7 @@ c
         integer iTurbWall(nshg) 
         real*8 yInlet(3), yInletg(3)
         integer imapped, imapInlet(nshg)  !for now, used for setting Blower conditions
+        integer Isrfid(nshg)
 !        real*8 M_th, M_tc, M_tt
 !        logical  exMc
 !        real*8 vBC, vBCg
@@ -98,6 +99,7 @@ c
 
        iprec=0 !PETSc - Disable PHASTA's BDiag. TODO: Preprocssor Switch
 
+       call findIsrfid(Isrfid)
        call findTurbWall(iTurbWall)
 
 !-------
