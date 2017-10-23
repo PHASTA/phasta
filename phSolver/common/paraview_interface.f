@@ -72,10 +72,13 @@ c  Inside addfields we check to see if we really need the field or not
 !         ycontainer(i,4) = vorticity(i,5) !Replace pressure by Q
 !      enddo
 
-      !call addfields(nshg, ndof, Y, compressibleflow)
+      ! Official API bundled with ParaView
+      call addfields(nshg, ndof, Y, compressibleflow)
       !call addfields(nshg, ndof, ycontainer, compressibleflow)
-      call addfields(nshg, ndof, Y, compressibleflow,
-     &               vorticity,dwal)
+     
+      !mrasquin's version
+!      call addfields(nshg, ndof, Y, compressibleflow,
+!     &               vorticity,dwal)
 
       if(myrank.eq.0)  then
          tcorecp5 = TMRC() 
