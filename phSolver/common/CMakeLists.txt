@@ -1,5 +1,5 @@
 # collect all the source files
-FILE(GLOB SRC_FILES *.cc *.f *.f90 *.c *.F90)
+FILE(GLOB SRC_FILES *.cc *.f *.f90 *.c *.F90 *.cpp)
 set(PHASTA_COMMON_INCLUDE_DIRS)
 set(PHASTA_COMMON_LIBS)
 if(PHASTA_USE_MPI)

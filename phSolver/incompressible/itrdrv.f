@@ -541,8 +541,9 @@ c
 
 
 #ifdef USE_CATALYST
+c     TODO: last parameter should be surfid map
             call phastacoprocessor(lstep, X, Y, 0, icomputevort, 
-     &                            vorticity, d2wall)
+     &                            vorticity, d2wall, 0)
 #endif
             
 c

@@ -776,8 +776,8 @@ c.. writing ybar field if requested in each restart file
               endif   
              endif
 #ifdef USE_CATALYST
-         ! step, X, Y, compressible, vorticity flag, vorticity, d2wall
-         call phastacoprocessor(lstep, X, Y, 1, 0, 0, 0)   
+         ! step, X, Y, compressible, vorticity flag, vorticity, d2wall, srfid
+         call phastacoprocessor(lstep, X, Y, 1, 0, 0, 0, Isrfid)   
 #endif
 
  2000    continue  !end of NSTEP loop

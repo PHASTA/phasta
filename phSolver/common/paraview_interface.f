@@ -19,13 +19,14 @@ c... It has no output and should not change any Phasta data.
 c...==============================================================
 
       subroutine phastacoprocessor(itimestep, X, Y, compressibleflow,
-     &                      computevort, VORTICITY, dwal )
+     &                      computevort, VORTICITY, dwal, surfid )
       use pointer_data
       include "common.h"
       integer iblk, nenl, npro, j, needflag, i
       integer compressibleflow, itimestep, computevort
       dimension x(numnp,nsd), y(nshg,ndof), vorticity(nshg, 5)
       dimension dwal(nshg)
+      dimension surfid(nshg)
 !      dimension ycontainer(nshg,ndof)
       if(docoprocessing .ne. 1) then
         return
@@ -74,6 +75,8 @@ c  Inside addfields we check to see if we really need the field or not
 
       ! Official API bundled with ParaView
       call addfields(nshg, ndof, Y, compressibleflow)
+      ! supplemental fields
+      call addsurfids(surfid)
       !call addfields(nshg, ndof, ycontainer, compressibleflow)
      
       !mrasquin's version
