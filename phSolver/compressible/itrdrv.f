@@ -99,7 +99,6 @@ c
 
        iprec=0 !PETSc - Disable PHASTA's BDiag. TODO: Preprocssor Switch
        call findIsrfid(Isrfid)
-       write(*,*) Isrfid
        call findTurbWall(iTurbWall)
 
 !-------
