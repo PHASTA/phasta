@@ -13,7 +13,7 @@ c..............................................................................
           call sfID2np(isfID,nnodesFound,globNodemap)  
           if(nnodesFound .gt. 0)then
            do i=1,nnodesFound
-             nn=blobNodemap(i)
+             nn=globNodemap(i)
              if(isrfid(nn).eq.-1) then
                  isrfid(nn)=isfID
              elseif(isrfid(nn).ne.isfID) then ! different srfid on shared model edge or vertex should get set to a value we know to ignore.  This allowsit to be KEPT if same 

@@ -225,6 +225,11 @@ c.....open the necessary files to gather time series
 c
       lstep0 = lstep+1
       nsteprcr = nstep(1)+lstep
+
+#ifdef USE_CATALYST
+      call catalystinit()
+#endif
+
 c
 c.... loop through the time sequences
 c
@@ -533,6 +538,13 @@ c
 c.... update and the aerodynamic forces
 c
             call forces ( yold,  ilwork )
+
+
+#ifdef USE_CATALYST
+c     TODO: last parameter should be surfid map
+            call phastacoprocessor(lstep, X, Y, 0, icomputevort, 
+     &                            vorticity, d2wall, 0)
+#endif
             
 c
 c .. write out the instantaneous solution
@@ -762,6 +774,10 @@ c
           if(iRANS.lt.0) then
             deallocate(d2wall)
           endif
+
+#ifdef USE_CATALYST
+          call coprocessorfinalize()
+#endif
 
          if (numpe > 1) call MPI_BARRIER(MPI_COMM_WORLD, ierr)
          if(myrank.eq.0)  then

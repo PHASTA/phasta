@@ -92,6 +92,11 @@ endif(PHASTA_BUILD_SHAPEFUNCTION)
 if(PHASTA_BUILD_PHSHAPE)
   set(PHASTAIC_LIBS ${PHASTAIC_LIBS} phshape)
 endif(PHASTA_BUILD_PHSHAPE)
+
+if(PHASTA_USE_CATALYST)
+  set(PHASTAIC_LIBS ${PHASTAIC_LIBS} ${PHASTA_ADAPTOR_LIB} vtkPVPythonCatalyst)
+endif(PHASTA_USE_CATALYST)
+
 target_link_libraries(phastaIC.exe ${PHASTAIC_LIBS})
 if(PHASTA_USE_PETSC)
 	#target_link_libraries(phastaC.exe ${PETSC_LIB}/libpetsc.a ${PETSC_PACKAGE_LIBS})
@@ -101,6 +106,8 @@ configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/phastaICConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/phastaICConfig.cmake"
 )
+
+
 
 if(PHASTA_TESTING)
   add_subdirectory(test)

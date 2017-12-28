@@ -1,5 +1,5 @@
 # collect all the source files
-FILE(GLOB SRC_FILES *.cc *.f *.f90 *.c *.F90)
+FILE(GLOB SRC_FILES *.cc *.f *.f90 *.c *.F90 *.cpp)
 set(PHASTA_COMMON_INCLUDE_DIRS)
 set(PHASTA_COMMON_LIBS)
 if(PHASTA_USE_MPI)
@@ -14,6 +14,13 @@ if(PHASTA_USE_MPI)
     ${MPI_Fortran_LIBRARIES}
   )
 endif(PHASTA_USE_MPI)
+
+if(PHASTA_USE_CATALYST)
+  set(PHASTA_COMMON_LIBS ${PHASTA_COMMON_LIBS}
+    ${PHASTA_ADAPTOR_LIB}
+    vtkPVPythonCatalyst
+    )
+endif(PHASTA_USE_CATALYST)
 
 if(NOT PHASTA_CHEF_ENABLED)
   set(SRC_FILES ${SRC_FILES} phstreamEmpty/phstreamEmpty.cc)

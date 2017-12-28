@@ -98,8 +98,8 @@ c
         real*8 vortmax, vortmaxg
 
        iprec=0 !PETSc - Disable PHASTA's BDiag. TODO: Preprocssor Switch
-
        call findIsrfid(Isrfid)
+       write(*,*) Isrfid
        call findTurbWall(iTurbWall)
 
 !-------
@@ -139,6 +139,9 @@ c
           open (unit=ihist,  file=fhist,  status='unknown')
           open (unit=iforce, file=fforce, status='unknown')
         endif
+#ifdef USE_CATALYST
+        call catalystinit()
+#endif
 c
 c
 c.... initialize
@@ -771,7 +774,11 @@ c.. writing ybar field if requested in each restart file
                 call checkpoint (nstp,yold, acold, ybar, rerr,  velbar, 
      &                       x, iper, ilwork, shp, shgl, iBC )
               endif   
-             endif   
+             endif
+#ifdef USE_CATALYST
+         ! step, X, Y, compressible, vorticity flag, vorticity, d2wall, srfid
+         call phastacoprocessor(lstep, X, Y, 1, 0, 0, 0, Isrfid)   
+#endif
 
  2000    continue  !end of NSTEP loop
  2001    continue  

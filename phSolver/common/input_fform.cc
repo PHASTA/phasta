@@ -279,6 +279,7 @@ int input_fform(phSolver::Input& inp)
 
     // OUTPUT CONTROL KEY WORDS.
 
+    coviz.docoprocessing = inp.GetValue("Enable Coprocessing");
     conpar.necho = inp.GetValue("Verbosity Level");
     outpar.ntout = inp.GetValue("Number of Timesteps between Restarts");
     outpar.nsynciofiles = inp.GetValue("Number of SyncIO Files");
