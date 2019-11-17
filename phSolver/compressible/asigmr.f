@@ -136,6 +136,17 @@ c----------------------------------------------------------------------
 c
         use turbSA
         include "common.h"
+      include 'ceedf.h'
+
+      integer ceed,err,i,j
+      integer erestrictx,erestrictq,erestrictxi,erestrictqdi
+      integer bx,bu
+      integer qf_setup,qf_ifunction
+      integer op_setup,op_mass
+      integer qdata,x,u,v
+      integer nelem,p,q,qdatasize,qpownsd
+      external setup,ifunction_advection
+ 
 c
         dimension y(nshg,ndof),             
      &            ac(nshg,ndof),
@@ -155,6 +166,8 @@ c
 c        
         dimension EGmasst(npro,nshape, nshape)
         real*8    elDwl(npro)
+        if(0.eq.1) call driveceed(y,ac, x,ien,rest) 
+! export PKG_CONFIG_PATH=/projects/tools/libCEED/libCEED2/lib/pkgconfig/:$PKG_CONFIG_PAT
 c.... create the matrix of mode signs for the hierarchic basis 
 c     functions. 
 c

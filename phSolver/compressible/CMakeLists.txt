@@ -39,6 +39,11 @@ if(PHASTA_USE_PETSC)
 	#target_link_libraries(phastaC.exe ${PETSC_LIB}/libpetsc.a ${PETSC_PACKAGE_LIBS})
 	target_link_libraries(phastaC.exe ${PETSC_LIBRARIES})
 endif()
+
+if(PHASTA_USE_CEED)
+        target_link_libraries(phastaC.exe ${CEED_LIBRARIES})
+endif(PHASTA_USE_CEED)
+
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/phastaCConfig.cmake.in"
   "${CMAKE_BINARY_DIR}/phastaCConfig.cmake"
