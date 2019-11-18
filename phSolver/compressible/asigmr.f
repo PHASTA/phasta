@@ -169,7 +169,7 @@ c
 //Match PHASTA        y(:,4)=101300
 //        y(:,5)=293
         if(1.eq.1) call driveceed(y,ac, x,ien,restlc) 
-! export PKG_CONFIG_PATH=/projects/tools/libCEED/libCEED2/lib/pkgconfig/:$PKG_CONFIG_PAT
+! export PKG_CONFIG_PATH=/projects/tools/libCEED/libCEED2/lib/pkgconfig/:$PKG_CONFIG_PATH
 c.... create the matrix of mode signs for the hierarchic basis 
 c     functions. 
 c
