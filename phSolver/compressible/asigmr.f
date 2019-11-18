@@ -155,7 +155,7 @@ c
      &            ien(npro,nshl),
      &            mater(npro),            rest(nshg),
      &            rmest(nshg),            Diag(nshg),
-     &            qrest(nshg)
+     &            qrest(nshg),            restlc(nshg)
 
 c
         dimension ycl(npro,nshl,ndof),       
@@ -166,7 +166,9 @@ c
 c        
         dimension EGmasst(npro,nshape, nshape)
         real*8    elDwl(npro)
-        if(0.eq.1) call driveceed(y,ac, x,ien,rest) 
+//Match PHASTA        y(:,4)=101300
+//        y(:,5)=293
+        if(1.eq.1) call driveceed(y,ac, x,ien,restlc) 
 ! export PKG_CONFIG_PATH=/projects/tools/libCEED/libCEED2/lib/pkgconfig/:$PKG_CONFIG_PAT
 c.... create the matrix of mode signs for the hierarchic basis 
 c     functions. 

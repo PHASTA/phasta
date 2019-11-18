@@ -128,8 +128,8 @@ int    driveceed(double* y,   double* ac,
 
 
 //  ! [Ceed Init]
-//  const char* intStr="/cpu/self/ref/memcheck";
-  const char* intStr="/cpu/self/ref/serial";
+  const char* intStr="/cpu/self/ref/memcheck";
+//  const char* intStr="/cpu/self/ref/serial";
   CeedInit(intStr, &ceed);
 //! [Ceed Init]
   for (CeedInt i=0; i<nelem; i++) {
@@ -195,7 +195,7 @@ int    driveceed(double* y,   double* ac,
     qfp[i+  nshg]=qfp[i]*y[i+0*nshg]; // density*u1
     qfp[i+2*nshg]=qfp[i]*y[i+1*nshg]; // density*u2
     qfp[i+3*nshg]=qfp[i]*y[i+2*nshg]; // density*u3
-    qfp[i+4*nshg]=     y[i+5*nshg]; // PHASTA scalar
+    qfp[i+4*nshg]=qfp[i]*y[i+5*nshg]; // PHASTA scalar
     qdotfp[i+4*nshg]= ac[i+5*nshg]; // PHASTA scalar
   }
   CeedVectorSetArray(U, CEED_MEM_HOST, CEED_USE_POINTER, qfp);
@@ -209,7 +209,7 @@ int    driveceed(double* y,   double* ac,
     CeedOperatorCreate(ceed, qf_ifunction, NULL, NULL, &op_ifunction);
     CeedOperatorSetField(op_ifunction, "q", restrictq, CEED_NOTRANSPOSE, //K Active input is current solution vector Q set on OperatorApply line q=B_q_i G_q Q  
                          bq, CEED_VECTOR_ACTIVE);
-    CeedOperatorSetField(op_ifunction, "dq", restrictq, CEED_TRANSPOSE, //K Active input is current solution vector Q set on OperatorApply line q=B_q_{gi} G_q Q  
+    CeedOperatorSetField(op_ifunction, "dq", restrictq, CEED_NOTRANSPOSE, //K Active input is current solution vector Q set on OperatorApply line q=B_q_{gi} G_q Q  
                          bq, CEED_VECTOR_ACTIVE);
     CeedOperatorSetField(op_ifunction, "qdot", restrictq, CEED_NOTRANSPOSE, //K not an active vector but the is qdot (like ac in PHASTA)
                          bq, Udot);
@@ -220,7 +220,7 @@ int    driveceed(double* y,   double* ac,
     CeedOperatorSetField(op_ifunction, "dv", restrictq, CEED_NOTRANSPOSE, //K Output
                          bq, CEED_VECTOR_ACTIVE);
   }
-  double CtauS=0.5;
+  double CtauS=1.0;
   int strong_form=0;
   int stab=2;
   struct Advection2dContext_ ctxAdvection2d = { //K struct that passes data needed at quadrature points for both advection

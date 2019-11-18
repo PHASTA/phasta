@@ -341,6 +341,8 @@ CEED_QFUNCTION(IFunction_Advection)(void *ctx, CeedInt Q,
     }
     CeedScalar strongConv = E*div_u + u_dot_grad_E;
     CeedScalar strongResid = qdot[4][i] + strongConv;
+// MatchPHASTA    CeedScalar strongResid = qdot[4][i] + u_dot_grad_E; //HACK out E*div_u+strongConv;
+
 
     v[4][i] = wJ * qdot[4][i]; // transient part (ALWAYS)
 
