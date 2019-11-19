@@ -220,7 +220,7 @@ c.... -------------------------->  heat flux <-------------------------
 c
 c.... floating heat flux
 c
-        heat =   con * ( bnorm(:,1) * g1yi(:,5) +
+        heat =  -con * ( bnorm(:,1) * g1yi(:,5) +
      &                   bnorm(:,2) * g2yi(:,5) +
      &                   bnorm(:,3) * g3yi(:,5) ) 
 
