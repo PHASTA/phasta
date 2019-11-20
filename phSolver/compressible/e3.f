@@ -477,7 +477,7 @@ c.... calculate the diffusion contribution
 c
         ttim(15) = ttim(15) - tmr()
         if (Navier .eq. 1) then
-// Match PHASTA         if (Navier .eq. 101) then
+! Match PHASTA         if (Navier .eq. 101) then
         call e3viscSclr (g1yti,        g2yti,         g3yti,
      &                   rmu,          Sclr,          rho,
      &                   rti,          rmti,          stifft )

@@ -6,6 +6,7 @@
 #include "common_c.h"
 #include "lccommon.h"
 #include "advection.h"
+#include "densitycurrent_primitive.h"
 #include <FCMangle.h>
 #define driveceed  FortranCInterface_GLOBAL_(driveceed ,DRIVECEED)
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -19,34 +20,8 @@ void get_max_time_diff(uint64_t* first, uint64_t* last, uint64_t* c_first, uint6
    
 int    driveceed(double* y,   double* ac,  
      	double* x,         int* ien,   
-     	double* rest)     
+     	double* res,      int lcmode)     
 {
-//
-//  Can test by replacing passed data above by data written from PHASTA into the file data4libCEED.dat 
-// written as follows (fortran)
-//      open(unit=777, file='data4libCEED.dat',status='unknown')
-//      write(777,*) npro,nen 
-//      do i =1,npro
-//        write(777,*) (ien(i,j), j=1,nen)
-//      enddo
-//      write(777,*) numnp,nsd
-//      do i=1,numnp
-//        write(777,*) (point2x(i,j),j=1,nsd)
-//      enddo
-//      write(777,*) numnp,ndof
-//      do i=1,numnp
-//         write(777,*) (y(i,j),j=1,ndof)
-//      enddo
-//      write(777,*) numnp,ndof
-//      do i=1,numnp
-//         write(777,*) (ac(i,j),j=1,ndof)
-//      enddo
-//      close(777)
-//   note, rest is output data thus not needed
-// numbers comming from common.h (PHASTA's not libCEEDs)   
-// nshg=numnp
-// nshl=nen (for this case)
-
 
 // 
 // ----------------------------------------------------------------------
@@ -61,7 +36,7 @@ int    driveceed(double* y,   double* ac,
 //  ien    (npro,nshl)           : connectivity
 // 
 // output:
-//  rest    (nshg)           : residual
+//  res    (lcmode*nshg)           : residual
 // 
 //  
 // Jansen 2019
@@ -70,56 +45,39 @@ int    driveceed(double* y,   double* ac,
 
 
 // Get variables from common_c.h
-      int tmp32,nen,numnp,nshg, nflow, nsd, iownnodes;
+      int npro,tmp32,nen,numnp,nshg, nflow, nsd ;
       nshg  = conpar.nshg; 
       nflow = conpar.nflow; 
       numnp = conpar.numnp; 
       nen = conpar.nen; 
       nsd = NSD; 
-      int node, element, var, eqn;
-      double valtoinsert;
-      int nenl, iel, lelCat, lcsyst, iorder;
-      int mattyp, ndofl, nsymdl, npro, ngauss, nppro;
       npro = propar.npro; 
-      double qfp[5*numnp]; // libCeed will get this array with scalar thrown into the temperature slot since advection works that way later we will need to make a real scalar equation. 
-      double qdotfp[5*numnp];
-      double q0[5*numnp]; // just for debugging using ics
-      double x0[3*numnp]; // just for debugging using ics
-// DEBUG
-      int i,j,k,l,m;
-
-      // FIXME: PetscScalar
-      double  real_rtol, real_abstol, real_dtol;
-// /DEBUG
-//
 
   Ceed ceed;
-  CeedElemRestriction restrictx, restrictq, restrictxi, restrictqdi,restrictxFake, restrictxcoord;
+  CeedElemRestriction restrictx, restrictq, restrictxi, restrictqdi;
   CeedBasis basisxc, bx, bq; 
-  CeedQFunction qf_setup, qf_ifunction, qf_ics;
-  CeedOperator op_setup, op_ifunction,  op_ics;
-  CeedVector qdata, X, U, Udot, V, Xfake;
-  CeedVector xceed, q0ceed, qceed, qdotceed, gceed;
+  CeedQFunction qf_setup, qf_ifunction;
+  CeedOperator op_setup, op_ifunction;
+  CeedVector qdata, X, U, Udot, V;
   const CeedScalar *hv;
-  const CeedScalar *hvt;
-  CeedInt nelem = npro, P = 2, Q = 2, qpownsd=Q*Q*Q;
+  CeedInt P = 2, Q = 2, qpownsd=Q*Q*Q;
   CeedInt nshl=P*P*P, qdatasize=10;
   CeedInt indx[npro*nen], indq[npro*nshl];
-  CeedScalar xref[24];
   CeedScalar theta0     = 300.;     // K
   CeedScalar thetaC     = -15.;     // K
   CeedScalar P0         = 1.e5;     // Pa
   CeedScalar N          = 0.01;     // 1/s
-  CeedScalar cv         = 717.;     // J/(kg K)
-  CeedScalar cp         = 1004.;    // J/(kg K)
+  CeedScalar Rd=mmatpar.Rgas; //  Rd=288.29438; //PHASTA VALUE cp-cv;
+  CeedScalar gamma=mmatpar.gamma;
+  CeedScalar cv         = Rd/(gamma-1.0);
+  CeedScalar cp         = cv*gamma;    // J/(kg K)
   CeedScalar g          = 9.81;     // m/s^2
   CeedScalar lx        = 8000.;    // m
   CeedScalar ly        = 8000.;    // m
   CeedScalar lz        = 4000.;    // m
   CeedScalar rc         = 1000.;    // m (Radius of bubble)
-  CeedScalar Rd;
   CeedInt periodicity[3];
-  Rd=288.29438; //PHASTA VALUE cp-cv;
+
 
   CeedScalar ctxSetup[] = {theta0, thetaC, P0, N, cv, cp, Rd, g, rc,
                            lx, ly, lz,
@@ -132,11 +90,11 @@ int    driveceed(double* y,   double* ac,
 //  const char* intStr="/cpu/self/ref/serial";
   CeedInit(intStr, &ceed);
 //! [Ceed Init]
-  for (CeedInt i=0; i<nelem; i++) {
+  for (CeedInt i=0; i<npro; i++) {
     for (CeedInt j=0; j<nen; j++) 
-      indx[j+i*nen] = ien[i+j*nelem]-1; // transpose and shift to C-based node numbering
+      indx[j+i*nen] = ien[i+j*npro]-1; // transpose and shift to C-based node numbering
   }
-  for (CeedInt i=0; i<nelem; i++) {
+  for (CeedInt i=0; i<npro; i++) {
       tmp32=indx[3+i*nen];
       indx[3+i*nen]=indx[2+i*nen];
       indx[2+i*nen]=tmp32;
@@ -180,7 +138,11 @@ int    driveceed(double* y,   double* ac,
   CeedOperatorApply(op_setup, X, qdata, CEED_REQUEST_IMMEDIATE); //K Apply setup for the selected case.  Creates qdata: WdetJ and dxidx at qpts
 
 
-  CeedQFunctionCreateInterior(ceed, 1, IFunction_Advection, IFunction_Advection_loc, &qf_ifunction);
+  if(lcmode==1) {
+    CeedQFunctionCreateInterior(ceed, 1, IFunction_Advection, IFunction_Advection_loc, &qf_ifunction);
+  } else {
+    CeedQFunctionCreateInterior(ceed, 1, IFunction_DCPrim, IFunction_DCPrim_loc, &qf_ifunction);
+  }
   CeedQFunctionAddInput(qf_ifunction, "q", 5, CEED_EVAL_INTERP);
   CeedQFunctionAddInput(qf_ifunction, "dq", 5*nsd, CEED_EVAL_GRAD);
   CeedQFunctionAddInput(qf_ifunction, "qdot", 5, CEED_EVAL_INTERP);
@@ -190,18 +152,30 @@ int    driveceed(double* y,   double* ac,
 
 
   CeedVectorCreate(ceed, 5*nshg, &U);
-  for (CeedInt i=0; i< nshg; i++) {
-    qfp[i]=y[i+3*nshg]/Rd/y[i+4*nshg]; // density
-    qfp[i+  nshg]=qfp[i]*y[i+0*nshg]; // density*u1
-    qfp[i+2*nshg]=qfp[i]*y[i+1*nshg]; // density*u2
-    qfp[i+3*nshg]=qfp[i]*y[i+2*nshg]; // density*u3
-    qfp[i+4*nshg]=qfp[i]*y[i+5*nshg]; // PHASTA scalar
-    qdotfp[i+4*nshg]= ac[i+5*nshg]; // PHASTA scalar
-  }
-  CeedVectorSetArray(U, CEED_MEM_HOST, CEED_USE_POINTER, qfp);
-
   CeedVectorCreate(ceed, 5*nshg, &Udot);
-  CeedVectorSetArray(Udot, CEED_MEM_HOST, CEED_USE_POINTER, qdotfp);
+    double qfp[5*numnp]; // libCeed will get this array with scalar thrown into the temperature slot since advection works that way later we will need to make a real scalar equation. 
+  if(lcmode==1) {
+    double qdotfp[5*numnp];
+    for (CeedInt i=0; i< nshg; i++) {
+      qfp[i]=y[i+3*nshg]/Rd/y[i+4*nshg]; // density
+      qfp[i+  nshg]=qfp[i]*y[i+0*nshg]; // density*u1
+      qfp[i+2*nshg]=qfp[i]*y[i+1*nshg]; // density*u2
+      qfp[i+3*nshg]=qfp[i]*y[i+2*nshg]; // density*u3
+      qfp[i+4*nshg]=qfp[i]*y[i+5*nshg];  // shift in scalar if lcmode=1 
+      qdotfp[i+4*nshg]= ac[i+5*nshg]; // PHASTA scalar
+    }
+    CeedVectorSetArray(Udot, CEED_MEM_HOST, CEED_USE_POINTER, qdotfp);
+  } else {
+    for (CeedInt i=0; i< nshg; i++) {
+      qfp[i]=y[i+3*nshg]; // pressure
+      qfp[i+1*nshg]=y[i+0*nshg]; // u1
+      qfp[i+2*nshg]=y[i+1*nshg]; // u2
+      qfp[i+3*nshg]=y[i+2*nshg]; // u3
+      qfp[i+4*nshg]=y[i+4*nshg]; // T 
+    }
+    CeedVectorSetArray(Udot, CEED_MEM_HOST, CEED_USE_POINTER, ac);
+  } 
+  CeedVectorSetArray(U, CEED_MEM_HOST, CEED_USE_POINTER, qfp);
   CeedVectorCreate(ceed, 5*nshg, &V);
 
 
@@ -223,26 +197,52 @@ int    driveceed(double* y,   double* ac,
   double CtauS=1.0;
   int strong_form=0;
   int stab=2;
+  double mu= matdat.datmat[0][1][0];
+  double lambda= -2.0/3.0;
+  double dt=1.0/timdat.Dtgl;
+  double k=mu*cp/0.72;
   struct Advection2dContext_ ctxAdvection2d = { //K struct that passes data needed at quadrature points for both advection
-    .CtauS = CtauS,
-    .strong_form = strong_form,
-    .stabilization = stab,
+     .CtauS = CtauS,
+     .strong_form = strong_form,
+     .stabilization = stab
   };
-  CeedQFunctionSetContext(qf_ifunction, &ctxAdvection2d, sizeof ctxAdvection2d); //K This function associates the struct with qf_rhs and in next line qf_ifunction
+/*
+  struct DCPrimContext_ ctxDCPrim = { 
+     .lambda = lambda,
+     .mu     = mu,
+     .k      = k,
+     .cv     = cv,
+     .cp     = cp,
+     .g      = g,
+     .Rd     = Rd,
+     .dt     = dt,
+     .CtauS = CtauS,
+     .strong_form = strong_form,
+     .stabilization = stab
+  };
+*/
+  CeedScalar ctxDCPrim[9]={lambda, mu, k, cv, cp, g, Rd, dt, stab};
+
+  if(lcmode==1) {
+    CeedQFunctionSetContext(qf_ifunction, &ctxAdvection2d, sizeof ctxAdvection2d); //K This function associates the struct with qf_rhs and in next line qf_ifunction
+  } else {
+    CeedQFunctionSetContext(qf_ifunction, &ctxDCPrim, sizeof ctxDCPrim); //K This function associates the struct with qf_rhs and in next line qf_ifunction
+  }
 // Calculate qdata 
   // Apply Setup Ceed Operators
 
   CeedOperatorApply(op_ifunction, U, V, CEED_REQUEST_IMMEDIATE); //K Apply setup for the selected case.  Creates qdata: WdetJ and dxidx at qpts
 
   CeedVectorGetArrayRead(V, CEED_MEM_HOST, &hv);
-  const CeedInt shft=4*nshg;
-  for (CeedInt i=0; i<nshg; i++)
-    rest[i]=hv[i+shft];
+  CeedInt shft=4*nshg;
+  if (lcmode==5) shft=0; // we only needed to shift if we solved a scalar hiding in the 5th equation like advection.h does 
+  for (CeedInt i=0; i<lcmode*nshg; i++)
+    res[i]=hv[i+shft];
   CeedVectorRestoreArrayRead(V, &hv);
 
 // pausing here to line 897 of copying from nsplex.c
 
-//  I know I  have not finished the cleanup below
+//  I am not sure if I finished the cleanup below
   CeedQFunctionDestroy(&qf_setup);
   CeedQFunctionDestroy(&qf_ifunction);
   CeedOperatorDestroy(&op_setup);
