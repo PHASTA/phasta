@@ -86,8 +86,8 @@ int    driveceed(double* y,   double* ac,
 
 
 //  ! [Ceed Init]
-  const char* intStr="/cpu/self/ref/memcheck";
-//  const char* intStr="/cpu/self/ref/serial";
+//  const char* intStr="/cpu/self/ref/memcheck";
+  const char* intStr="/cpu/self/ref/serial";
   CeedInit(intStr, &ceed);
 //! [Ceed Init]
   for (CeedInt i=0; i<npro; i++) {
