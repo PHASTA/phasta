@@ -198,7 +198,8 @@ c
 c.... calculate the least-squares contribution 
 c
         ttim(16) = ttim(16) - secs(0.0)
-        call e3LS   (A1,              A2,            A3,
+        if(ivart.gt.1) 
+     &  call e3LS   (A1,              A2,            A3,
      &               rho,             rmu,           cp,
      &               cv,              con,           T,  
      &               u1,              u2,            u3,              

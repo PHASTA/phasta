@@ -71,7 +71,7 @@ int    driveceed(double* y,   double* ac,
   CeedScalar gamma=mmatpar.gamma;
   CeedScalar cv         = Rd/(gamma-1.0);
   CeedScalar cp         = cv*gamma;    // J/(kg K)
-  CeedScalar g          = 9.81;     // m/s^2
+  CeedScalar g          =0.0; /// 9.81;     // m/s^2
   CeedScalar lx        = 8000.;    // m
   CeedScalar ly        = 8000.;    // m
   CeedScalar lz        = 4000.;    // m
@@ -196,7 +196,8 @@ int    driveceed(double* y,   double* ac,
   }
   double CtauS=1.0;
   int strong_form=0;
-  int stab=2;
+  int stabfromFile=solpar.ivart;
+  int stab=(stabfromFile==2) ? 2:0;
   double mu= matdat.datmat[0][1][0];
   double lambda= -2.0/3.0;
   double dt=1.0/timdat.Dtgl;

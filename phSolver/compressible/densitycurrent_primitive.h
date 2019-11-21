@@ -351,7 +351,7 @@ CEED_QFUNCTION(IFunction_DCPrim)(void *ctx, CeedInt Q,
       dFconvdq[j][0][0] = u[j]/(Rd*T);
       dFconvdq[j][0][4] -= rho*u[j]/T; 
       dFconvdq[j][4][0] = u[j] * (cv/Rd + ke/(Rd*T) + 1);
-      dFconvdq[j][4][4] = dFconvdq[j][0][4] * ke/T;
+      dFconvdq[j][4][4] = dFconvdq[j][0][4] * ke;
       for (int k=0; k<3; k++){
         dFconvdq[j][k+1][0] = u[j]*u[k]/(Rd*T) + (j==k?1:0);
         dFconvdq[j][k+1][4] = u[k] * dFconvdq[j][0][4];
@@ -361,11 +361,11 @@ CEED_QFUNCTION(IFunction_DCPrim)(void *ctx, CeedInt Q,
         dFconvdq[j][k+1][j+1] = rho*u[k] * (j==k?2:1);
         }}
     // dFconvdqT = dFconvdq^T 
-    CeedScalar dFconvdqT[3][5][5];
-    for (int j=0; j<3; j++)
-      for (int k=0; k<5; k++)
-        for (int l=0; l<5; l++)
-          dFconvdqT[j][k][l] = dFconvdq[j][l][k];   
+//    CeedScalar dFconvdqT[3][5][5];
+//    for (int j=0; j<3; j++)
+//      for (int k=0; k<5; k++)
+//        for (int l=0; l<5; l++)
+//          dFconvdqT[j][k][l] = dFconvdq[j][l][k];   
     // dqdx collects drhodx, dUdx and dEdx in one vector
     CeedScalar dqdx[5][3];
     for (int j=0; j<3; j++) {
@@ -375,7 +375,7 @@ CEED_QFUNCTION(IFunction_DCPrim)(void *ctx, CeedInt Q,
         dqdx[k+1][j] = dudx[k][j];
     }
     // StrongConv = dF/dq * dq/dx    (Strong convection)
-    CeedScalar StrongConv[5];
+    CeedScalar StrongConv[5]={0};
     for (int j=0; j<3; j++)
       for (int k=0; k<5; k++)
         for (int l=0; l<5; l++)
@@ -422,7 +422,7 @@ CEED_QFUNCTION(IFunction_DCPrim)(void *ctx, CeedInt Q,
                              Fu[Fuviscidx[j][2]]*dXdx[k][2]);
     // -- Total Energy Density
     // ---- (E + P) u
-    const CeedScalar E = rho*(cv + ke);
+    const CeedScalar E = rho*(cv*T + ke);
     for (int j=0; j<3; j++)
       dv[j][4][i]  -= wJ * (E + P) * (u[0]*dXdx[j][0] + u[1]*dXdx[j][1] +
                                      u[2]*dXdx[j][2]);
@@ -462,7 +462,7 @@ CEED_QFUNCTION(IFunction_DCPrim)(void *ctx, CeedInt Q,
       for (int j=0; j<3; j++)
         for (int k=0; k<5; k++)
           for (int l=0; l<5; l++)
-            stab[k][j] = dFconvdqT[j][k][l] * TauSU[l] * StrongConv[l];
+            stab[k][j] = dFconvdq[j][k][l] * TauSU[l] * StrongConv[l];
 
       for (int j=0; j<5; j++)
         for (int k=0; k<3; k++)
@@ -480,13 +480,13 @@ CEED_QFUNCTION(IFunction_DCPrim)(void *ctx, CeedInt Q,
       for (int j=0; j<3; j++)
         for (int k=0; k<5; k++)
           for (int l=0; l<5; l++)
-            stab[k][j] = dFconvdqT[j][k][l] * TauSUPG[l] * StrongResid[l];
+            stab[k][j] = dFconvdq[j][k][l] * TauSUPG[l] * StrongResid[l];
 
       for (int j=0; j<5; j++)
         for (int k=0; k<3; k++)
-          dv[k][j][i] += stab[j][k] * dXdx[k][0] + 
-                         stab[j][k] * dXdx[k][1] +
-                         stab[j][k] * dXdx[k][2];
+          dv[k][j][i] +=(stab[j][0] * dXdx[k][0] + 
+                         stab[j][1] * dXdx[k][1] +
+                         stab[j][2] * dXdx[k][2] ) * wJ;
       break;              
     } 
  
