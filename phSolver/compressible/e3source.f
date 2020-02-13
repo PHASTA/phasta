@@ -95,6 +95,36 @@ c           determine coordinates of quadrature pt
      &                          + shpfun(:,n)*ytargetl(:,n,j)
                enddo
             enddo
+            if (1.eq.1) then ! bringing in x BL sponge
+              do id=1,npro
+               if((xx(id,1).gt.zoutSponge))  then
+                  bcool(id)=grthOSponge*(xx(id,1)-zoutSponge)**2
+                  bcool(id)=min(bcool(id),betamax)
+c     Determine the resulting density and energies
+               den   = ytargeti(id,1) / (Rgas * ytargeti(id,5))
+               ei    = ytargeti(id,5) * ( Rgas / gamma1 )
+               rk    = pt5 * ( ytargeti(id,2)**2+ytargeti(id,3)**2
+     &                                         +ytargeti(id,4)**2 )
+c     Determine the resulting conservation variables
+               duitarg(id,1) = den
+               duitarg(id,2) = den * ytargeti(id,2)
+               duitarg(id,3) = den * ytargeti(id,3)
+               duitarg(id,4) = den * ytargeti(id,4)
+               duitarg(id,5) = den * (ei + rk)
+c     Apply the sponge
+               if(spongeContinuity.eq.1)
+     &           src(id,1) = -bcool(id)*(dui(id,1) - duitarg(id,1))
+               if(spongeMomentum1.eq.1)
+     &           src(id,2) = -bcool(id)*(dui(id,2) - duitarg(id,2))
+               if(spongeMomentum2.eq.1)
+     &           src(id,3) = -bcool(id)*(dui(id,3) - duitarg(id,3))
+               if(spongeMomentum3.eq.1)
+     &           src(id,4) = -bcool(id)*(dui(id,4) - duitarg(id,4))
+               if(spongeEnergy.eq.1)
+     &           src(id,5) = -bcool(id)*(dui(id,5) - duitarg(id,5))
+              endif
+             enddo
+            else  !keep the original sponge below but
 
             
 c            we=3.0*29./682.
@@ -147,6 +177,7 @@ c     Apply the sponge
      &           src(id,5) = -bcool(id)*(dui(id,5) - duitarg(id,5))
             endif
          enddo
+        endif ! end of initial sponge circumvented for BL
       else
          if(isurf .ne. 1) then
             write(*,*) 'only vector (1) and cooling (4) implemented'
