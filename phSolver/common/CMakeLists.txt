@@ -12,6 +12,7 @@ if(PHASTA_USE_MPI)
   set(PHASTA_COMMON_LIBS ${PHASTA_COMMON_LIBS}
     ${MPI_LIBRARIES}
     ${MPI_Fortran_LIBRARIES}
+    phastaIO
   )
 endif(PHASTA_USE_MPI)
 
