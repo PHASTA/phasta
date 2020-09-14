@@ -17,10 +17,10 @@ endif()
 enable_testing()
 include(CTest)
 set(MPIRUN "mpirun"
-  CACHE string
+  CACHE STRING
   "the mpirun or srun executable")
 set(MPIRUN_PROCFLAG "-np"
-  CACHE string
+  CACHE STRING
   "the command line flag to give process count to MPIRUN")
 
 list(APPEND CMAKE_MODULE_PATH ${PHASTA_SOURCE_DIR}/CMakeFiles)

@@ -6,7 +6,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 include(GetGitRevisionDescription)
 
 set(CASES "/path/to/test/cases/"
-  CACHE string
+  CACHE STRING
   "path to the test cases")
 option(PHASTA_TESTING "enable tests" OFF)
 
