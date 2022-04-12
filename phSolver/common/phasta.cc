@@ -177,7 +177,7 @@ int phasta( int argc, char *argv[] ) {
     PetscPopSignalHandler(); //Let us segfault in peace ;-)
 // ok with Master    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
 // ok with 3.6x    PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);
-    PetscOptionsView(PETSC_VIEWER_STDOUT_WORLD);
+    PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD);
     if(sizeof(PetscInt) != sizeof(long long int))
     {
       //PetscInt and gcorp_t (gen_ncorp.c)
