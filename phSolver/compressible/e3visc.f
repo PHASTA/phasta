@@ -413,7 +413,8 @@ c.... K11
 c     
          stifft(:,1,1)=rmu
          if (iRANS .lt. 0) then
-            stifft(:,1,1)=saSigmaInv*rho*((rmu/rho)+max(zero,Sclr))
+            stifft(:,1,1)=saSigmaInv*((rmu/rho)+max(zero,Sclr))
+!Sclr is nu_til not mu and thus nu+nu_til is the total diffusion
          endif
 c     
 c.... K22

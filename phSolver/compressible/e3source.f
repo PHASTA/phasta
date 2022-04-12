@@ -266,7 +266,8 @@ c
      &          rmu    (npro),             con    (npro),
      &          g1yti  (npro),             g2yti  (npro),
      &          g3yti  (npro),             u1     (npro),
-     &          u2     (npro),             u3     (npro)
+     &          u2     (npro),             u3     (npro),
+     &          rnu    (npro)
 c
       dimension rti    (npro,4),           rLyti  (npro)
 c
@@ -295,8 +296,9 @@ c... for levelset
      &        xl(npro,nenl,nsd)
     
 c
+      rnu=rmu/rho  ! SA variable is nu_til not mu so nu needed in lots of places where xi=nu_til/nu
       if(iRANS.lt.0) then    ! spalart almaras model
-        sclrm=max(rmu/100.0,Sclr)
+        sclrm=max(rnu/100.0,Sclr)   ! sets a floor on SCLR
         if(iles.lt.0) then
           do i=1,npro
             dx=maxval(xl(i,:,1))-minval(xl(i,:,1))
@@ -317,7 +319,7 @@ c
         elDwl(:)=elDwl(:)+dist2w(:)
 c
 c  determine chi
-        chi = rho*sclrm/rmu
+        chi = sclrm/rnu
 c  determine f_v1
         fv1 = chi**3/(chi**3+saCv1**3)
 c  determine f_v2
@@ -384,9 +386,11 @@ c        term1=saCb1*(one-ft2)*Stilde*sclrm
 c        term2=saCb2*saSigmaInv*(g1yti**2+g2yti**2+g3yti**2)
 c        term3=-(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w)**2
 c determine d()/d(sclrm)
-        fv1p = 3*(saCv1**3)*(chi**2)*rho
-          fv1p = fv1p/(rmu*(chi**3+saCv1**3)**2)
-        fv2p = (chi**2)*fv1p-(one/rmu)
+        fv1p = 3*(saCv1**3)*(chi**2)
+!        fv1p = 3*(saCv1**3)*(chi**2)
+! rho stays as chi=nutil/nu = rho nutil/mu -> dxi/dnutil=rho/rmu
+          fv1p = fv1p/(rnu*(chi**3+saCv1**3)**2)
+        fv2p = (chi**2)*fv1p-(one/rnu)
           fv2p = fv2p/(one+chi*fv1)**2
         stp = fv2 + sclrm*fv2p
           stp = stp/(saKappa*dist2w)**2
@@ -404,10 +408,9 @@ c  determine source term
         bf = saCb2*saSigmaInv*(g1yti**2+g2yti**2+g3yti**2)
      &      +saCb1*(one-ft2)*Stilde*sclrm
      &      -(saCw1*fw - saCb1*ft2/saKappa**2)*(sclrm/dist2w)**2
-        bf = bf * rho
 c determine d(source)/d(sclrm)
-        srcp = rho*saCb1*(sclrm*stp+Stilde)
-     &        -rho*saCw1*(fwp*sclrm**2 + 2*sclrm*fw)/dist2w**2
+        srcp = saCb1*(sclrm*stp+Stilde)
+     &        -saCw1*(fwp*sclrm**2 + 2*sclrm*fw)/dist2w**2
         do i=1, npro
           if(srcp(i).le.zero .and. srcp(i).le.srcrat(i)) then
             srcp(i)=srcp(i)

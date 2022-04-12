@@ -244,10 +244,10 @@ c in all of these cases, eddy viscosity is calculated normally
                do n = 1, nshl
                   savar = savar + shp(e,n) * ycl(e,n,6)
                enddo
-               xki    = abs(savar)/rmu(e)
+               xki    = rho(e)*abs(savar)/rmu(e)
                xki3   = xki * xki * xki
                fv1    = xki3 / (xki3 + saCv1P3)
-               xmut(e) = fv1*abs(savar)
+               xmut(e) = fv1*abs(savar)*rho(e)
             endif
          enddo                  ! end loop over elts
 

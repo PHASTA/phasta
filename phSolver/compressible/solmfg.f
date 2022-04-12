@@ -312,9 +312,9 @@ c
 c
 c.... check for convergence
 c
-        ercheck=eBrg(iKs+1)
         ntotGM = ntotGM + 1
-        if (abs(eBrg(iKs+1)) .le. epsnrm) exit
+        echeck=abs(eBrg(iKs+1))
+        if (echeck .le. epsnrm.and. iKs .ge. minIters) exit 
 c
 c.... end of GMRES iteration loop
 c
