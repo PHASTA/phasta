@@ -177,12 +177,19 @@ c
              allocate (lhsK(nflow*nflow,nnz_tot))
            endif
         endif
+        if (mod(impl(1),100)/10 .eq. 2) then
+c
+c     generate the mfg data fill vectors
+c
+           allocate (BDiag(nshg,nflow,nflow))
+        endif
         if (mod(impl(1),100)/10 .eq. 3) then
 c
 c     generate the ebe data fill vectors
 c
            nedof=nflow*nshape
            allocate  (EGmass(numel,nedof*nedof))
+           allocate (BDiag(nshg,nflow,nflow))
         endif
 
 c..........................................
