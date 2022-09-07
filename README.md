@@ -13,11 +13,5 @@ Note, the following builds only the native compressible solver.  There are optio
     -DPHASTA_INCOMPRESSIBLE=OFF \
     -DPHASTA_COMPRESSIBLE=ON \
     -DPHASTA_USE_SVLS=OFF \
-    -DPHASTA_USE_PETSC=OFF \    
-    -DPHASTA_TESTING=ON \
-    -DCASES=/path/to/phastaCases/ \
-    ..
-
-    make
-
-    ctest
+    -DPHASTA_USE_PETSC=OFF \
+    ../phasta
