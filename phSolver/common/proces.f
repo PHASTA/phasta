@@ -79,9 +79,9 @@ c
 c
 c.... RANS turbulence model
 c
-        if (iRANS .lt. 0) then
+!        if (iRANS .lt. 0) then
            call initTurb( point2x )
-        endif
+!        endif
 c
 c.... p vs. Q boundary
 c
@@ -109,6 +109,8 @@ c
         if(exlog) then
            open (unit=654,file="inlet.dat",status="old")
            read(654,*) ninterp,ibcmatch,(interp_mask(j),j=1,ndof)
+! with no surfID control, this will also get applied to isothermal walls but! usually ok and can be extended if not. 
+
            do i=1,ninterp
               read(654,*) (bcinterp(i,j),j=1,ndof+1) ! distance to wall+
                         ! ndof but note order of BC's
@@ -131,34 +133,21 @@ c
                     write(*,*) 'failure in finterp, ynint=',d2wall(i)
                     stop
                  endif
-                 if(interp_mask(1).ne.zero) then 
-                    BC(i,1)=(xi*bcinterp(iupper,2)
-     &                +(one-xi)*bcinterp(iupper-1,2))*interp_mask(1)
-                 endif
-                 if(interp_mask(2).ne.zero) then 
-                    BC(i,2)=(xi*bcinterp(iupper,3)
-     &                +(one-xi)*bcinterp(iupper-1,3))*interp_mask(2)
-                 endif
-                 if(interp_mask(3).ne.zero) then 
-                    BC(i,3)=(xi*bcinterp(iupper,4)
-     &                +(one-xi)*bcinterp(iupper-1,4))*interp_mask(3)
-                 endif
-                 if(interp_masK(4).ne.zero) then 
-                    BC(i,4)=(xi*bcinterp(iupper,5)
-     &                +(one-xi)*bcinterp(iupper-1,5))*interp_mask(4)
-                 endif
-                 if(interp_mask(5).ne.zero) then 
-                    BC(i,5)=(xi*bcinterp(iupper,6)
-     &                +(one-xi)*bcinterp(iupper-1,6))*interp_mask(5)
-                 endif
-                 if(interp_mask(6).ne.zero) then 
-                    BC(i,7)=(xi*bcinterp(iupper,7)
-     &                +(one-xi)*bcinterp(iupper-1,7))*interp_mask(6)
-                 endif
-                 if(interp_mask(7).ne.zero) then 
-                    BC(i,8)=(xi*bcinterp(iupper,8)
-     &                +(one-xi)*bcinterp(iupper-1,8))*interp_mask(7)
-                 endif
+              if(lstep.eq.0) then  ! apply this inlet bl as an IC if on step 0
+              y(i,1:3)=(xi*bcinterp(iupper,4:6)
+     &                +(one-xi)*bcinterp(iupper-1,4:6))
+              y(i,4)=(xi*bcinterp(iupper,2)
+     &                +(one-xi)*bcinterp(iupper-1,2))
+              y(i,5)=(xi*bcinterp(iupper,3)
+     &                +(one-xi)*bcinterp(iupper-1,3))
+              endif
+              if(point2x(i,1).lt.1.0e-5 .and. mod(iBC(i),1024).eq.ibcmatch) then
+                 do j=1,ndof
+                  if(interp_mask(j).ne.zero) then 
+                    BC(i,j)=(xi*bcinterp(iupper,j+1)
+     &                +(one-xi)*bcinterp(iupper-1,j+1))
+                  endif
+                 enddo
               endif
            enddo
         endif

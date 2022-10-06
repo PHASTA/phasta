@@ -896,10 +896,10 @@ c
       call restar ('out ',  yold, acold)  
 
       !Write the distance to wall field in each restart
-      if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
+!      if((istep==nstp) .and. (irans < 0 )) then !d2wall is allocated
                  call write_field(myrank,'a'//char(0),'dwal'//char(0),4,
      &                            d2wall,'d'//char(0), nshg, 1, lstep)
-      endif 
+!      endif 
            
       !Write the time average in each restart. 
       if(ioybar.eq.1)then

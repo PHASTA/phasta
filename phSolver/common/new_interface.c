@@ -224,9 +224,9 @@ void countfieldstowriterestart()
 
   }
 
-  if(turbvari.irans < 0) {
+//  if(turbvari.irans < 0) {
     nfields++; /*dwal*/
-  }
+//  }
 
   outpar.nsynciofieldswriterestart = nfields;
 
