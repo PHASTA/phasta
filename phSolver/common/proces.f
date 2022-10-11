@@ -119,36 +119,35 @@ c
 
            enddo
            do i=1,nshg  ! only correct for linears at this time
-              if(mod(iBC(i),1024).eq.ibcmatch) then
-                 iupper=0
-                 do j=2,ninterp
-                    if(bcinterp(j,1).gt.d2wall(i)) then !bound found
-                       xi=(d2wall(i)-bcinterp(j-1,1))/
-     &                    (bcinterp(j,1)-bcinterp(j-1,1))
-                       iupper=j
-                       exit
-                    endif
-                 enddo
-                 if(iupper.eq.0) then
-                    write(*,*) 'failure in finterp, ynint=',d2wall(i)
-                    stop
-                 endif
-              if(lstep.eq.0) then  ! apply this inlet bl as an IC if on step 0
+             iupper=0
+             do j=2,ninterp
+               if(bcinterp(j,1).gt.d2wall(i)) then !bound found
+                 xi=(d2wall(i)-bcinterp(j-1,1))/
+     &           (bcinterp(j,1)-bcinterp(j-1,1))
+                 iupper=j
+                 exit
+               endif
+             enddo
+             if(iupper.eq.0) then
+               write(*,*) 'failure in finterp, ynint=',d2wall(i)
+               stop
+             endif
+             if(lstep.eq.0) then  ! apply this inlet bl as an IC if on step 0
               y(i,1:3)=(xi*bcinterp(iupper,4:6)
      &                +(one-xi)*bcinterp(iupper-1,4:6))
               y(i,4)=(xi*bcinterp(iupper,2)
      &                +(one-xi)*bcinterp(iupper-1,2))
               y(i,5)=(xi*bcinterp(iupper,3)
      &                +(one-xi)*bcinterp(iupper-1,3))
-              endif
-              if(point2x(i,1).lt.1.0e-5 .and. mod(iBC(i),1024).eq.ibcmatch) then
-                 do j=1,ndof
-                  if(interp_mask(j).ne.zero) then 
-                    BC(i,j)=(xi*bcinterp(iupper,j+1)
-     &                +(one-xi)*bcinterp(iupper-1,j+1))
-                  endif
-                 enddo
-              endif
+             endif
+             if(point2x(i,1).lt.1.0e-5 .and. mod(iBC(i),1024).eq.ibcmatch) then
+               do j=1,ndof
+                 if(interp_mask(j).ne.zero) then 
+                   BC(i,j)=(xi*bcinterp(iupper,j+1)
+     &             +(one-xi)*bcinterp(iupper-1,j+1))
+                 endif
+               enddo
+             endif
            enddo
         endif
 c$$$$$$$$$$$$$$$$$$$$
