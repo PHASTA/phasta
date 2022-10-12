@@ -41,6 +41,13 @@ ENDIF(CMAKE_SYSTEM_NAME MATCHES BlueGeneQ-static)
 # stuff for C/C++ calls to Fortran -- still needs to be done properly...
 IF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
   SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffixed-form -ffixed-line-length-132 -cpp " )
+	IF(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER 9.5.0)
+		#This feature was introduced in gfortran 10
+		#the last public release prior was 9.5 and 
+		#version_greater_equal was introduced recently so we implement
+		#for compatibility.
+		SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fallow-argument-mismatch")
+	ENDIF(CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER 9.5.0)
 ENDIF(CMAKE_Fortran_COMPILER_ID MATCHES GNU)
 
 IF(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
