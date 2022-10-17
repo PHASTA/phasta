@@ -50,7 +50,9 @@ c
      &		  fact(npro),	 h2o2u(npro),   giju(npro,6),
      &            A0inv(npro,15),gijdu(npro,6)
 c
-      call e3gijd( dxidx, gijd )
+      call e3gijd( dxidx, gijd ) ! both diagonal taus need this
+      if(itau.eq.1) then        ! tau proposed by  for nearly incompressible
+c                                 flows by Guillermo Hauke
 c
 c  next form the diffusive length scale |u| h_1 = 2 ( ui (gijd)-1 uj)^{1/2}
 c
@@ -73,11 +75,11 @@ c   at this point we have (u h1)^2 * inverse coefficient^2 / 4
 c
 c                                    ^ fact
 c
-      uh1= two * sqrt(uh1/fact)
+         uh1= two * sqrt(uh1/fact)
 c
 c  next form the advective length scale |u|/h_2 = 2 ( ui (gijd) uj)^{1/2}
 c
-      h2o2u =   u1*u1*gijd(:,1)
+         h2o2u =   u1*u1*gijd(:,1)
      &     + u2*u2*gijd(:,3)
      &     + u3*u3*gijd(:,6)
      &     +(u1*u2*gijd(:,2)
@@ -89,12 +91,10 @@ c
 
 c       call tnanqe(h2o2u,1,"riaconv ")
 
-      h2o2u = one / sqrt(h2o2u) ! this flips it over leaves it h_2/(2u)
+         h2o2u = one / sqrt(h2o2u) ! this flips it over leaves it h_2/(2u)
 c  
 c.... diffusive corrections
 
-      if(itau.eq.1) then        ! tau proposed by  for nearly incompressible
-c                                 flows by Guillermo Hauke
 c     
 c.... cell Reynold number
 c     
@@ -107,8 +107,10 @@ c
 c     
 c...  momentum tau
 c     
-         dts=one/(Dtgl*dtsfct)
-         tau(:,2)=min(dts,h2o2u)
+         if (iremoveStabTimeTerm.eq.0 ) then
+            dts=one/(Dtgl*dtsfct)
+            tau(:,2)=min(dts,h2o2u)
+         endif
          tau(:,2)=tau(:,2)/rho
 c     
 c.... energy tau   cv=cp/gamma  assumed
@@ -151,16 +153,20 @@ c     fff = 36.0d0
          else if (ipord == 3) then
             fff = 128.0d0
 c     fff = 144.0d0
-      endif           
-         dts = dtsfct*Dtgl
+         endif           
+         if (iremoveStabTimeTerm.eq.1 ) then
+            dts = zero
+         else
+            dts = dtsfct*Dtgl
+         endif
          tau(:,2)=rho**2*((two*dts)**2
-     &        + u1*(u1*gijd(:,1) + two*(u2*gijd(:,2)+u3*gijd(:,4)))
+     &        + (u1*(u1*gijd(:,1) + two*(u2*gijd(:,2)+u3*gijd(:,4)))
      &        + u2*(u2*gijd(:,3) + two*u3*gijd(:,5))
-     &        + u3*u3*gijd(:,6))
+     &        + u3*u3*gijd(:,6)))
      &        +fff*rmu**2*(gijd(:,1)**2 + gijd(:,3)**2 + gijd(:,6)**2 +
      &        two*(gijd(:,2)**2 + gijd(:,4)**2 + gijd(:,5)**2))
          fact=sqrt(tau(:,2))
-         tau(:,1)=pt125*fact/(gijd(:,1)+gijd(:,3)+gijd(:,6))*taucfct
+         tau(:,1)=pt125*fact/(rho*(gijd(:,1)+gijd(:,3)+gijd(:,6)))*taucfct
          tau(:,2)=one/fact
 c     
 c.... energy tau   cv=cp/gamma  assumed
