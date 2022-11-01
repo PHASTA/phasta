@@ -82,10 +82,11 @@ c
           HFlux = Forout(4)
           if (myrank .eq. master) then
              write (iforce,1000) lstep+1, (Force(i), i=1,nsd), HFlux, 
-     &                           spmasss
+     &                           spmasss,(ftot(i),i=1,nsd)
              call flush(iforce)
           endif
         endif
+
 c
 c.... ----------------------->  Convergence  <-------------------------
 c
@@ -143,7 +144,7 @@ c.... return
 c
         return
 c
-1000    format(1p,i6,5e13.5)
+1000    format(1p,i6,8e13.5)
 2000    format(1p,i6,e10.3,e10.3,1x,'(',i4,')',
      &                  1x,e10.3,1x,'(',i4,')',
      &         ' [',i3,'-',i3,']',i10)
@@ -327,7 +328,7 @@ c
           HFlux = Forout(4)
           if (myrank .eq. master) then
              write (iforce,1000) lstep+1, (Force(i), i=1,nsd), HFlux, 
-     &                           spmasss
+     &                           spmasss,(ftot(i),i=1,nsd)
              call flush(iforce)
           endif
         endif

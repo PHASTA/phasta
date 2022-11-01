@@ -75,12 +75,7 @@ c              src(:,2) = rho(:) * ampl
             src(:,5) = u1*src(:,2)
          endwhere
 
-      else if(matflg(5,1).ge.4) then ! cool case (sponge outside of a
-                                     ! revolved box defined from zinSponge to
-                                     ! zoutSponge in axial extent and 0
-                                     ! to radSponge in radial extent for
-                                     ! all theta)
-
+      else if(matflg(5,1).ge.4) then 
 c           determine coordinates of quadrature pt
             xx=zero
             do n  = 1,nenl
@@ -97,8 +92,9 @@ c           determine coordinates of quadrature pt
             enddo
             if (1.eq.1) then ! bringing in x BL sponge
               do id=1,npro
-               if((xx(id,1).gt.zoutSponge))  then
-                  bcool(id)=grthOSponge*(xx(id,1)-zoutSponge)**2
+               rsq=xx(id,1)*xx(id,1) + xx(id,2)*xx(id,2)
+               if(rsq.gt.zoutSponge)  then
+                  bcool(id)=grthOSponge*(rsq-zoutSponge)**2
                   bcool(id)=min(bcool(id),betamax)
 c     Determine the resulting density and energies
                den   = ytargeti(id,1) / (Rgas * ytargeti(id,5))
