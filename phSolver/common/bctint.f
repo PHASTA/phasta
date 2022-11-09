@@ -75,7 +75,15 @@ c-----------------------------------------------------------------------
          write(*,*) 'calculating IC sponge'
          ytarget = y
       else
-         write(*,*) 'calculating Analytic sponge'
+         ytarget(:,1)= xvel_ini
+         ytarget(:,2)= yvel_ini
+         ytarget(:,3)= zvel_ini
+         ytarget(:,4)= pres_ini
+         ytarget(:,5)= temp_ini
+         if(myrank.eq.0)write(*,*) 'calculating Analytic sponge'
+       endif
+!      else
+       if (0.eq.1) then
 
 c
 c OLD style sponge pushed onto target.  You need to be sure that your
