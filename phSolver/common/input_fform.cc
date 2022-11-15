@@ -443,6 +443,12 @@ int input_fform(phSolver::Input& inp)
     }
     else if ( (string)inp.GetValue("Body Force Option") == "Cooling Analytic" ) {
       for(i=0; i< levlset.iLSet +1 ; i++) matdat.matflg[i][4] = 4;
+      ctrlvar.xvel_ini = inp.GetValue("Initial X Velocity");
+      ctrlvar.yvel_ini = inp.GetValue("Initial Y Velocity");
+      ctrlvar.zvel_ini = inp.GetValue("Initial Z Velocity");
+      ctrlvar.temp_ini = inp.GetValue("Initial Temp");
+      ctrlvar.pres_ini = inp.GetValue("Initial Pressure");
+      ctrlvar.evis_ini = inp.GetValue("Initial Scalar 1");
     }
     else if ( (string)inp.GetValue("Body Force Option") == "Cooling Initial Condition" ) {
       for(i=0; i< levlset.iLSet +1 ; i++) matdat.matflg[i][4] = 5;
