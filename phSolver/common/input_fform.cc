@@ -120,7 +120,6 @@ int input_fform(phSolver::Input& inp)
 		ctrlvar.zvel_ini = inp.GetValue("Initial Z Velocity");
 		ctrlvar.temp_ini = inp.GetValue("Initial Temp");
 		ctrlvar.pres_ini = inp.GetValue("Initial Pressure");
-		ctrlvar.evis_ini = inp.GetValue("Initial Scalar 1");
 	}
 
     
